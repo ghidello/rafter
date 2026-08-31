@@ -1,20 +1,42 @@
 <Project>
+  <!-- Target framework and compiler -->
   <PropertyGroup>
     <TargetFramework Condition="'$(TargetFramework)' == ''">net10.0</TargetFramework>
     <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <!-- Static analysis -->
+  <PropertyGroup>
+    <!-- .NET analyzers ship with the SDK; an additional package reference is unnecessary. -->
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>10.0-recommended</AnalysisLevel>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Reproducible builds and symbols -->
+  <PropertyGroup>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <DebugType>portable</DebugType>
     <DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <!-- Repository artifacts and development version -->
+  <PropertyGroup>
     <UseArtifactsOutput>true</UseArtifactsOutput>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
     <PackageOutputPath>$(ArtifactsPath)\package\$(Configuration)</PackageOutputPath>
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.1.0-dev.1</PackageVersion>
+  </PropertyGroup>
+
+  <!-- NuGet package metadata -->
+  <PropertyGroup>
     <RepositoryUrl>https://github.com/ghidello/rafter</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
@@ -26,6 +48,7 @@
     <Copyright>Copyright (c) Alessandro Ghidini</Copyright>
   </PropertyGroup>
 
+  <!-- Package-only build dependency -->
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
   </ItemGroup>
