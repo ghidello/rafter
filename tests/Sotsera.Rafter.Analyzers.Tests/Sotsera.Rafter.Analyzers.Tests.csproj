@@ -1,7 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <IsTestProject>true</IsTestProject>
-  </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../../src/Sotsera.Rafter.Analyzers/Sotsera.Rafter.Analyzers.csproj" />
   </ItemGroup>

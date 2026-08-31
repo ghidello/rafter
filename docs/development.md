@@ -27,6 +27,9 @@ Generated build, test, package, and validation output belongs under `artifacts/`
 
 ## Project ownership
 
+`tests/` contains only projects executed by Microsoft.Testing.Platform. `test-assets/` contains executable fixtures
+and consumer templates used by those tests or repository validation.
+
 - `src/Sotsera.Rafter` owns the runtime library and its NuGet package. It intentionally exposes no placeholder public
   API in Phase 1.
 - `src/Sotsera.Rafter.Analyzers` is an isolated Roslyn packaging seam. Analyzer behavior and package integration are
@@ -34,10 +37,10 @@ Generated build, test, package, and validation output belongs under `artifacts/`
 - `tests/Sotsera.Rafter.Tests` owns fast runtime unit tests.
 - `tests/Sotsera.Rafter.IntegrationTests` owns multi-component and host-level tests.
 - `tests/Sotsera.Rafter.Analyzers.Tests` owns analyzer tests.
-- `tests/Sotsera.Rafter.RunFixture` is the deterministic child application used to exercise Rafter execution.
-- `tests/Sotsera.Rafter.ProcessFixture` is the deterministic child process used for process and stream tests. Add new
+- `test-assets/Sotsera.Rafter.RunFixture` is the deterministic child application used to exercise Rafter execution.
+- `test-assets/Sotsera.Rafter.ProcessFixture` is the deterministic child process used for process and stream tests. Add new
   process scenarios here rather than relying on shell commands or machine-installed tools.
-- `tests/Sotsera.Rafter.PackageConsumer` is copied outside the repository by `eng/verify-package.ps1` and proves that
+- `test-assets/Sotsera.Rafter.PackageConsumer` is copied outside the repository by `eng/verify-package.ps1` and proves that
   clean conventional and file-based consumers can restore and load the locally produced package without a project
   reference.
 

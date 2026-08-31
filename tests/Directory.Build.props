@@ -3,11 +3,12 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(IsTestProject)' == 'true'">
+  <ItemGroup>
     <PackageReference Include="AwesomeAssertions" />
     <PackageReference Include="AwesomeAssertions.Analyzers" PrivateAssets="all" />
     <PackageReference Include="xunit.v3" />

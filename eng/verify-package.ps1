@@ -49,10 +49,10 @@ $reportPath = Join-Path $packageRoot "Sotsera.Rafter.$PackageVersion.contents.tx
 $temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("rafter-package-consumer-" + [Guid]::NewGuid().ToString("N"))
 try {
     [System.IO.Directory]::CreateDirectory($temporaryRoot) | Out-Null
-    $consumerProjectSource = Join-Path $repositoryRoot "tests/Sotsera.Rafter.PackageConsumer/Sotsera.Rafter.PackageConsumer.csproj"
+    $consumerProjectSource = Join-Path $repositoryRoot "test-assets/Sotsera.Rafter.PackageConsumer/Sotsera.Rafter.PackageConsumer.csproj"
     $consumerProject = [System.IO.File]::ReadAllText($consumerProjectSource).Replace("0.1.0-dev.1", $PackageVersion)
     [System.IO.File]::WriteAllText((Join-Path $temporaryRoot "Sotsera.Rafter.PackageConsumer.csproj"), $consumerProject)
-    Copy-Item -LiteralPath (Join-Path $repositoryRoot "tests/Sotsera.Rafter.PackageConsumer/Program.cs") -Destination $temporaryRoot
+    Copy-Item -LiteralPath (Join-Path $repositoryRoot "test-assets/Sotsera.Rafter.PackageConsumer/Program.cs") -Destination $temporaryRoot
 
     $nugetConfigContent = @"
 <?xml version="1.0" encoding="utf-8"?>
@@ -78,7 +78,7 @@ try {
         throw "Package consumer failed with exit code $LASTEXITCODE."
     }
 
-    $consumerScriptSource = Join-Path $repositoryRoot "tests/Sotsera.Rafter.PackageConsumer/consumer.cs"
+    $consumerScriptSource = Join-Path $repositoryRoot "test-assets/Sotsera.Rafter.PackageConsumer/consumer.cs"
     $consumerScript = [System.IO.File]::ReadAllText($consumerScriptSource).Replace("0.1.0-dev.1", $PackageVersion)
     $consumerScriptPath = Join-Path $temporaryRoot "consumer.cs"
     [System.IO.File]::WriteAllText($consumerScriptPath, $consumerScript)

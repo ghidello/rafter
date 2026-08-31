@@ -24,8 +24,8 @@ dotnet build Rafter.slnx --configuration Release --no-restore
 dotnet test Rafter.slnx --configuration Release --no-build --results-directory artifacts/test-results/local
 dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --no-build
 dotnet format Rafter.slnx --verify-no-changes --no-restore --verbosity minimal
-dotnet run --project tests/Sotsera.Rafter.RunFixture/Sotsera.Rafter.RunFixture.csproj --configuration Release --no-build
-dotnet run --project tests/Sotsera.Rafter.ProcessFixture/Sotsera.Rafter.ProcessFixture.csproj --configuration Release --no-build
+dotnet run --project test-assets/Sotsera.Rafter.RunFixture/Sotsera.Rafter.RunFixture.csproj --configuration Release --no-build
+dotnet run --project test-assets/Sotsera.Rafter.ProcessFixture/Sotsera.Rafter.ProcessFixture.csproj --configuration Release --no-build
 pwsh -NoProfile -File ./eng/verify-package.ps1 -Configuration Release
 pwsh -NoProfile -File ./eng/validate-examples.ps1
 git diff --exit-code -- examples
