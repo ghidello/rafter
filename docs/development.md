@@ -16,7 +16,7 @@ Run these commands from the repository root:
 ```powershell
 dotnet restore Rafter.slnx --configfile nuget.config
 dotnet build Rafter.slnx --configuration Release --no-restore
-dotnet test Rafter.slnx --configuration Release --no-build --results-directory artifacts/test-results/local --report-xunit-trx
+dotnet test Rafter.slnx --configuration Release --no-build --report-xunit-trx
 dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --no-build
 pwsh ./eng/verify-package.ps1 -Configuration Release
 pwsh ./eng/validate-examples.ps1
@@ -24,6 +24,8 @@ git diff --exit-code -- examples
 ```
 
 Generated build, test, package, and validation output belongs under `artifacts/` and must not be committed.
+`tests/Directory.Build.props` supplies the shared Microsoft.Testing.Platform results directory, so individual test
+commands do not need to repeat `--results-directory` and must not create a root `TestResults/` directory.
 
 ## Project ownership
 

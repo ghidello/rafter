@@ -34,7 +34,6 @@ jobs:
       - name: Test
         run: >-
           dotnet test Rafter.slnx --configuration Release --no-build
-          --results-directory artifacts/test-results/${{ matrix.os }}
           --diagnostic-output-directory artifacts/test-results/${{ matrix.os }}/diagnostics
           --diagnostic --diagnostic-verbosity Information --report-xunit-trx
 
