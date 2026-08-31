@@ -2,9 +2,9 @@
 
 ## Status
 
-The Phase 1 implementation and all locally executable gates pass. F1 awaits a post-commit clean-clone run, and F2
-awaits the first successful Windows, Linux, and macOS CI matrix. Those two gates remain unchecked in the phase plan
-until their corresponding environments have actually executed; configuring a job is not treated as proof that it ran.
+The Phase 1 implementation and all locally executable gates pass. F1 was verified from the committed sources in a
+fresh temporary clone. F2 awaits the first successful Windows, Linux, and macOS CI matrix and remains unchecked until
+those environments have actually executed; configuring a job is not treated as proof that it ran.
 
 ## Toolchain and platform matrix
 
@@ -34,6 +34,7 @@ git diff --check
 
 Observed results:
 
+- A fresh local clone of commit `04310ce` restored and built in Release with 0 warnings and 0 errors.
 - Release build: 0 warnings, 0 errors.
 - Tests: 3 passed, 0 failed, 0 skipped across unit, integration, and analyzer assemblies.
 - Fixtures printed `rafter-run-fixture` and `rafter-process-fixture` respectively.
@@ -67,5 +68,4 @@ package. Analyzer packaging is owned by phase 9.
 
 ## Gate follow-up
 
-- F1: make a clean local clone from the Phase 1 commit and run the documented sequence.
 - F2: push the branch and require the complete three-platform CI matrix to pass before merging.

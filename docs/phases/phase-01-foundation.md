@@ -52,7 +52,7 @@ examples. This phase creates structure and seams, not feature behavior.
 
 ## Required verification
 
-- [ ] A clean clone can restore without machine-specific paths or private feeds.
+- [x] A clean clone can restore without machine-specific paths or private feeds.
 - [x] Release build emits no warnings under the agreed warnings policy.
 - [ ] Unit and placeholder integration suites execute on every declared platform.
 - [x] Repeated package builds from identical inputs are deterministic where the SDK permits comparison.
@@ -61,7 +61,7 @@ examples. This phase creates structure and seams, not feature behavior.
 
 ## Completion gates
 
-- [ ] **F1 — Reproducible root:** clean restore and build succeed using only documented prerequisites.
+- [x] **F1 — Reproducible root:** clean restore and build succeed using only documented prerequisites.
 - [ ] **F2 — Test topology:** every test and fixture project runs through the root solution on declared CI platforms.
 - [x] **F3 — Package integrity:** package-content assertions and a package-consumer restore pass.
 - [x] **F4 — Example preservation:** validation uses generated copies and `git diff --exit-code -- examples` remains clean.
