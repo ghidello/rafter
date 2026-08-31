@@ -1,5 +1,10 @@
-*.user
-
-.vs/
+artifacts/
 bin/
 obj/
+.vs/
+.idea/
+TestResults/
+*.user
+*.suo
+*.nupkg
+*.snupkg

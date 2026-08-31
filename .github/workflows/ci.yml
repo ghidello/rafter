@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore
+        run: dotnet restore Rafter.slnx --configfile nuget.config
+
+      - name: Build
+        run: dotnet build Rafter.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: >-
+          dotnet test Rafter.slnx --configuration Release --no-build
+          --results-directory artifacts/test-results/${{ matrix.os }}
+          --diagnostic-output-directory artifacts/test-results/${{ matrix.os }}/diagnostics
+          --diagnostic --diagnostic-verbosity Information --report-xunit-trx
+
+      - name: Upload diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-${{ matrix.os }}
+          path: |
+            artifacts/test-results/
+          if-no-files-found: ignore
+
+  package:
+    name: Package integrity
+    runs-on: ubuntu-latest
+    needs: build-and-test
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - run: dotnet restore Rafter.slnx --configfile nuget.config
+      - run: dotnet build Rafter.slnx --configuration Release --no-restore
+      - run: dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --no-build
+      - shell: pwsh
+        run: ./eng/verify-package.ps1 -Configuration Release
+      - shell: pwsh
+        run: ./eng/validate-examples.ps1
+      - run: git diff --exit-code -- examples
+
+      - name: Upload packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/package/
+          if-no-files-found: error
