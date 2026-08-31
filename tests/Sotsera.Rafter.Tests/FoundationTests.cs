@@ -9,7 +9,7 @@ public sealed class FoundationTests
     {
         Assembly assembly = Assembly.Load("Sotsera.Rafter");
 
-        Assert.Equal("Sotsera.Rafter", assembly.GetName().Name);
-        Assert.Contains(assembly.GetReferencedAssemblies(), reference => reference.Name == "Spectre.Console");
+        assembly.GetName().Name.Should().Be("Sotsera.Rafter");
+        assembly.GetReferencedAssemblies().Should().Contain(reference => reference.Name == "Spectre.Console");
     }
 }

@@ -9,6 +9,6 @@ public sealed class FoundationAnalyzerTests
     {
         Assembly assembly = Assembly.Load("Sotsera.Rafter.Analyzers");
 
-        Assert.Equal("Sotsera.Rafter.Analyzers", assembly.GetName().Name);
+        assembly.GetName().Name.Should().Be("Sotsera.Rafter.Analyzers");
     }
 }
