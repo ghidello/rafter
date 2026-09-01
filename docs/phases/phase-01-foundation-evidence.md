@@ -2,9 +2,10 @@
 
 ## Status
 
-The Phase 1 implementation and all locally executable gates pass. F1 was verified from the committed sources in a
-fresh temporary clone. F2 awaits the first successful Windows, Linux, and macOS CI matrix and remains unchecked until
-those environments have actually executed; configuring a job is not treated as proof that it ran.
+Phase 1 is complete. F1 was verified from the committed sources in a fresh temporary clone. F2 was verified by the
+[clean three-platform CI run](https://github.com/ghidello/rafter/actions/runs/33560464972) for commit `b8f0748`: every
+test assembly and both executable fixtures ran successfully on Windows, Linux, and macOS, followed by successful
+package-integrity verification.
 
 ## Toolchain and platform matrix
 
@@ -45,6 +46,9 @@ Observed results:
 - The unchanged minimal example restored through the runtime project by default and through
   `Sotsera.Rafter.0.1.0-dev.1.nupkg` in package mode.
 - Formatting and whitespace verification passed.
+- CI run `33560464972` completed successfully with zero annotations on all four jobs. Its Windows, Ubuntu, and macOS
+  jobs restored, built, tested, and ran both deterministic fixtures; its dependent package job enforced the exact
+  runtime and symbol-package layouts, ran both isolated consumers, and validated all 29 examples.
 
 ## Package determinism and contents
 
@@ -80,6 +84,8 @@ Sotsera.Rafter.nuspec
 The analyzer project is deliberately not packed in Phase 1, so no analyzer or Roslyn assets appear in the runtime
 package. Analyzer packaging is owned by phase 9.
 
-## Gate follow-up
+## Final gate evidence
 
-- F2: push the branch and require the complete three-platform CI matrix to pass before merging.
+- F2: [CI run `33560464972`](https://github.com/ghidello/rafter/actions/runs/33560464972) passed for commit `b8f0748`
+  on `windows-latest`, `ubuntu-latest`, and `macos-latest`, with both fixture executables running on every host.
+- All Phase 1 required verification items and completion gates are satisfied.
