@@ -10,41 +10,108 @@ Set-StrictMode -Version Latest
 $repositoryRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $packageRoot = Join-Path $repositoryRoot "artifacts/package/$Configuration"
 $packagePath = Join-Path $packageRoot "Sotsera.Rafter.$PackageVersion.nupkg"
+$symbolPackagePath = Join-Path $packageRoot "Sotsera.Rafter.$PackageVersion.snupkg"
 
-if (-not (Test-Path -LiteralPath $packagePath)) {
-    throw "Package not found: $packagePath. Run dotnet pack first."
+function Get-ArchiveEntries([string] $Path) {
+    if (-not (Test-Path -LiteralPath $Path)) {
+        throw "Package not found: $Path. Run dotnet pack first."
+    }
+
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        return @($archive.Entries | ForEach-Object FullName | Sort-Object)
+    }
+    finally {
+        $archive.Dispose()
+    }
 }
 
-$archive = [System.IO.Compression.ZipFile]::OpenRead($packagePath)
-try {
-    $entries = @($archive.Entries | ForEach-Object FullName | Sort-Object)
-}
-finally {
-    $archive.Dispose()
+function Assert-ArchiveLayout([string] $Path, [string[]] $ExpectedEntries) {
+    $actualEntries = @(Get-ArchiveEntries $Path)
+    [string[]] $actualEntriesForComparison = @($actualEntries)
+    [string[]] $expectedEntriesForComparison = @($ExpectedEntries)
+    [Array]::Sort($actualEntriesForComparison, [StringComparer]::Ordinal)
+    [Array]::Sort($expectedEntriesForComparison, [StringComparer]::Ordinal)
+
+    $compareArguments = @{
+        ReferenceObject = $expectedEntriesForComparison
+        DifferenceObject = $actualEntriesForComparison
+        CaseSensitive = $true
+    }
+    $differences = @(Compare-Object @compareArguments)
+    $missingEntries = @($differences | Where-Object SideIndicator -EQ "<=" | ForEach-Object InputObject)
+    $unexpectedEntries = @($differences | Where-Object SideIndicator -EQ "=>" | ForEach-Object InputObject)
+
+    if ($missingEntries.Count -gt 0 -or $unexpectedEntries.Count -gt 0) {
+        $details = @(
+            if ($missingEntries.Count -gt 0) {
+                "missing: $($missingEntries -join ', ')"
+            }
+            if ($unexpectedEntries.Count -gt 0) {
+                "unexpected: $($unexpectedEntries -join ', ')"
+            }
+        )
+        throw "Package layout mismatch for $Path ($($details -join '; '))."
+    }
+
+    return $actualEntries
 }
 
-$requiredEntries = @(
+function Write-NuGetConfig([string] $Path, [string] $LocalSource) {
+    $settings = [System.Xml.XmlWriterSettings]::new()
+    $settings.Indent = $true
+    $settings.Encoding = [System.Text.UTF8Encoding]::new($false)
+
+    $writer = [System.Xml.XmlWriter]::Create($Path, $settings)
+    try {
+        $writer.WriteStartDocument()
+        $writer.WriteStartElement("configuration")
+        $writer.WriteStartElement("packageSources")
+        $writer.WriteStartElement("clear")
+        $writer.WriteEndElement()
+        $writer.WriteStartElement("add")
+        $writer.WriteAttributeString("key", "rafter-local")
+        $writer.WriteAttributeString("value", $LocalSource.Replace('\', '/'))
+        $writer.WriteEndElement()
+        $writer.WriteStartElement("add")
+        $writer.WriteAttributeString("key", "nuget.org")
+        $writer.WriteAttributeString("value", "https://api.nuget.org/v3/index.json")
+        $writer.WriteAttributeString("protocolVersion", "3")
+        $writer.WriteEndElement()
+        $writer.WriteEndElement()
+        $writer.WriteEndElement()
+        $writer.WriteEndDocument()
+    }
+    finally {
+        $writer.Dispose()
+    }
+}
+
+$expectedPackageEntries = @(
+    "_rels/.rels",
+    "[Content_Types].xml",
+    "package/services/metadata/core-properties/nuget.psmdcp",
     "README.md",
     "Sotsera.Rafter.nuspec",
     "lib/net10.0/Sotsera.Rafter.dll",
     "lib/net10.0/Sotsera.Rafter.xml"
 )
 
-foreach ($requiredEntry in $requiredEntries) {
-    if ($requiredEntry -notin $entries) {
-        throw "Package is missing required entry: $requiredEntry"
-    }
-}
+$expectedSymbolPackageEntries = @(
+    "_rels/.rels",
+    "[Content_Types].xml",
+    "package/services/metadata/core-properties/nuget.psmdcp",
+    "Sotsera.Rafter.nuspec",
+    "lib/net10.0/Sotsera.Rafter.pdb"
+)
 
-$forbiddenEntries = @($entries | Where-Object {
-    $_ -like "analyzers/*" -or $_ -like "lib/*/xunit*" -or $_ -like "lib/*/Microsoft.CodeAnalysis*"
-})
-if ($forbiddenEntries.Count -gt 0) {
-    throw "Package contains unintended entries: $($forbiddenEntries -join ', ')"
-}
+$entries = @(Assert-ArchiveLayout $packagePath $expectedPackageEntries)
+$symbolEntries = @(Assert-ArchiveLayout $symbolPackagePath $expectedSymbolPackageEntries)
 
 $reportPath = Join-Path $packageRoot "Sotsera.Rafter.$PackageVersion.contents.txt"
 [System.IO.File]::WriteAllLines($reportPath, $entries)
+$symbolReportPath = Join-Path $packageRoot "Sotsera.Rafter.$PackageVersion.symbols.contents.txt"
+[System.IO.File]::WriteAllLines($symbolReportPath, $symbolEntries)
 
 $temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("rafter-package-consumer-" + [Guid]::NewGuid().ToString("N"))
 try {
@@ -54,20 +121,9 @@ try {
     [System.IO.File]::WriteAllText((Join-Path $temporaryRoot "Sotsera.Rafter.PackageConsumer.csproj"), $consumerProject)
     Copy-Item -LiteralPath (Join-Path $repositoryRoot "test-assets/Sotsera.Rafter.PackageConsumer/Program.cs") -Destination $temporaryRoot
 
-    $nugetConfigContent = @"
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="rafter-local" value="$($packageRoot.Replace('\', '/'))" />
-    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" protocolVersion="3" />
-  </packageSources>
-</configuration>
-"@
-    [System.IO.File]::WriteAllText((Join-Path $temporaryRoot "NuGet.Config"), $nugetConfigContent)
-
     $consumerProjectPath = Join-Path $temporaryRoot "Sotsera.Rafter.PackageConsumer.csproj"
     $consumerConfigPath = Join-Path $temporaryRoot "NuGet.Config"
+    Write-NuGetConfig $consumerConfigPath $packageRoot
     & dotnet restore $consumerProjectPath --configfile $consumerConfigPath
     if ($LASTEXITCODE -ne 0) {
         throw "Package consumer restore failed with exit code $LASTEXITCODE."
@@ -99,4 +155,4 @@ finally {
     }
 }
 
-Write-Host "Verified package contents, external project restore, and file-based app restore."
+Write-Host "Verified package and symbol-package contents, external project restore, and file-based app restore."

@@ -19,6 +19,7 @@ var inspect = command.Target("inspect")
             .Set("CI", "true")
             .Set("EMPTY", string.Empty)
             .Unset("RAFTER_EXAMPLE_REMOVE"))
-        .Run());
+        .Run()
+    );
 
 return await command.RunAsync(inspect, args);

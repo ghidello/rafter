@@ -351,7 +351,8 @@ Streaming `.Run()` returns a small Rafter-owned result containing the actual val
 therefore distinguish valid nonzero outcomes without switching to capture mode. That result is the value type `ProcessExit`, whose only initial
 property is `ExitCode`.
 
-`.CaptureLimitBytes(long)` overrides the default retained-data limit separately for stdout and stderr. The byte count is measured before text
+`.CaptureLimitBytes(long)` applies the same retained-data limit independently to stdout and stderr; it is not a combined budget. For example, a
+2 MiB setting permits up to 2 MiB from each stream, or 4 MiB of retained child-process bytes in total. The byte count is measured before text
 decoding. `Capture()` defaults to 1 MiB per stream; streaming `Run()` does not retain complete output. Exceeding a limit stops retaining that
 stream but never stops draining it, so a full pipe cannot deadlock the child process. After the process settles, `Capture()` reports a distinct
 capture-limit failure rather than returning normally with incomplete data; diagnostics identify the affected stream and limit without embedding
@@ -362,8 +363,11 @@ observed-order line transcript in the initial API: exact per-stream data is the 
 presents lines in Rafter's observation order.
 If capture completes within its bounds and decodes successfully but the exit code is invalid, the Rafter-owned exit
 failure exposes that complete `ProcessCapture`. Startup, cancellation, timeout, capture-limit, and decoding failures
-do not expose partial public capture, and streaming `Run()` never retains output merely to enrich an exception. The
-Phase 6 capture/redaction trust-boundary decision still governs whether exposed capture is raw or redacted.
+do not expose partial public capture, and streaming `Run()` never retains output merely to enrich an exception.
+Exposed capture is exact raw application-owned program data so structured formats are not corrupted. Rafter never
+presents it automatically; if the application sends it through `context.Output`, intercepted console output, or
+another Rafter-managed channel, registered sensitive values are redacted there. Direct use outside those channels is
+the application's responsibility.
 
 Public process failures use a compact hierarchy rooted at `RafterException` and `ProcessException`, with dedicated
 start, invalid-exit, timeout, and output exception types. Output failures distinguish capture-limit and strict-UTF-8

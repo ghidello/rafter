@@ -14,7 +14,8 @@ may improve syntax and validation; it may not own another launch, output, cancel
 
 ### Generic completion modes
 
-- [ ] Import and enforce the capture/redaction trust-boundary decision approved in phase 6.
+- [ ] Return exact raw application-owned data from `Capture()` without presenting it automatically, and redact that
+      data if the application sends it through any Rafter-managed output channel.
 - [ ] Implement `Run()` for live target-aware output, returning `ProcessExit`, an allocation-free value with the
       actual valid exit code and no retained stdout or stderr.
 - [ ] Implement `Capture()` returning immutable `ProcessCapture` with `ExitCode`, exact `StandardOutput`, and exact
@@ -31,8 +32,8 @@ may improve syntax and validation; it may not own another launch, output, cancel
 - [ ] Do not expose public partial capture for startup failure, cancellation, timeout, capture-limit overflow, or
       decoding failure; continue draining and processing internally where safe teardown requires it.
 - [ ] Do not make streaming `Run()` retain stdout or stderr solely to enrich a failure.
-- [ ] Apply the phase-6 trust-boundary decision to the complete capture attached to an invalid-exit failure without
-      changing this availability rule.
+- [ ] Keep the complete capture attached to an invalid-exit failure raw and application-owned, while ensuring normal
+      exception rendering exposes only safe metadata and no captured text.
 - [ ] Keep valid-exit-code evaluation identical between run and capture modes.
 
 ### Public extensibility
@@ -83,8 +84,9 @@ may improve syntax and validation; it may not own another launch, output, cancel
 
 ## Required verification
 
-- [ ] Run/Capture parity tests cover exit classification, redaction, environment, working directory, timeout, and
-      cancellation.
+- [ ] Run/Capture shared-policy tests cover exit classification, environment, working directory, timeout, and
+      cancellation. Separate trust-boundary tests prove streaming output is redacted, capture remains raw, and raw
+      capture is redacted if it re-enters a Rafter-managed output channel.
 - [ ] Test capture at boundary sizes and with independently overflowing stdout and stderr.
 - [ ] Test that the extensibility example consumes the ordinary public capture result and requires no privileged API.
 - [ ] Snapshot every typed example's executable and exact argument vector.
@@ -94,7 +96,8 @@ may improve syntax and validation; it may not own another launch, output, cancel
 
 ## Completion gates
 
-- [ ] **T1 — Mode parity:** Run and Capture share exit, cancellation, redaction, and working-directory semantics.
+- [ ] **T1 — Mode contract:** Run and Capture share exit, cancellation, timeout, environment, and working-directory
+      semantics while enforcing their distinct streaming-redaction and raw-capture responsibilities.
 - [ ] **T2 — Capture bound:** both streams obey limits with documented partial-result behavior.
 - [ ] **T3 — Public extensibility:** the application-owned `CaptureJson` example compiles and runs using only supported
       public process APIs.

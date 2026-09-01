@@ -96,8 +96,8 @@ Rafter's public API.
       bytes; expose no public encoding override in v1.
 - [ ] Preserve stdout/stderr identity and unterminated final content.
 - [ ] Route complete and partial lines through target-aware output without merging concurrent streams accidentally.
-- [ ] Apply the capture/redaction trust-boundary decision recorded in phase 6 while always redacting presentation and
-      diagnostic output.
+- [ ] Preserve bounded capture as exact raw application-owned data, while always redacting streaming presentation,
+      diagnostics, exception rendering, and any capture text sent back through Rafter-managed output.
 - [ ] Count captured bytes before decoding and enforce the configured limit separately for each stream.
 - [ ] On first limit exceedance, record the policy failure and stop retaining additional content for that stream.
 - [ ] Continue reading and discarding both streams until normal termination or bounded shutdown.

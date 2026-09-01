@@ -265,8 +265,15 @@ Implement semantic output and its Spectre.Console presentation.
   the replacement, and restore both exact entry writers in `finally`.
 - Report only the affected stream. Do not inspect replacement content, and document that an undetectable temporary
   replace-and-restore lies outside the supported attribution/redaction boundary.
-- Redact registered sensitive values from semantic output, managed console output, child-process output, diagnostics,
-  exception presentation, and command rendering.
+- Redact registered sensitive values from semantic output, managed console output, streamed child-process output,
+  captured data sent back through Rafter-managed output, diagnostics, exception presentation, and command rendering.
+- Return exact raw program data from `Capture()` and through the complete capture attached to an invalid-exit
+  exception. Treat it as application-owned, never present it automatically, and redact it whenever the application
+  sends it back through a Rafter-managed output channel. Direct application use outside those channels remains the
+  caller's responsibility.
+- Do not retain a second redacted capture solely for presentation. Keep raw retention bounded by the process capture
+  policy, release execution-only buffers when the terminal operation settles, and let the application own the
+  lifetime of returned capture strings.
 - Keep the synthetic redaction example as a contract fixture; never use real credentials in tests.
 
 Completion requires deterministic presentation snapshots plus concurrent console and cross-channel redaction tests.

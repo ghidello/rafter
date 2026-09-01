@@ -67,6 +67,16 @@ README.md
 Sotsera.Rafter.nuspec
 ```
 
+It also asserted the symbol-package layout:
+
+```text
+_rels/.rels
+[Content_Types].xml
+lib/net10.0/Sotsera.Rafter.pdb
+package/services/metadata/core-properties/nuget.psmdcp
+Sotsera.Rafter.nuspec
+```
+
 The analyzer project is deliberately not packed in Phase 1, so no analyzer or Roslyn assets appear in the runtime
 package. Analyzer packaging is owned by phase 9.
 

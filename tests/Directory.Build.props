@@ -6,7 +6,7 @@
     <IsTestProject>true</IsTestProject>
     <IsPackable>false</IsPackable>
     <IsPublishable>false</IsPublishable>
-    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --results-directory $(ArtifactsPath)/test-results</TestingPlatformCommandLineArguments>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --results-directory &quot;$(ArtifactsPath)/test-results&quot;</TestingPlatformCommandLineArguments>
   </PropertyGroup>
 
   <ItemGroup>

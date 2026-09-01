@@ -17,7 +17,8 @@ var install = command.Target("install")
         .WorkingDirectory(directory)
         .Environment(environment => environment.Set("CI", "true"))
         .Timeout(TimeSpan.FromMinutes(5))
-        .Run());
+        .Run()
+    );
 
 var verify = command.Target("verify")
     .Description("Run typed processes that inherit the target directory.")

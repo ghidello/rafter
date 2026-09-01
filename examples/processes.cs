@@ -38,6 +38,7 @@ var run = command.Target("run")
             .Option("--stdout", message)
             .Option("--exit-code", 2)
             .ValidExitCodes(0, 2)
+            // The limit applies independently to stdout and stderr.
             .CaptureLimitBytes(2 * 1024 * 1024)
             .Capture();
 

@@ -5,17 +5,20 @@
 Provide a semantic output pipeline with Spectre.Console presentation, concurrent target attribution, and one
 redaction boundary covering every supported output and failure channel.
 
-## Questions to resolve before implementation
+## Questions resolved before implementation
 
-- [ ] Is a value returned by `Capture()` application-owned program data or an output channel governed by automatic
-      redaction?
-- [ ] If capture remains raw, where is the exact trust boundary that guarantees it is redacted before presentation,
-      diagnostics, exception excerpts, command rendering, or persistent artifacts?
-- [ ] If capture is redacted before return, how do exact output consumers and secrets embedded in application-owned
-      structured payloads avoid corruption?
-- [ ] Do we need separate raw internal buffers and redacted presentation buffers, and how are their lifetimes and
-      memory exposure constrained?
-- [ ] Record the capture/redaction trust model before implementing redaction or the process-capture integration.
+- [x] **Is captured output application-owned or automatically redacted?** `ProcessCapture` contains exact raw program
+      data so structured formats and other exact consumers are not corrupted. The same rule applies to the complete
+      capture attached to an invalid-exit exception.
+- [x] **Where is the trust boundary?** Rafter never presents raw capture automatically. Text is redacted whenever it
+      crosses back into a Rafter-managed semantic output, intercepted console, diagnostic, exception presentation,
+      command rendering, or persistent-output channel. Direct application use outside those channels is caller-owned.
+- [x] **Are separate raw and redacted capture buffers required?** No persistent redacted duplicate is retained solely
+      for presentation. Capture retains only the bounded raw data needed for the public result; managed sinks redact
+      when data crosses their boundary, while streaming output is redacted before presentation.
+- [x] **Who owns lifetime after return?** Rafter releases execution-only buffers when the terminal operation settles.
+      The application controls the lifetime and disclosure of raw strings reachable through `ProcessCapture`.
+- [x] Record this capture/redaction trust model before implementing redaction or process capture.
 
 ## Output model
 
@@ -99,11 +102,12 @@ objects directly through the initial API.
 
 - [ ] Maintain an invocation-scoped immutable/redaction-safe registry populated during binding.
 - [ ] Define handling for duplicate, empty, overlapping, substring, Unicode, and multiline sensitive values.
-- [ ] Apply the recorded capture trust model; in every case, redact before text reaches semantic sinks, original
+- [ ] Apply the recorded raw-capture trust model; in every case, redact before text reaches semantic sinks, original
       console writers, terminal renderers, diagnostics, exception rendering, command previews, or persistent
       artifacts.
 - [ ] Redact across chunk boundaries and partial-line buffering.
-- [ ] Never retain an unredacted duplicate solely for later presentation.
+- [ ] Never retain an unredacted duplicate solely for later presentation; bounded raw capture exists only for the
+      application-owned result.
 - [ ] Use a stable replacement marker that cannot be mistaken for the original value.
 - [ ] Ensure redaction failures fail closed rather than emitting raw text.
 
@@ -149,12 +153,13 @@ objects directly through the initial API.
 - [ ] **O1 — Semantic contract:** event and renderer snapshots are approved and deterministic.
 - [ ] **O2 — Concurrent integrity:** stress tests show no mixed target lines or corrupted terminal sequences.
 - [ ] **O3 — Async attribution:** all patterns in `console.cs` retain the correct target identity.
-- [ ] **O4 — Cross-channel redaction:** the disposable secret is absent from all captured bytes and failure artifacts.
+- [ ] **O4 — Cross-channel redaction:** except for the deliberately raw application-owned `ProcessCapture`, the
+      disposable secret is absent from all captured renderer/diagnostic bytes and failure artifacts.
 - [ ] **O5 — Chunk safety:** boundary and partial-write tests cannot bypass redaction.
 - [ ] **O6 — Console restoration:** process-wide writers are identical before and after every tested terminal path.
 - [ ] **O7 — Evidence recorded:** output routing table, snapshots, and redaction coverage matrix are committed.
-- [ ] **O8 — Capture trust boundary:** the approved raw-versus-redacted capture decision is implemented and its data
-      flow is covered by tests used again in phases 7 and 8.
+- [ ] **O8 — Capture trust boundary:** raw application-owned capture and redaction on re-entry into managed channels
+      are implemented, and the complete data flow is covered by tests used again in phases 7 and 8.
 
 ## Non-goals
 

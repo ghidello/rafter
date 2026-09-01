@@ -37,6 +37,16 @@ jobs:
           --diagnostic-output-directory artifacts/test-results/${{ matrix.os }}/diagnostics
           --diagnostic --diagnostic-verbosity Information --report-xunit-trx
 
+      - name: Run execution fixture
+        run: >-
+          dotnet run --project test-assets/Sotsera.Rafter.RunFixture/Sotsera.Rafter.RunFixture.csproj
+          --configuration Release --no-build
+
+      - name: Run process fixture
+        run: >-
+          dotnet run --project test-assets/Sotsera.Rafter.ProcessFixture/Sotsera.Rafter.ProcessFixture.csproj
+          --configuration Release --no-build
+
       - name: Upload diagnostics on failure
         if: failure()
         uses: actions/upload-artifact@v7

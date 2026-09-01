@@ -20,7 +20,8 @@ var restore = command.Target("restore")
         .Restore(solution)
         .LockedMode()
         .NoCache()
-        .Run());
+        .Run()
+    );
 
 var build = command.Target("build")
     .Description("Build with warnings as errors.")
@@ -30,7 +31,8 @@ var build = command.Target("build")
         .Configuration(configuration)
         .NoRestore()
         .WarningsAsErrors()
-        .Run());
+        .Run()
+    );
 
 var test = command.Target("test")
     .Description("Run tests without rebuilding.")
@@ -40,6 +42,7 @@ var test = command.Target("test")
         .Configuration(configuration)
         .NoBuild()
         .Logger("console;verbosity=minimal")
-        .Run());
+        .Run()
+    );
 
 return await command.RunAsync(test, args);
