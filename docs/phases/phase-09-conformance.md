@@ -5,20 +5,14 @@
 Lock the initial product experience through high-signal analyzers, public API compatibility checks, package-consumer
 tests, and executable validation of the complete syntax portfolio.
 
-## Questions to resolve before implementation
-
-- [ ] Is `RAFTER005` an accepted diagnostic contract because `no-op.cs` suppresses it explicitly, or should that
-      suppression be removed until analyzer admission is decided?
-- [ ] If retained, what precise syntax and semantic state triggers RAFTER005, and how does an author intentionally
-      declare a no-op without a pragma where appropriate?
-- [ ] What severity, message, help, false-positive boundary, and code-fix behavior belong to the rule?
-- [ ] Record whether RAFTER005 is required or removed from the portfolio before evaluating optional analyzer rules.
-
 ## Analyzer admission rule
 
 An analyzer is added only when it can identify a misuse statically with a clear location and remedy, and when runtime
 validation would be materially later or less actionable. A possible rule is not a requirement until its diagnostic
 contract is approved in this phase.
+
+Duplicate target or command `.Finally(...)` registration is not an analyzer candidate: phase 2 detects it completely
+at model freeze before invocation behavior, while static detection would be partial.
 
 ## Implementation checklist
 
@@ -32,7 +26,6 @@ contract is approved in this phase.
 
 ### Candidate-rule evaluation
 
-- [ ] Resolve RAFTER005 first as a portfolio contract rather than treating it as an optional candidate.
 - [ ] Inventory misuse cases discovered in phases 2–8 and compare analyzer versus runtime diagnostics.
 - [ ] Approve only rules with low false-positive risk and a concrete portfolio-aligned correction.
 - [ ] Consider, without presuming adoption, cross-command handles, invalid literal names, ignored returned builders,
@@ -52,8 +45,8 @@ contract is approved in this phase.
 ### Portfolio harness
 
 - [ ] Treat every checked-in example as immutable source input.
-- [ ] Generate validation copies in artifacts, changing only the package directive/reference mechanism.
-- [ ] Compile every example against the packed product, not merely project outputs.
+- [ ] Compile every checked-in example directly in the default project mode.
+- [ ] Pack the centrally recorded example version and compile every unchanged example in package mode.
 - [ ] Assign each example its required execution fixtures, arguments, environment, and expected result.
 - [ ] Execute deterministic examples on supported platforms; explicitly classify documentation-only or
       external-tool-dependent examples.
@@ -84,7 +77,7 @@ contract is approved in this phase.
 
 - [ ] Analyzer tests pass under supported compiler hosts with no unexpected diagnostics on the portfolio.
 - [ ] Every adopted diagnostic has at least one negative test preventing its main false-positive risk.
-- [ ] Every example compiles from its checked-in text through the generated-copy mechanism.
+- [ ] Every example compiles from its checked-in text in both project and package dependency modes.
 - [ ] Deterministic examples execute with approved outputs and side effects on the platform matrix.
 - [ ] Package-consumer tests prove no accidental source-project or repository dependency.
 - [ ] Public API and package-content comparisons are clean.
@@ -94,7 +87,7 @@ contract is approved in this phase.
 
 - [ ] **C1 — Analyzer quality:** every shipped diagnostic has approved rationale, negative coverage, documentation,
       and acceptable performance.
-- [ ] **C2 — Portfolio compilation:** every example compiles unchanged except for generated dependency substitution.
+- [ ] **C2 — Portfolio compilation:** every example compiles unchanged in both project and package dependency modes.
 - [ ] **C3 — Portfolio behavior:** every deterministic example passes its declared execution contract.
 - [ ] **C4 — Public API lock:** runtime/analyzer baselines contain no unreviewed or speculative surface.
 - [ ] **C5 — Real package use:** an external temporary consumer restores and runs only the packed artifacts.
@@ -103,8 +96,6 @@ contract is approved in this phase.
 - [ ] **C8 — Documentation truth:** support and limitation statements match tested evidence from all phases.
 - [ ] **C9 — Evidence recorded:** analyzer decisions, portfolio manifest, API diff, package report, platform results, and
       release checklist are committed.
-- [ ] **C10 — RAFTER005 resolved:** the diagnostic and its tests ship as approved, or the portfolio suppression is
-      removed through an explicit syntax decision.
 
 ## Non-goals
 

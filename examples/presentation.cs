@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 
@@ -16,6 +16,11 @@ var present = command.Target("present")
         context.Output.Line("Starting presentation fixture.");
         Console.WriteLine("Managed console output from the presentation fixture.");
         context.Output.Property("fixture", "presentation");
+        context.Output.Property("missing", null);
+        context.Output.Property("empty", string.Empty);
+        context.Output.Property("notes", "First line.\nSecond line.");
+        context.Output.Property("include", new[] { "src", "tests" });
+        context.Output.Property("retries", 3);
         await Task.Delay(25, context.CancellationToken);
 
         if (context.Value(fail))

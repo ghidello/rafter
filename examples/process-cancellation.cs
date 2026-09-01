@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 
@@ -14,14 +14,16 @@ var graceful = command.Target("graceful")
     .Run(context => context.Process(fixture)
         .Argument("wait")
         .Flag("--acknowledge-cancel")
-        .Run());
+        .Run()
+    );
 
 var forced = command.Target("forced")
     .Description("Run a process tree that requires forced termination.")
     .Run(context => context.Process(fixture)
         .Argument("spawn-child")
         .Flag("--ignore-cancel")
-        .Run());
+        .Run()
+    );
 
 var all = command.Target("all")
     .Description("Run both cancellation behaviors.")

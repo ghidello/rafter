@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Sotsera.Rafter</AssemblyName>
+    <RootNamespace>Sotsera.Rafter</RootNamespace>
+    <PackageId>Sotsera.Rafter</PackageId>
+    <Description>A strongly typed, file-based build scripting library for .NET.</Description>
+    <PackageTags>build;automation;scripting;dotnet</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="all" />
+    <PackageReference Include="Spectre.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../README.md" Pack="true" PackagePath="/" Link="README.md" />
+  </ItemGroup>
+</Project>

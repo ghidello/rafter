@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 

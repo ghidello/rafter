@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 
@@ -20,7 +20,8 @@ var publish = command.Option<bool>("publish")
 var token = command.Option<string>("token")
     .Description("Optional service token.")
     .FromEnvironment("RAFTER_EXAMPLE_TOKEN")
-    .Sensitive();
+    .Sensitive()
+    .Validate(value => !string.IsNullOrWhiteSpace(value), "The token cannot be empty.");
 
 var inspect = command.Target("inspect")
     .Description("Print the resolved non-sensitive options.")
@@ -29,7 +30,7 @@ var inspect = command.Target("inspect")
         context.Output.Property("project", context.Value(project));
         context.Output.Property("configuration", context.Value(configuration));
         context.Output.Property("publish", context.Value(publish));
-        context.Output.Property("hasToken", context.Value(token) is not null);
+        context.Output.Property("hasToken", !string.IsNullOrEmpty(context.Value(token)));
     });
 
 return await command.RunAsync(inspect, args);

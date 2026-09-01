@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 #:package Microsoft.Extensions.Configuration.UserSecrets@10.0.0
 
 using Microsoft.Extensions.Configuration;

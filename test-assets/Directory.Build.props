@@ -1,0 +1,9 @@
+<Project>
+  <Import Project="../Directory.Build.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+  </PropertyGroup>
+</Project>

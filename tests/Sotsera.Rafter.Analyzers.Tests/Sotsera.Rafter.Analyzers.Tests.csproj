@@ -1,0 +1,5 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../../src/Sotsera.Rafter.Analyzers/Sotsera.Rafter.Analyzers.csproj" />
+  </ItemGroup>
+</Project>

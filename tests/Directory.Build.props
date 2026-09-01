@@ -1,0 +1,19 @@
+<Project>
+  <Import Project="../Directory.Build.props" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <IsTestProject>true</IsTestProject>
+    <IsPackable>false</IsPackable>
+    <IsPublishable>false</IsPublishable>
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --results-directory &quot;$(ArtifactsPath)/test-results&quot;</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="AwesomeAssertions.Analyzers" PrivateAssets="all" />
+    <PackageReference Include="xunit.v3" />
+    <Using Include="AwesomeAssertions" />
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>

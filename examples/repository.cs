@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 
@@ -25,7 +25,8 @@ var restore = command.Target("restore")
     .Run(context => context.DotNet
         .Restore("Rafter.slnx")
         .LockedMode()
-        .Run());
+        .Run()
+    );
 
 var build = command.Target("build")
     .Description("Build the repository with warnings as errors.")
@@ -35,7 +36,8 @@ var build = command.Target("build")
         .Configuration(configuration)
         .NoRestore()
         .WarningsAsErrors()
-        .Run());
+        .Run()
+    );
 
 var test = command.Target("test")
     .Description("Run repository tests.")
@@ -45,7 +47,8 @@ var test = command.Target("test")
         .Configuration(configuration)
         .NoBuild()
         .ResultsDirectory("artifacts/test-results")
-        .Run());
+        .Run()
+    );
 
 var pack = command.Target("pack")
     .Description("Create repository packages.")
@@ -55,7 +58,8 @@ var pack = command.Target("pack")
         .Configuration(configuration)
         .NoBuild()
         .Output("artifacts/packages")
-        .Run());
+        .Run()
+    );
 
 var verify = command.Target("verify")
     .Description("Run every repository verification step.")

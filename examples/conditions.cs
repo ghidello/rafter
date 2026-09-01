@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 
@@ -35,8 +35,15 @@ var asynchronous = command.Target("asynchronous")
     })
     .Run(context => context.Output.Line("Asynchronous condition passed."));
 
+var composed = command.Target("composed")
+    .Description("Short-circuit several conditions in authored order.")
+    .When(available)
+    .When(() => available)
+    .When(context => context.Value(enabled))
+    .Run(context => context.Output.Line("Every composed condition passed."));
+
 var all = command.Target("all")
     .Description("Evaluate every supported condition form.")
-    .DependsOn(authored, deferred, contextual, asynchronous);
+    .DependsOn(authored, deferred, contextual, asynchronous, composed);
 
 return await command.RunAsync(all, args);

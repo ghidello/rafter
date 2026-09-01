@@ -1,0 +1,7 @@
+<Project>
+  <Import Project="../Directory.Packages.props" />
+
+  <ItemGroup>
+    <PackageVersion Include="Sotsera.Rafter" Version="0.1.0-dev.1" />
+  </ItemGroup>
+</Project>
