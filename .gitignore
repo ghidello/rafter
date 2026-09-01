@@ -1,9 +1,11 @@
-artifacts/
-bin/
-obj/
-.vs/
-.idea/
 *.user
 *.suo
 *.nupkg
 *.snupkg
+
+.vs/
+.idea/
+
+artifacts/
+bin/
+obj/
