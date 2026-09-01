@@ -23,7 +23,7 @@ pwsh ./eng/validate-examples.ps1
 git diff --exit-code -- examples
 ```
 
-Generated build, test, package, and validation output belongs under `artifacts/` and must not be committed.
+Generated build, test, and package output belongs under `artifacts/` and must not be committed.
 `tests/Directory.Build.props` supplies the shared Microsoft.Testing.Platform results directory, so individual test
 commands do not need to repeat `--results-directory` and must not create a root `TestResults/` directory.
 
@@ -51,7 +51,10 @@ solution therefore remains independently restorable while the package check pres
 
 ## Example validation
 
-`eng/validate-examples.ps1` copies every canonical example to `artifacts/example-validation/sources`, changes only its
-`#:package Sotsera.Rafter@...` directive, and records the original SHA-256 hash in a manifest. Phase 1 does not compile
-examples whose APIs belong to later phases. Each owning phase promotes its implemented examples into required compile
-and runtime checks. The final Git command above independently proves that the canonical sources were not edited.
+Every canonical example references the runtime project directly. `eng/validate-examples.ps1` verifies that invariant
+without copying or compiling the portfolio. The example-scoped MSBuild files default to project mode and can switch an
+unchanged example to the centrally versioned package by passing `-p:RafterDependency=Package`.
+
+Phase 1 does not compile examples whose APIs belong to later phases. Each owning phase promotes its implemented
+examples into required compile and runtime checks, and phase 9 runs the complete portfolio in project and package
+modes. `examples/Directory.Packages.props` holds the one development package version used by package mode.

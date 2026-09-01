@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <IsPackable>false</IsPackable>
+    <PackAsTool>false</PackAsTool>
+  </PropertyGroup>
+
+  <Import Project="../Directory.Build.props" />
+
+  <PropertyGroup>
+    <RafterDependency Condition="'$(RafterDependency)' == ''">Project</RafterDependency>
+    <RafterPackageSource Condition="'$(RafterPackageSource)' == ''">$(PackageOutputPath)</RafterPackageSource>
+    <RestoreAdditionalProjectSources
+      Condition="'$(RafterDependency)' == 'Package'">$(RafterPackageSource);$(RestoreAdditionalProjectSources)</RestoreAdditionalProjectSources>
+  </PropertyGroup>
+</Project>

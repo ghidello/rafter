@@ -12,7 +12,7 @@ phase explicitly leaves an integration seam for a later one.
 | 5 | [Graph execution](phase-05-graph-execution.md) | Deterministic concurrent target lifecycle |
 | 6 | [Output and redaction](phase-06-output-and-redaction.md) | Safe target-aware presentation |
 | 7 | [Process runtime](phase-07-process-runtime.md) | Deadlock-safe .NET 10 child-process execution |
-| 8 | [Capture and typed tools](phase-08-capture-and-tools.md) | JSON capture and tool-specific builders |
+| 8 | [Capture and typed tools](phase-08-capture-and-tools.md) | Process extensibility and tool-specific builders |
 | 9 | [Conformance](phase-09-conformance.md) | Analyzers, package consumption, and portfolio lock |
 
 A phase is complete only when every completion gate in its document is checked and its evidence is committed with

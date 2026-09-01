@@ -1,10 +1,14 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 
 var command = Rafter.Command(Root.Invocation)
     .Description("Attribute managed console writes to their targets.")
     .Concurrency(2);
+
+var immediate = command.Target("immediate")
+    .Description("Write from a synchronous context-free callback.")
+    .Run(() => Console.WriteLine("immediate: stdout"));
 
 var first = command.Target("first")
     .Description("Write across an ordinary await.")
@@ -25,7 +29,7 @@ var second = command.Target("second")
     });
 
 var all = command.Target("all")
-    .Description("Run both console-writing targets.")
-    .DependsOn(first, second);
+    .Description("Run every console-writing target.")
+    .DependsOn(immediate, first, second);
 
 return await command.RunAsync(all, args);

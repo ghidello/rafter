@@ -1,10 +1,9 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
-using System.Text.Json.Serialization;
 using Sotsera.Rafter;
 
 var command = Rafter.Command(Root.Invocation)
-    .Description("Demonstrate generic process execution and capture.");
+    .Description("Demonstrate reusable generic process specifications, execution, and capture.");
 
 var fixture = command.RequiredOption<string>("fixture")
     .Description("Path to the deterministic process fixture.");
@@ -17,35 +16,33 @@ var workingDirectory = command.Option<string>("working-directory")
     .Description("Working directory used by the fixture process.")
     .Default(".");
 
+var timeout = command.Option<TimeSpan>("timeout")
+    .Description("Maximum process execution time.")
+    .Default(TimeSpan.FromSeconds(30));
+
 var run = command.Target("run")
     .Description("Stream and capture fixture output.")
     .Run(async context =>
     {
-        await context.Process(fixture)
+        var process = context.Process(fixture)
             .Argument("emit")
+            .WorkingDirectory(workingDirectory)
+            .Timeout(timeout);
+
+        var streamed = await process
             .Option("--stdout", message)
             .Option("--stderr", "streamed diagnostic")
-            .WorkingDirectory(workingDirectory)
             .Run();
 
-        var capture = await context.Process(fixture)
-            .Argument("emit")
+        var capture = await process
             .Option("--stdout", message)
-            .AcceptExitCode(0)
-            .CaptureLimit(1024 * 1024)
+            .Option("--exit-code", 2)
+            .ValidExitCodes(0, 2)
+            .CaptureLimitBytes(2 * 1024 * 1024)
             .Capture();
 
-        var payload = await context.Process(fixture)
-            .Argument("json")
-            .CaptureJson(ProcessJsonContext.Default.FixturePayload);
-
+        context.Output.Property("streamedExitCode", streamed.ExitCode);
         context.Output.Property("captured", capture.StandardOutput.Trim());
-        context.Output.Property("payload", payload.Value);
     });
 
 return await command.RunAsync(run, args);
-
-sealed record FixturePayload(string Value);
-
-[JsonSerializable(typeof(FixturePayload))]
-sealed partial class ProcessJsonContext : JsonSerializerContext;

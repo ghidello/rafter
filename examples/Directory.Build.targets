@@ -1,0 +1,12 @@
+<Project>
+  <Target Name="ValidateRafterDependency" BeforeTargets="Restore;PrepareForBuild">
+    <Error
+      Condition="'$(RafterDependency)' != 'Project' and '$(RafterDependency)' != 'Package'"
+      Text="RafterDependency must be either 'Project' or 'Package', but was '$(RafterDependency)'." />
+  </Target>
+
+  <ItemGroup Condition="'$(FileBasedProgram)' == 'true' and '$(RafterDependency)' == 'Package'">
+    <ProjectReference Remove="../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+    <PackageReference Include="Sotsera.Rafter" />
+  </ItemGroup>
+</Project>

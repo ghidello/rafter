@@ -28,6 +28,8 @@ dotnet run --project test-assets/Sotsera.Rafter.RunFixture/Sotsera.Rafter.RunFix
 dotnet run --project test-assets/Sotsera.Rafter.ProcessFixture/Sotsera.Rafter.ProcessFixture.csproj --configuration Release --no-build
 pwsh -NoProfile -File ./eng/verify-package.ps1 -Configuration Release
 pwsh -NoProfile -File ./eng/validate-examples.ps1
+dotnet restore examples/minimal.cs --configfile nuget.config -p:Configuration=Release
+dotnet restore examples/minimal.cs --configfile nuget.config -p:Configuration=Release -p:RafterDependency=Package
 git diff --exit-code -- examples
 git diff --check
 ```
@@ -39,7 +41,9 @@ Observed results:
 - Tests: 3 passed, 0 failed, 0 skipped across unit, integration, and analyzer assemblies.
 - Fixtures printed `rafter-run-fixture` and `rafter-process-fixture` respectively.
 - Package verification restored and ran both an external conventional project and an external file-based app.
-- Example validation generated 28 copies and left `examples/` unchanged.
+- Example validation verified project-mode references for all 29 canonical sources without generating copies.
+- The unchanged minimal example restored through the runtime project by default and through
+  `Sotsera.Rafter.0.1.0-dev.1.nupkg` in package mode.
 - Formatting and whitespace verification passed.
 
 ## Package determinism and contents

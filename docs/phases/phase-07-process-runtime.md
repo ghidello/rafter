@@ -35,14 +35,45 @@ Rafter's public API.
 ### Public and internal model
 
 - [ ] Implement the generic process fluent surface demonstrated by `processes.cs`, `environment.cs`,
-      `working-directory.cs`, `redaction.cs`, and `long-running-processes.cs`.
-- [ ] Normalize executable, argument tokens, accepted exits, environment edits, working directory, stream mode,
-      capture limit, and cancellation policy into an immutable specification.
+      `working-directory.cs`, `redaction.cs`, and `process-cancellation.cs`.
+- [ ] Normalize executable, argument tokens, valid exits, environment edits, working directory, stream mode,
+      capture limit, public timeout, and cancellation policy into an immutable specification.
+- [ ] Make every fluent modifier return a new `ProcessBuilder` without mutating its source; keep generic process
+      builders reusable rather than consuming them at a terminal operation.
+- [ ] Make every `Run()` and `Capture()` invocation launch an independent process with no cached completion or
+      output, and support concurrent terminal calls on the same builder safely.
+- [ ] Compile and execute the base-builder reuse and defaulted `Option<TimeSpan>` timeout syntax in `processes.cs`.
+- [ ] Tie execution authority to the creating invocation and reject a terminal call made after that invocation has
+      settled with a clear Rafter-owned failure.
+- [ ] Allow one working directory, timeout, capture limit, valid-exit declaration, and environment block per process
+      specification; preserve first values and accumulate duplicate-setting diagnostics.
+- [ ] Validate all accumulated specification diagnostics at terminal `Run()` or `Capture()` and launch nothing on
+      failure; keep argument, flag, and option token appenders repeatable.
+- [ ] Default valid exit codes to `{ 0 }`; make `.ValidExitCodes(params int[] codes)` replace the complete set, require
+      at least one code, and normalize duplicates.
+- [ ] Implement `.Timeout(TimeSpan)` on the generic builder and reject non-positive or otherwise unsupported values
+      before attempting launch.
+- [ ] Apply no execution timeout by default; distinguish authored execution timeouts from bounded internal drain,
+      graceful-termination, forced-kill, and retained-handle deadlines.
 - [ ] Resolve option handles from the invocation snapshot exactly once; never retain unresolved handles in the
       runtime specification.
-- [ ] Validate empty executable names, invalid environment keys, capture limits, and working directories before
-      attempting launch.
-- [ ] Define Rafter-owned result, exit, cancellation, timeout, startup, output-limit, and infrastructure failures.
+- [ ] Validate environment edit keys before launch with the fallback-name rules: reject empty or whitespace-only
+      text, NUL, and `=`, preserve authored spelling, and rely on the host operating system's case semantics.
+- [ ] Validate empty executable names, capture limits, and working directories before attempting launch.
+- [ ] Implement `.CaptureLimitBytes(long)` as a positive per-stream retained-byte limit measured before decoding.
+- [ ] Default capture retention to 1 MiB independently for stdout and stderr; do not apply that retention policy to
+      streaming `Run()`.
+- [ ] Implement public `RafterException` and `ProcessException`, with dedicated `ProcessStartException`,
+      `ProcessExitException`, `ProcessTimeoutException`, and `ProcessOutputException` derived types; allow the process
+      base to represent otherwise unclassified infrastructure failures without adding a type per internal stage.
+- [ ] Give `ProcessOutputException` a stable reason enum covering capture-limit overflow and strict-UTF-8 decoding,
+      together with safe stream/limit metadata where applicable.
+- [ ] Preserve original platform failures as `InnerException`, avoid raw captured text in exception messages, and
+      represent cancellation with standard `OperationCanceledException` carrying the relevant token.
+- [ ] Expose the invalid exit code from `ProcessExitException` and, in capture mode only, the complete capture
+      permitted by the phase-8 availability and phase-6 trust-boundary contracts.
+- [ ] Keep failure output ownership mode-specific: streaming execution retains no output for exceptions, while
+      capture may attach only a complete, bounded, successfully decoded result after an invalid exit.
 - [ ] Preserve safe executable/argument diagnostics while redacting sensitive values.
 
 ### Launch and ownership
@@ -51,6 +82,8 @@ Rafter's public API.
 - [ ] Apply the normalized absolute working directory and environment changes without mutating parent state.
 - [ ] Configure redirection consistently for stream and capture modes before start.
 - [ ] Record ownership of the `Process`, readers/streams, cancellation registrations, timers, and drain tasks.
+- [ ] Keep execution-owned state local to one terminal call so two launches from the same immutable builder cannot
+      share process handles, buffers, timers, registrations, or completion state.
 - [ ] Handle `Process.Start()` returning false or throwing without starting drains or leaking registrations.
 - [ ] Obtain the process ID only after successful start and tolerate rapid natural exit.
 
@@ -58,14 +91,19 @@ Rafter's public API.
 
 - [ ] Start independent stdout and stderr drains immediately after successful launch.
 - [ ] Ensure both drain operations are created before any exit wait is awaited.
-- [ ] Decode incrementally using the configured/default encoding without splitting multibyte characters incorrectly.
+- [ ] Decode incrementally as strict UTF-8 without splitting multibyte characters incorrectly.
+- [ ] Report invalid UTF-8 as a distinct decoding failure without emitting replacement characters or raw invalid
+      bytes; expose no public encoding override in v1.
 - [ ] Preserve stdout/stderr identity and unterminated final content.
 - [ ] Route complete and partial lines through target-aware output without merging concurrent streams accidentally.
 - [ ] Apply the capture/redaction trust-boundary decision recorded in phase 6 while always redacting presentation and
       diagnostic output.
-- [ ] Count captured data using one documented unit and enforce a separate limit per stream.
+- [ ] Count captured bytes before decoding and enforce the configured limit separately for each stream.
 - [ ] On first limit exceedance, record the policy failure and stop retaining additional content for that stream.
 - [ ] Continue reading and discarding both streams until normal termination or bounded shutdown.
+- [ ] After safe settlement, report a distinct capture-limit failure even when the process exits with a valid code;
+      never return normally with silently truncated output.
+- [ ] Identify the affected stream and configured byte limit without embedding raw partial output in diagnostics.
 - [ ] Do not build an unbounded line buffer; define bounded handling for a single line larger than the capture limit.
 
 ### Exit and retained handles
@@ -82,6 +120,8 @@ Rafter's public API.
 
 - [ ] Return cancellation without launch when the token is already cancelled.
 - [ ] Serialize or atomically coordinate start, natural exit, cancellation, timer, and kill decisions.
+- [ ] Treat expiration of the authored timeout as a distinct outcome while using the same bounded tree-termination,
+      drain-settlement, and resource-cleanup machinery as external cancellation.
 - [ ] Make exactly one path responsible for graceful termination and forced tree kill.
 - [ ] Define the graceful protocol per supported platform/fixture; skip it when unavailable rather than pretending
       `CloseMainWindow` is portable.
@@ -116,7 +156,7 @@ Rafter's public API.
 - [ ] Prove the historical sequential-read deadlock pattern completes under the Rafter runtime.
 - [ ] Test retained data below, exactly at, and above both stream limits.
 - [ ] Prove limit exceedance still drains enough for the fixture to reach and record natural exit.
-- [ ] Test zero, nonzero, accepted, and rapidly exiting processes.
+- [ ] Test zero, nonzero, explicitly valid nonzero, and rapidly exiting processes.
 - [ ] Test executable and argument values containing spaces, quotes, empty strings, and shell metacharacters.
 - [ ] Test environment add/replace/remove and target/process working-directory precedence.
 - [ ] Test every cancellation race and retained-descendant scenario under strict test deadlines.

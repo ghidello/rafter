@@ -39,9 +39,10 @@ examples. This phase creates structure and seams, not feature behavior.
 - [x] Produce `Sotsera.Rafter` with correct ID, version placeholder, license, repository, symbols, and Source Link.
 - [x] Ensure analyzer assets, if packaged, land under analyzer assets and are not runtime dependencies.
 - [x] Create a local-package consumer path that restores the produced package rather than a project reference.
-- [x] Create an example-validation mechanism that replaces only the package directive for development validation;
-      individual examples become required when their owning phase implements the referenced API.
-- [x] Prove the original example files remain untouched by generated validation work.
+- [x] Make canonical examples reference the runtime project by default and provide an opt-in package mode that changes
+      the evaluated reference without rewriting source; individual examples become required when their owning phase
+      implements the referenced API.
+- [x] Centralize the package-mode example version in `examples/Directory.Packages.props`.
 
 ### Automation and documentation
 
@@ -64,7 +65,8 @@ examples. This phase creates structure and seams, not feature behavior.
 - [x] **F1 — Reproducible root:** clean restore and build succeed using only documented prerequisites.
 - [ ] **F2 — Test topology:** every test and fixture project runs through the root solution on declared CI platforms.
 - [x] **F3 — Package integrity:** package-content assertions and a package-consumer restore pass.
-- [x] **F4 — Example preservation:** validation uses generated copies and `git diff --exit-code -- examples` remains clean.
+- [x] **F4 — Example preservation:** validation checks canonical project references without generated copies, and
+      `git diff --exit-code -- examples` remains clean after validation.
 - [x] **F5 — Configuration ownership:** root SDK/build/package files contain no experiment-specific settings.
 - [x] **F6 — Evidence recorded:** exact SDK, commands, platform matrix, and package-content report are captured in the
       phase completion record.

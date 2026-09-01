@@ -1,4 +1,4 @@
-#:package Sotsera.Rafter@0.1.0
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 
 using Sotsera.Rafter;
 
@@ -10,16 +10,17 @@ var directory = command.Option<string>("directory")
     .Default("web");
 
 var install = command.Target("install")
-    .Description("Install locked dependencies.")
-    .WorkingDirectory(directory)
+    .Description("Install locked dependencies with a typed-process directory override.")
     .Run(context => context.Pnpm
         .Install()
         .FrozenLockfile()
+        .WorkingDirectory(directory)
         .Environment(environment => environment.Set("CI", "true"))
+        .Timeout(TimeSpan.FromMinutes(5))
         .Run());
 
 var verify = command.Target("verify")
-    .Description("Run lint and test scripts.")
+    .Description("Run typed processes that inherit the target directory.")
     .DependsOn(install)
     .WorkingDirectory(directory)
     .Run(async context =>
