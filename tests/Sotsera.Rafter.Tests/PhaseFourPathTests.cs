@@ -219,13 +219,15 @@ public sealed class PhaseFourPathTests
     }
 
     [Fact]
-    public async Task LinkTraversalAndDestructiveProtectedTargetsFailWithoutMutation()
+    public async Task LinkTraversalAndDestructiveCleanupPreserveExternalTargets()
     {
         using TemporaryDirectory temporary = new();
         using TemporaryDirectory external = new();
         string sentinel = Path.Combine(external.Path, "sentinel.txt");
         File.WriteAllText(sentinel, "keep");
-        string link = Path.Combine(temporary.Path, "redirect");
+        string target = Path.Combine(temporary.Path, "target");
+        Directory.CreateDirectory(target);
+        string link = Path.Combine(target, "redirect");
         try
         {
             _ = Directory.CreateSymbolicLink(link, external.Path);
@@ -246,11 +248,13 @@ public sealed class PhaseFourPathTests
             entry.Authored.Id,
             PhysicalFileSystemPrimitives.Instance);
 
-        Action traverse = () => context.FileSystem.EnsureDirectory("redirect/new");
+        Action traverse = () => context.FileSystem.EnsureDirectory("target/redirect/new");
         Action emptyRoot = () => context.FileSystem.EnsureEmptyDirectory(".");
 
         traverse.Should().Throw<PathPolicyException>();
         emptyRoot.Should().Throw<PathPolicyException>();
+        context.FileSystem.EnsureEmptyDirectory("target");
+        Directory.EnumerateFileSystemEntries(target).Should().BeEmpty();
         File.ReadAllText(sentinel).Should().Be("keep");
     }
 

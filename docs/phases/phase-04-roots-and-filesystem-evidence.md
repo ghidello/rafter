@@ -69,12 +69,11 @@ non-mutating; a failure after deletion begins may leave a partial result and sto
 
 ## Capability report
 
-| Capability | Local Windows result |
-| --- | --- |
-| Physical ordinary directory/file traversal | Passed |
-| Deterministic injected file-to-link replacement | Passed; zero delete calls |
-| External-sentinel physical symlink test | Host denied symlink creation privilege; test records unavailable capability |
-| Unix physical symlink behavior | Assigned to Linux/macOS CI |
+| Capability | Local Windows result | CI matrix result |
+| --- | --- | --- |
+| Physical ordinary directory/file traversal | Passed | Passed on Windows, Ubuntu, and macOS |
+| Deterministic injected file-to-link replacement | Passed; zero delete calls | Passed on Windows, Ubuntu, and macOS |
+| External-sentinel physical symlink cleanup | Host denied symlink creation privilege; test records unavailable capability | Pending strict matrix rerun |
 
 ## Verification
 
@@ -96,9 +95,10 @@ pwsh -NoProfile -File ./eng/validate-examples.ps1
 git diff --check
 ```
 
-Cross-platform physical link coverage remains the branch integration gate after the user pushes the eventual commit.
-The physical-link test may record unavailable capability on local Windows hosts, but CI treats link-creation failure
-as a test failure on every matrix platform so a green matrix proves that the physical assertion ran.
+The [strict-capability CI run](https://github.com/ghidello/rafter/actions/runs/33683218156) completed successfully on
+Windows, Ubuntu, and macOS and proved that each runner could create physical links. The external-sentinel scenario was
+subsequently strengthened to empty an ordinary child containing the link, so P4 requires a fresh green matrix before
+the destructive-cleanup guarantee is recorded as complete.
 
 Observed locally on Windows x64 with .NET SDK `10.0.400`:
 
