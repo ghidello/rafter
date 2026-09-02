@@ -230,7 +230,7 @@ public sealed class PhaseFourPathTests
         {
             _ = Directory.CreateSymbolicLink(link, external.Path);
         }
-        catch (IOException) when (OperatingSystem.IsWindows())
+        catch (IOException) when (OperatingSystem.IsWindows() && !IsContinuousIntegration())
         {
             return;
         }
@@ -280,6 +280,12 @@ public sealed class PhaseFourPathTests
 
     private static Command NewCommand(Root root)
         => global::Sotsera.Rafter.Rafter.Command(root).Description("Test command.");
+
+    private static bool IsContinuousIntegration()
+        => string.Equals(
+            Environment.GetEnvironmentVariable("CI"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
 
     private static void ConfigureServices(
         Command command,

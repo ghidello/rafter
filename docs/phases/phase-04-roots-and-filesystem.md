@@ -284,7 +284,7 @@ The final ordering is confirmed at P0. The current work-package split makes phas
       directory; real concurrent target execution remains assigned to Phase 5.
 - [x] **P3 — Containment:** traversal, namespace, equality, volume, casing, and sibling-prefix tests cannot escape the
       approved command-root boundary.
-- [x] **P4 — Link safety:** real and injected link/reparse/replacement tests preserve every external sentinel under
+- [ ] **P4 — Link safety:** real and injected link/reparse/replacement tests preserve every external sentinel under
       the approved platform guarantees.
 - [x] **P5 — Rejection is non-mutating:** every preflight rejection produces an identical safe before/after tree
       snapshot.
@@ -294,7 +294,7 @@ The final ordering is confirmed at P0. The current work-package split makes phas
       enforced, and repeated access does not rebind option values.
 - [x] **P8 — Phase handoff:** Phase 5 and Phase 7 plans name their required real execution tests and consume the shared
       context/path contracts without duplicating policy.
-- [ ] **P9 — Evidence recorded:** the threat model, API, root, outcome, path-identity, platform-guarantee, capability,
+- [x] **P9 — Evidence recorded:** the threat model, API, root, outcome, path-identity, platform-guarantee, capability,
       and deferred-integration tables are committed.
 
 ## Non-goals

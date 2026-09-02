@@ -97,6 +97,8 @@ git diff --check
 ```
 
 Cross-platform physical link coverage remains the branch integration gate after the user pushes the eventual commit.
+The physical-link test may record unavailable capability on local Windows hosts, but CI treats link-creation failure
+as a test failure on every matrix platform so a green matrix proves that the physical assertion ran.
 
 Observed locally on Windows x64 with .NET SDK `10.0.400`:
 
