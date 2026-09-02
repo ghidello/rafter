@@ -1,4 +1,5 @@
 using System.Reflection;
+using static Sotsera.Rafter.PathRuntime;
 
 namespace Sotsera.Rafter;
 
@@ -10,6 +11,13 @@ internal sealed record InvocationServices(
     bool StandardErrorSupportsAnsi,
     string InvocationName)
 {
+    internal Func<string> ReadInvocationDirectory { get; init; } = Directory.GetCurrentDirectory;
+
+    internal Func<string?> ReadSourceFilePath { get; init; }
+        = static () => AppContext.GetData("EntryPointFilePath") as string;
+
+    internal IFileSystemPrimitives FileSystem { get; init; } = PhysicalFileSystemPrimitives.Instance;
+
     internal static InvocationServices Capture()
     {
         string? filePath = AppContext.GetData("EntryPointFilePath") as string;
@@ -24,7 +32,10 @@ internal sealed record InvocationServices(
             Console.Error,
             !Console.IsOutputRedirected,
             !Console.IsErrorRedirected,
-            invocationName);
+            invocationName)
+        {
+            ReadSourceFilePath = () => filePath,
+        };
     }
 
     internal static class InvocationNameResolver

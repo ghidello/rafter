@@ -56,10 +56,20 @@ Sotsera.Rafter.Target.WorkingDirectory(Sotsera.Rafter.DefaultedOption<string!>! 
 Sotsera.Rafter.Target.WorkingDirectory(Sotsera.Rafter.RequiredOption<string!>! option) -> Sotsera.Rafter.Target!
 Sotsera.Rafter.Target.WorkingDirectory(string! path) -> Sotsera.Rafter.Target!
 Sotsera.Rafter.RafterContext
+Sotsera.Rafter.RafterContext.FileSystem.get -> Sotsera.Rafter.RafterFileSystem!
+Sotsera.Rafter.RafterContext.Root.get -> string!
 Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.DefaultedOption<T>! option) -> T
 Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.Option<T>! option) -> T?
 Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.RepeatedOption<T>! option) -> System.Collections.Generic.IReadOnlyList<T>!
 Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.RequiredOption<T>! option) -> T
+Sotsera.Rafter.RafterContext.WorkingDirectory.get -> string!
+Sotsera.Rafter.RafterFileSystem
+Sotsera.Rafter.RafterFileSystem.EnsureDirectory(Sotsera.Rafter.DefaultedOption<string!>! option) -> void
+Sotsera.Rafter.RafterFileSystem.EnsureDirectory(Sotsera.Rafter.RequiredOption<string!>! option) -> void
+Sotsera.Rafter.RafterFileSystem.EnsureDirectory(string! path) -> void
+Sotsera.Rafter.RafterFileSystem.EnsureEmptyDirectory(Sotsera.Rafter.DefaultedOption<string!>! option) -> void
+Sotsera.Rafter.RafterFileSystem.EnsureEmptyDirectory(Sotsera.Rafter.RequiredOption<string!>! option) -> void
+Sotsera.Rafter.RafterFileSystem.EnsureEmptyDirectory(string! path) -> void
 static Sotsera.Rafter.Rafter.Command(Sotsera.Rafter.Root! root) -> Sotsera.Rafter.Command!
 static Sotsera.Rafter.Root.At(string! path) -> Sotsera.Rafter.Root!
 static Sotsera.Rafter.Root.Invocation.get -> Sotsera.Rafter.Root!

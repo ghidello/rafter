@@ -65,6 +65,12 @@ internal static class CommandPresentation
         ]);
     }
 
+    internal static Report CreatePathFailure(string message)
+        => new([
+            new ReportLine("Command paths are invalid", LineRole.ErrorHeading),
+            new ReportLine($"error: {ValueFormatter.FormatInlineText(message)}", LineRole.Error),
+        ]);
+
     internal static async Task<bool> WriteAsync(
         Report report,
         TextWriter writer,
