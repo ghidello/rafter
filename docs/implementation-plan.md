@@ -97,7 +97,9 @@ Implement only the command grammar demonstrated by the examples.
 - Support required, optional, defaulted, Boolean, enum, and common scalar options plus explicit
   `RepeatedOption<T>` values.
 - Convert `string` without transformation, handle Boolean and enum values with their dedicated grammars, unwrap
-  nullable value types, and convert every other supported scalar through invariant-culture `IParsable<T>`.
+  nullable value types, and convert every other supported scalar through one cached invariant-culture
+  `IParsable<T>.TryParse` call per attempted value; a thrown converter or successful null reference result is an
+  author failure rather than ordinary invalid input.
 - Parse enum values as one declared member name using ordinal case-insensitive matching; reject numeric values and
   implicit comma-separated `[Flags]` combinations. A flags enum can expose an explicitly declared composite member.
 - Reject an enum option at model freeze when two declared member names collide under ordinal case-insensitive
@@ -126,7 +128,8 @@ Implement only the command grammar demonstrated by the examples.
 - Reject the `--` end-of-options marker in v1 because there is no positional or pass-through tail; hyphen-leading
   values use `--name=value`.
 - Report unknown options exactly without fuzzy suggestions or autocorrection in v1, never echo an attached value,
-  and follow parse errors with the ordinary safe help/usage output. Revisit spelling suggestions post-v1.
+  report unexpected positionals by position without their text, and follow parse errors with the ordinary safe
+  help/usage output. Revisit spelling suggestions post-v1.
 - Present ordinary input failures in one section: token/syntax diagnostics in argument order followed by at most one
   conversion/validation diagnostic per option in declaration order, then render safe help once.
 - Show bounded escaped invalid values only for non-sensitive known options, use `<redacted>` for sensitive values,
@@ -138,15 +141,22 @@ Implement only the command grammar demonstrated by the examples.
   `--version` for file-based commands.
 - Reserve the Rafter-owned long option names `plain` and `help` plus short alias `h`; reject authored collisions at
   model freeze.
-- Render sensitive option metadata but never sensitive values in help; show invariant non-sensitive scalar defaults.
+- Render sensitive option metadata but never sensitive values in help. Show approved invariant non-sensitive scalar
+  defaults and `default: configured` for application-defined defaults that have no approved formatter; reject a
+  sensitive authored default when no stable redaction representation exists.
+- Use the exact framework-type and format whitelist recorded in the Phase 3 plan; reject undefined enum defaults,
+  canonicalize aliases to the first declared name, reject null authored defaults as optional absence, and never
+  invoke application formatting code during model normalization or help. Use its quoted escape grammar and
+  64-Unicode-element truncation policy for string and character presentation.
 - Lay help out as command description and usage followed by separate `Command options`, `Common options`, and
   `Targets` sections. Keep `--plain` and `-h, --help` in common options rather than mixing Rafter-owned syntax into
   the command-owned list.
 - Treat the target section as a deterministic human/agent-readable execution manifest, not target-selection syntax:
   preserve declaration order and show each name, description, authored dependency order, entry marker, conditional
   marker, and callback-free `Aggregate` or `No work` shape.
-- Derive the invocation name from the executable or file-based application, expose no command-name API in v1, and
-  omit callback, cleanup, permit, and working-directory implementation details from help.
+- Derive the invocation name once from .NET file-app host metadata, a non-`dotnet` executable, the entry assembly, a
+  launch token, or the stable fallback `command`; expose no command-name API in v1, and omit callback, cleanup,
+  permit, and working-directory implementation details from help.
 - Give an exact standalone `--help` or `-h` token successful precedence over all other tokens; embedded or malformed
   help-like text does not activate help.
 - Apply command-line input, declared environment fallback, defaults, conversion, fluent validation, and sensitive-value
@@ -160,15 +170,23 @@ Implement only the command grammar demonstrated by the examples.
 - Treat `.Default(...)` and `.Sensitive()` as single-valued option declarations; use fluent type-state to prevent
   duplicate defaults where practical and model-freeze diagnostics as the complete guard.
 - Allow `.Sensitive()` on every scalar and repeated option type rather than restricting it to `string`.
-- Register selected non-empty raw sensitive text before conversion and any distinct converted representation before
-  validation so conversion and validator failures are redacted; apply this independently to every repeated value.
+- Register every non-empty command-line occurrence associated with a known sensitive option before environment
+  lookup, including duplicate or rejected occurrences. Register each selected sensitive environment or default
+  representation immediately, select every option source before invoking the first converter, and register each
+  distinct stable converted representation before validation. Preserve raw snapshots and original application
+  exceptions internally while redacting every Rafter-managed report.
+- Treat a thrown environment lookup as a fail-closed infrastructure failure without rendering arbitrary exception
+  details. For complete semantic text, use exact ordinal matching, merge every overlapping match interval, select a
+  marker containing no registered pattern, verify the final buffered renderer output, and suppress the complete
+  report before any write on redaction uncertainty. Phase 6 reuses this algorithm across streaming boundaries.
 - Do not expose manual sensitive-value registration in v1. Values obtained outside option binding are not registered
   automatically, and target-time mutation cannot protect earlier or concurrent output.
 - Bind every option exactly once per invocation and store an immutable snapshot.
 - Snapshot repeated values into immutable lists.
 - A binding failure prevents every condition, target, process, and cleanup callback from running.
-- `context.Value(option)` and context-owned APIs read the same snapshot without repeating conversion, validation,
-  environment reads, or defaults.
+- `context.Value(option)` returns nullable optional values, declared required/defaulted values, or immutable repeated
+  lists from the same ownership-checked snapshot without repeating conversion, validation, environment reads, or
+  defaults.
 
 Completion requires parser diagnostics, help, binding precedence, sensitive binding, and exactly-once tests.
 
@@ -216,9 +234,10 @@ Validate and execute the target graph with deterministic lifecycle behavior.
 - Keep escaped callback and cleanup exceptions in Rafter's internal outcome for classification, presentation, and
   verification without adding a structured public command-result API in v1. Authors needing programmatic handling
   catch exceptions inside their callback; `RunAsync` remains the integer-returning script entry point.
-- Return stable command exit codes: `0` for success/help/skipped/no-op/explicitly valid process exits, `1` for
-  execution, process, infrastructure, or cleanup failure, `2` for model/input/binding/validation/planning errors,
-  and `130` for invocation cancellation.
+- Return stable command exit codes: `0` for success/help/skipped/no-op/explicitly valid process exits; `1` for
+  converter or validator author exceptions and execution, process, infrastructure, or cleanup failure; `2` for
+  model, syntax, failed conversion, missing-required, validator-rejection, or planning diagnostics; and `130` for
+  invocation cancellation.
 - Classify `OperationCanceledException` as invocation cancellation only when the invocation token was actually
   requested; otherwise treat it as an ordinary callback failure. Treat process timeout as failure, not cancellation.
 - Preserve the distinction between executable, aggregate, and intentional no-op targets.

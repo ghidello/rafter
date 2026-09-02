@@ -41,7 +41,7 @@ internal static class OptionMutation
         ArgumentNullException.ThrowIfNull(predicate);
         ArgumentNullException.ThrowIfNull(message);
         long sequence = Begin(option);
-        option.Validators.Add(new AuthoredValidator(predicate, message, sequence));
+        option.Validators.Add(new AuthoredValidator(predicate, value => predicate((T)value!), message, sequence));
         if (string.IsNullOrWhiteSpace(message))
         {
             option.Command.Diagnostics.Add(new ModelDiagnostic(

@@ -56,6 +56,10 @@ Sotsera.Rafter.Target.WorkingDirectory(Sotsera.Rafter.DefaultedOption<string!>! 
 Sotsera.Rafter.Target.WorkingDirectory(Sotsera.Rafter.RequiredOption<string!>! option) -> Sotsera.Rafter.Target!
 Sotsera.Rafter.Target.WorkingDirectory(string! path) -> Sotsera.Rafter.Target!
 Sotsera.Rafter.RafterContext
+Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.DefaultedOption<T>! option) -> T
+Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.Option<T>! option) -> T?
+Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.RepeatedOption<T>! option) -> System.Collections.Generic.IReadOnlyList<T>!
+Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.RequiredOption<T>! option) -> T
 static Sotsera.Rafter.Rafter.Command(Sotsera.Rafter.Root! root) -> Sotsera.Rafter.Command!
 static Sotsera.Rafter.Root.At(string! path) -> Sotsera.Rafter.Root!
 static Sotsera.Rafter.Root.Invocation.get -> Sotsera.Rafter.Root!

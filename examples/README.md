@@ -125,11 +125,21 @@ Authored defaults must also be snapshot-safe: `string` or a value type containin
 reference-type `IParsable<T>` can still bind external input, but cannot be used as an authored default because the
 frozen command would otherwise retain caller-owned mutable state.
 
-For a sensitive scalar option, Rafter registers the selected non-empty raw command-line, environment, or authored-default text before conversion,
-then registers any distinct converted representation before validation. Conversion failures and throwing validators therefore pass through the
-same redaction boundary as later output.
+For a sensitive scalar option, Rafter registers every non-empty raw command-line occurrence associated with that
+known option before the first environment lookup, including duplicate or rejected occurrences. It registers a
+selected sensitive environment value or approved authored default immediately, before another fallible operation,
+and any distinct stable converted representation before validation. A throwing environment lookup is a fail-closed
+infrastructure failure whose arbitrary exception details are not rendered. Conversion failures and throwing
+validators therefore pass through the same redaction boundary as later managed output.
 `.Sensitive()` is available for every supported scalar and repeated option type, not only `string`. Repeated options
 register each command-line occurrence independently, and empty representations are never added as redaction patterns.
+Raw bound values, the redaction registry, and preserved original application exceptions remain internal and are not
+claimed to be sanitized. Rafter never renders arbitrary exception details for a sensitive option.
+Rafter redacts complete managed text with exact ordinal matching. It merges overlapping secret matches before
+replacement, uses a marker that contains no registered pattern, verifies the result, and suppresses the complete
+buffered renderer output before writing it. It suppresses the report rather than emitting text when redaction cannot
+be proven safe. Unicode normalization and application-created secret transformations are caller-owned. Phase 6
+applies the same algorithm across streaming boundaries.
 
 `.Sensitive()` is redaction metadata, not secure input transport. It prevents registered values from being emitted
 through Rafter-managed output, but it cannot remove a command-line value from shell history or process inspection.
@@ -166,10 +176,11 @@ v1. Their validators receive the complete immutable list and run even when it is
 validation message to require at least one occurrence when necessary.
 Scalar conversion is invariant and deliberately extensible through the .NET type system: `string` passes through
 unchanged, Boolean and enum values use Rafter's dedicated grammars, nullable value types delegate to their
-underlying type, and other supported values implement `IParsable<T>`. This includes framework types such as numeric
-values, `Guid`, `DateTime`, and `TimeSpan`, as well as application-defined parsable types. An unsupported option type
-is a model-freeze error. Rafter has no custom converter API in v1; bind a `string` and convert it inside a target for
-more complex application-owned conversion.
+underlying type, and other supported values receive one `IParsable<T>.TryParse` call per attempted value. This
+includes framework types such as numeric values, `Guid`, `DateTime`, and `TimeSpan`, as well as application-defined
+parsable types. A thrown converter or one that reports success with a null reference result is an author failure.
+An unsupported option type is a model-freeze error. Rafter has no custom converter API in v1; bind a `string` and
+convert it inside a target for more complex application-owned conversion.
 Enum input accepts one declared member name using ordinal case-insensitive matching, so `Release` and `release` are
 equivalent. Numeric values, undefined values, and implicit comma-separated `[Flags]` combinations are rejected. A
 flags enum may still declare a named composite member and accept that member by name.
@@ -180,14 +191,25 @@ The initial grammar has no `--` end-of-options marker because it has no position
 beginning with hyphens is supplied with the unambiguous `--name=value` form.
 Unknown options are reported exactly without fuzzy suggestions or autocorrection in v1, followed by the ordinary
 safe help/usage output. Diagnostics show only an unknown option's name and never an attached `=value` payload.
+Unexpected positional diagnostics identify only the argument position and never display the token text because it
+could be a value supplied after a mistyped sensitive option.
 Rafter reserves `--plain`, `--help`, and `-h` as built-ins. Help succeeds without binding options, reading environment fallbacks,
 running validators, resolving roots, or executing graph callbacks. Authors cannot
 declare the `plain` or `help` name or the `h` alias. File-based commands receive no synthesized `--version` option.
 Help shows each sensitive option's name, alias, description, required/optional state, scalar environment fallback
 name, and sensitive marker, but never its default or environment value. Non-sensitive scalar defaults are formatted
-invariantly.
-Help begins with the command description and a usage line whose invocation name is derived from the executable or
-file-based application; v1 has no command-name API. Authored `Command options` are separate from Rafter-owned
+with an approved invariant formatter; an application-defined default without one appears only as
+`default: configured`. A sensitive authored default without a stable approved redaction representation is a
+model-freeze error.
+The approved default formats are invariant decimal for integral types, `R` for binary floating-point types, `G29`
+for `decimal`, lowercase `D` for `Guid`, `O` for date/time types, `c` for `TimeSpan`, lowercase text for Boolean,
+and the first declared canonical name for enums. String and character displays use the exact quoted escape grammar in
+the Phase 3 plan; strings retain at most 64 Unicode elements and append `...` when truncated. Undefined enum
+defaults and null authored defaults are model errors; null remains optional absence rather than a resolved default.
+Rafter does not invoke application formatting code to produce help.
+Help begins with the command description and a usage line whose invocation name is derived from .NET file-based
+application host metadata, with deterministic executable, entry-assembly, launch-token, and `command` fallbacks;
+v1 has no command-name API. Authored `Command options` are separate from Rafter-owned
 `Common options`, which contain `--plain` and `-h, --help`. Friendly metavariables describe scalar and enum
 values, Boolean values are optional because a bare flag means `true`, and only repeated options use `...`.
 
@@ -238,7 +260,8 @@ authoring failure whose original exception is preserved; it is not reported usin
 the binding barrier, and sensitive values remain redacted from both diagnostic paths. A thrown validator aborts binding immediately, retains
 safe ordinary diagnostics already collected, and prevents later converters or validators from running.
 
-`context.Value(option)` and context-owned APIs both read the same immutable bound snapshot. Reading an option from multiple targets never repeats
+`context.Value(option)` returns nullable optional values, declared required/defaulted values, and immutable repeated
+lists from the same ownership-checked bound snapshot. Reading an option from multiple targets never repeats
 conversion, validation, environment access, or default selection.
 
 Conditions support an authored Boolean, a deferred `Func<bool>`, a context-aware synchronous predicate, or a context-aware asynchronous
@@ -293,8 +316,9 @@ structured public outcome in v1. Authors who need programmatic handling catch an
 cleanup callback before it escapes to Rafter; typed process exceptions remain catchable there.
 
 `RunAsync` returns `0` for success, help, skipped/no-op completion, and explicitly valid nonzero child-process exits;
-`1` for execution, process, infrastructure, or cleanup failure; `2` for command-model, parsing, binding, validation,
-or graph-planning diagnostics; and `130` for invocation cancellation. An `OperationCanceledException` counts as
+`1` for converter or validator author exceptions and execution, process, infrastructure, or cleanup failure; `2`
+for command-model, syntax, failed-conversion, missing-required, validator-rejection, or graph-planning diagnostics;
+and `130` for invocation cancellation. An `OperationCanceledException` counts as
 invocation cancellation only when that invocation's token was actually requested; otherwise it is a callback
 failure. A process timeout is likewise failure rather than cancellation. Concurrent and cleanup details affect the
 diagnostic outcome, not the numeric mapping.

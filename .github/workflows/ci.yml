@@ -40,7 +40,7 @@ jobs:
       - name: Run execution fixture
         run: >-
           dotnet run --project test-assets/Sotsera.Rafter.RunFixture/Sotsera.Rafter.RunFixture.csproj
-          --configuration Release --no-build
+          --configuration Release --no-build -- --help --plain
 
       - name: Run process fixture
         run: >-

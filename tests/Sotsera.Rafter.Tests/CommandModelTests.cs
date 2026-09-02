@@ -94,6 +94,7 @@ public sealed class CommandModelTests
         Target first = command.Target("first").Description("First.");
         Target replacement = command.Target("replacement").Description("Replacement.");
         Target entry = command.Target("entry").Description("Entry.");
+        command.Option<string>("value").Description("Value.");
         Target[] dependencies = [first];
         entry.DependsOn(dependencies);
         dependencies[0] = replacement;
@@ -111,9 +112,10 @@ public sealed class CommandModelTests
     public async Task RejectsOverlappingInvocationsAndAllowsSequentialReuse()
     {
         Command command = NewCommand();
+        command.Option<string>("second").Description("Second.");
         Target entry = command.Target("entry").Description("Entry.");
         TaskCompletionSource barrier = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        command.PhaseTwoInvocationBarrier = barrier.Task;
+        command.InvocationBarrier = barrier.Task;
 
         Task<int> first = command.RunAsync(entry, []);
         Action overlap = () => command.RunAsync(entry, []);
@@ -121,9 +123,9 @@ public sealed class CommandModelTests
         overlap.Should().Throw<InvalidOperationException>();
         barrier.SetResult();
         await FluentActions.Awaiting(() => first).Should().ThrowAsync<NotSupportedException>();
-        command.PhaseTwoInvocationBarrier = null;
-        await FluentActions.Awaiting(() => command.RunAsync(entry, ["--second"])).Should().ThrowAsync<NotSupportedException>();
-        command.LastArguments.Should().Equal("--second");
+        command.InvocationBarrier = null;
+        await FluentActions.Awaiting(() => command.RunAsync(entry, ["--second=value"])).Should().ThrowAsync<NotSupportedException>();
+        command.LastArguments.Should().Equal("--second=value");
     }
 
     [Fact]
@@ -134,8 +136,9 @@ public sealed class CommandModelTests
         Command other = NewCommand();
         Target foreign = other.Target("foreign").Description("Foreign.");
 
-        await FluentActions.Awaiting(() => command.RunAsync(foreign, [])).Should().ThrowAsync<NotSupportedException>();
+        int exitCode = await command.RunAsync(foreign, []);
 
+        exitCode.Should().Be(2);
         command.FreezeResult.IsSuccess.Should().BeTrue();
         command.FreezeResult.Diagnostics.Should().BeEmpty();
         command.LastInvocationDiagnostics.Select(static diagnostic => diagnostic.Code).Should().Equal("RAFTER1301");

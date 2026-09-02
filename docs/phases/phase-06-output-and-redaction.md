@@ -47,8 +47,10 @@ objects directly through the initial API.
 
 ### Presentation
 
-- [ ] Implement rich Spectre.Console rendering for an interactive capable terminal.
-- [ ] Implement plain rendering without ANSI sequences for redirected or explicitly plain output.
+- [ ] Extend the Phase 3 Spectre.Console report renderer for general semantic events in an interactive capable
+      terminal; reuse rather than replace its help and diagnostic document models.
+- [ ] Extend the Phase 3 deterministic plain renderer without introducing ANSI sequences for redirected or
+      explicitly plain output.
 - [ ] Make the common `--plain` option force both stdout and stderr into deterministic width-independent output with
       no ANSI, cursor/live control, or Unicode-only status glyphs.
 - [ ] Without `--plain`, detect stdout and stderr capabilities independently and use plain output for each redirected
@@ -100,18 +102,18 @@ objects directly through the initial API.
 
 ### Redaction
 
-- [ ] Maintain an invocation-scoped immutable/redaction-safe registry populated during binding.
+- [ ] Consume the invocation-scoped immutable redaction registry populated during Phase 3 binding.
 - [ ] Keep manual sensitive-value registration outside v1; do not mutate the registry from target contexts because
       target-time registration cannot protect earlier or concurrent output.
-- [ ] Define handling for duplicate, empty, overlapping, substring, Unicode, and multiline sensitive values.
+- [ ] Reuse the Phase 3 exact ordinal, duplicate, overlap, substring, Unicode, multiline, marker-selection,
+      verification, and fail-closed text-redaction contract without introducing another matching algorithm.
 - [ ] Apply the recorded raw-capture trust model; in every case, redact before text reaches semantic sinks, original
       console writers, terminal renderers, diagnostics, exception rendering, command previews, or persistent
       artifacts.
 - [ ] Redact across chunk boundaries and partial-line buffering.
 - [ ] Never retain an unredacted duplicate solely for later presentation; bounded raw capture exists only for the
       application-owned result.
-- [ ] Use a stable replacement marker that cannot be mistaken for the original value.
-- [ ] Ensure redaction failures fail closed rather than emitting raw text.
+- [ ] Preserve Phase 3 replacement-marker safety and fail-closed verification across every streaming boundary.
 
 ### Failure resilience
 

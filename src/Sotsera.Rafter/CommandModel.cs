@@ -61,9 +61,12 @@ internal static class CommandModel
         bool HasDefault,
         object? DefaultValue,
         bool IsSensitive,
+        string? DefaultDisplay,
+        string? DefaultStableRepresentation,
+        OptionBindingStrategy BindingStrategy,
         ImmutableArray<ValidatorDefinition> Validators);
 
-    internal sealed record ValidatorDefinition(Guid Id, Delegate Predicate, string Message);
+    internal sealed record ValidatorDefinition(Guid Id, Delegate Predicate, Func<object?, bool> Evaluate, string Message);
 
     internal sealed record TargetDefinition(
         Guid Id,
@@ -169,6 +172,7 @@ internal static class CommandModel
         bool isRequired,
         bool isRepeated,
         bool isSnapshotSafeDefaultType,
+        OptionBindingStrategy bindingStrategy,
         long declarationSequence)
     {
         internal Guid Id { get; } = Guid.NewGuid();
@@ -185,6 +189,8 @@ internal static class CommandModel
 
         internal bool IsSnapshotSafeDefaultType { get; } = isSnapshotSafeDefaultType;
 
+        internal OptionBindingStrategy BindingStrategy { get; } = bindingStrategy;
+
         internal long DeclarationSequence { get; } = declarationSequence;
 
         internal SingleSetting<string> Description { get; } = new();
@@ -200,7 +206,7 @@ internal static class CommandModel
         internal List<AuthoredValidator> Validators { get; } = [];
     }
 
-    internal sealed record AuthoredValidator(Delegate Predicate, string Message, long Sequence)
+    internal sealed record AuthoredValidator(Delegate Predicate, Func<object?, bool> Evaluate, string Message, long Sequence)
     {
         internal Guid Id { get; } = Guid.NewGuid();
     }
@@ -272,6 +278,28 @@ internal static class CommandModel
             return command.FreezeResult;
         }
 
+        internal static TextRedactor CreateSensitiveDefaultRedactor(AuthoredCommand command)
+        {
+            TextRedactor.Registry registry = new();
+            foreach (AuthoredOption option in command.Options)
+            {
+                if (!option.Default.IsSet
+                    || option.Default.Value is null
+                    || !option.Sensitive.IsSet
+                    || !option.Sensitive.Value)
+                {
+                    continue;
+                }
+
+                if (ValueFormatter.TryFormatStable(option.Default.Value, option.ValueType, out string stable, out _))
+                {
+                    registry.Add(stable);
+                }
+            }
+
+            return registry.Freeze();
+        }
+
         private static void ValidateOptions(AuthoredCommand command, List<ModelDiagnostic> diagnostics)
         {
             Dictionary<string, AuthoredOption> names = new(Ordinal);
@@ -328,6 +356,8 @@ internal static class CommandModel
                 Add(diagnostics, "RAFTER1119", "The authored default type cannot be copied safely into the frozen command model.", option.Default.Sequence, null, DiagnosticStage.InvalidStructure);
             }
 
+            ValidateDefault(option, diagnostics);
+
             ValidateAlias(option, aliases, diagnostics);
             if (option.EnvironmentName.IsSet && !IsValidEnvironmentName(option.EnvironmentName.Value!))
             {
@@ -356,6 +386,41 @@ internal static class CommandModel
             if (!aliases.TryAdd(alias, option))
             {
                 Add(diagnostics, "RAFTER1108", "An option with this alias has already been declared.", option.Alias.Sequence, null, DiagnosticStage.ReservedOrCollision);
+            }
+        }
+
+        private static void ValidateDefault(AuthoredOption option, List<ModelDiagnostic> diagnostics)
+        {
+            if (!option.Default.IsSet)
+            {
+                return;
+            }
+
+            if (option.Default.Value is null)
+            {
+                Add(diagnostics, "RAFTER1120", "An authored default cannot be null; null represents optional absence.", option.Default.Sequence, null, DiagnosticStage.InvalidValue);
+                return;
+            }
+
+            bool hasStableRepresentation = ValueFormatter.TryFormatStable(
+                option.Default.Value,
+                option.ValueType,
+                out _,
+                out _);
+            Type effectiveType = Nullable.GetUnderlyingType(option.ValueType) ?? option.ValueType;
+            if (effectiveType.IsEnum && !hasStableRepresentation)
+            {
+                Add(diagnostics, "RAFTER1121", "An enum default must be a declared member.", option.Default.Sequence, null, DiagnosticStage.InvalidValue);
+            }
+            else if (option.Sensitive.IsSet && option.Sensitive.Value && !hasStableRepresentation)
+            {
+                Add(
+                    diagnostics,
+                    "RAFTER1122",
+                    "A sensitive default requires an approved stable representation.",
+                    option.Default.Sequence,
+                    null,
+                    DiagnosticStage.InvalidStructure);
             }
         }
 
@@ -458,19 +523,7 @@ internal static class CommandModel
 
         private static CommandDefinition CreateDefinition(AuthoredCommand command)
         {
-            ImmutableArray<OptionDefinition> options = command.Options.Select(static option => new OptionDefinition(
-                option.Id,
-                option.Name,
-                option.ValueType,
-                option.IsRequired,
-                option.IsRepeated,
-                option.Description.Value!,
-                option.Alias.IsSet ? option.Alias.Value : null,
-                option.EnvironmentName.IsSet ? option.EnvironmentName.Value : null,
-                option.Default.IsSet,
-                option.Default.Value,
-                option.Sensitive.IsSet && option.Sensitive.Value,
-                option.Validators.Select(static validator => new ValidatorDefinition(validator.Id, validator.Predicate, validator.Message)).ToImmutableArray())).ToImmutableArray();
+            ImmutableArray<OptionDefinition> options = command.Options.Select(CreateOptionDefinition).ToImmutableArray();
 
             ImmutableArray<TargetDefinition> targets = command.Targets.Select(static target => new TargetDefinition(
                 target.Id,
@@ -490,6 +543,42 @@ internal static class CommandModel
                 options,
                 targets,
                 command.Cleanup.IsSet ? command.Cleanup.Value : null);
+        }
+
+        private static OptionDefinition CreateOptionDefinition(AuthoredOption option)
+        {
+            bool isSensitive = option.Sensitive.IsSet && option.Sensitive.Value;
+            string? defaultDisplay = null;
+            string? defaultStableRepresentation = null;
+            if (option.Default.IsSet && option.Default.Value is not null)
+            {
+                _ = ValueFormatter.TryFormatStable(
+                    option.Default.Value,
+                    option.ValueType,
+                    out defaultStableRepresentation,
+                    out defaultDisplay);
+            }
+
+            return new OptionDefinition(
+                option.Id,
+                option.Name,
+                option.ValueType,
+                option.IsRequired,
+                option.IsRepeated,
+                option.Description.Value!,
+                option.Alias.IsSet ? option.Alias.Value : null,
+                option.EnvironmentName.IsSet ? option.EnvironmentName.Value : null,
+                option.Default.IsSet,
+                option.Default.Value,
+                isSensitive,
+                defaultDisplay,
+                defaultStableRepresentation,
+                option.BindingStrategy,
+                option.Validators.Select(static validator => new ValidatorDefinition(
+                    validator.Id,
+                    validator.Predicate,
+                    validator.Evaluate,
+                    validator.Message)).ToImmutableArray());
         }
 
         private static WorkingDirectoryDefinition? CreateWorkingDirectory(SingleSetting<WorkingDirectoryValue> setting)

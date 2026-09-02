@@ -61,8 +61,9 @@ documented and testable.
 - [ ] Record callback exceptions without wrapping or replacing them so their original type, identity, stack, and
       safe details remain available to Rafter's internal outcome for classification, presentation, and verification.
 - [ ] Return `0` for success, help, skipped/no-op completion, and explicitly valid nonzero process exits; return `1`
-      for execution, process, infrastructure, or cleanup failure; return `2` for command-model, parsing, binding,
-      validation, or graph-planning diagnostics; and return `130` for invocation cancellation.
+      for converter or validator author exceptions and execution, process, infrastructure, or cleanup failure;
+      return `2` for command-model, syntax, failed-conversion, missing-required, validator-rejection, or graph-planning
+      diagnostics; and return `130` for invocation cancellation.
 - [ ] Recognize `OperationCanceledException` as invocation cancellation only when the invocation token was actually
       requested; otherwise classify it as a callback failure. Keep process timeout in the failure category.
 - [ ] Keep concurrent and cleanup details in the internal structured outcome and presentation rather than inventing

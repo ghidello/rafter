@@ -1,5 +1,7 @@
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using static Sotsera.Rafter.BindingEngine;
 using static Sotsera.Rafter.CommandModel;
 
 namespace Sotsera.Rafter;
@@ -23,7 +25,13 @@ public sealed class Command
 
     internal ImmutableArray<ModelDiagnostic> LastInvocationDiagnostics => _lastInvocationDiagnostics;
 
-    internal Task? PhaseTwoInvocationBarrier { get; set; }
+    internal BindingResult? LastBindingResult { get; private set; }
+
+    internal InvocationStatus? LastInvocationStatus { get; private set; }
+
+    internal Func<InvocationServices> InvocationServicesFactory { get; set; } = InvocationServices.Capture;
+
+    internal Task? InvocationBarrier { get; set; }
 
     /// <summary>Sets the command description.</summary>
     public Command Description(string description)
@@ -127,11 +135,13 @@ public sealed class Command
         try
         {
             _lastArguments = [.. args];
+            LastBindingResult = null;
+            LastInvocationStatus = null;
             _lastInvocationDiagnostics = entryTarget.Authored.Command.Id == _authored.Id
                 ? []
                 : [new ModelDiagnostic("RAFTER1301", "The entry target must belong to the invoked command.", 0, null, DiagnosticStage.OwnershipOrReference)];
-            _ = ModelValidation.Freeze(_authored);
-            return CompletePhaseTwoInvocationAsync();
+            ModelFreezeResult freezeResult = ModelValidation.Freeze(_authored);
+            return CompleteInvocationAsync(entryTarget.Authored.Id, freezeResult);
         }
         catch
         {
@@ -140,21 +150,128 @@ public sealed class Command
         }
     }
 
-    private async Task<int> CompletePhaseTwoInvocationAsync()
+    private async Task<int> CompleteInvocationAsync(Guid entryTargetId, ModelFreezeResult freezeResult)
     {
         try
         {
-            if (PhaseTwoInvocationBarrier is not null)
+            if (InvocationBarrier is not null)
             {
-                await PhaseTwoInvocationBarrier.ConfigureAwait(false);
+                await InvocationBarrier.ConfigureAwait(false);
             }
 
-            await Task.Yield();
-            throw new NotSupportedException("Command execution is implemented in a later Rafter phase.");
+            return await ExecuteInvocationAsync(entryTargetId, freezeResult).ConfigureAwait(false);
         }
         finally
         {
             Volatile.Write(ref _invocationActive, 0);
+        }
+    }
+
+    private async Task<int> ExecuteInvocationAsync(Guid entryTargetId, ModelFreezeResult freezeResult)
+    {
+        InvocationServices services;
+        try
+        {
+            services = InvocationServicesFactory();
+        }
+        catch
+        {
+            LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+            return 1;
+        }
+
+        ImmutableArray<ModelDiagnostic> modelDiagnostics = [.. freezeResult.Diagnostics, .. _lastInvocationDiagnostics];
+        TextRedactor defaultRedactor = ModelValidation.CreateSensitiveDefaultRedactor(_authored);
+        if (!modelDiagnostics.IsEmpty)
+        {
+            CommandPresentation.Report report = CommandPresentation.CreateModelFailure(modelDiagnostics);
+            bool written = await TryWriteAsync(
+                report,
+                services.StandardError,
+                services.StandardErrorSupportsAnsi,
+                defaultRedactor).ConfigureAwait(false);
+            LastInvocationStatus = written ? InvocationStatus.InvalidModel : InvocationStatus.InfrastructureFailure;
+            return written ? 2 : 1;
+        }
+
+        CommandDefinition model = freezeResult.Model!;
+        bool help = _lastArguments.Any(static argument => argument is "--help" or "-h");
+        bool plain = _lastArguments.Any(static argument => string.Equals(argument, "--plain", StringComparison.Ordinal));
+        if (help)
+        {
+            CommandPresentation.Report report = CommandPresentation.CreateHelp(model, entryTargetId, services.InvocationName);
+            bool written = await TryWriteAsync(
+                report,
+                services.StandardOutput,
+                !plain && services.StandardOutputSupportsAnsi,
+                defaultRedactor).ConfigureAwait(false);
+            LastInvocationStatus = written ? InvocationStatus.Help : InvocationStatus.InfrastructureFailure;
+            return written ? 0 : 1;
+        }
+
+        LastBindingResult = BindingEngine.Bind(model, _lastArguments, services);
+        return await CompleteBindingAsync(model, entryTargetId, services, LastBindingResult).ConfigureAwait(false);
+    }
+
+    private async Task<int> CompleteBindingAsync(
+        CommandDefinition model,
+        Guid entryTargetId,
+        InvocationServices services,
+        BindingResult result)
+    {
+        switch (result.Status)
+        {
+            case BindingStatus.InputFailure:
+                {
+                    CommandPresentation.Report report = CommandPresentation.CreateInputFailure(
+                        model,
+                        entryTargetId,
+                        services.InvocationName,
+                        result.Diagnostics);
+                    bool written = await TryWriteAsync(
+                        report,
+                        services.StandardError,
+                        !result.Plain && services.StandardErrorSupportsAnsi,
+                        result.Redactor).ConfigureAwait(false);
+                    LastInvocationStatus = written ? InvocationStatus.InputFailure : InvocationStatus.InfrastructureFailure;
+                    return written ? 2 : 1;
+                }
+            case BindingStatus.AuthorFailure:
+            case BindingStatus.InfrastructureFailure:
+                {
+                    CommandPresentation.Report report = CommandPresentation.CreateBindingFailure(result);
+                    bool written = await TryWriteAsync(
+                        report,
+                        services.StandardError,
+                        !result.Plain && services.StandardErrorSupportsAnsi,
+                        result.Redactor).ConfigureAwait(false);
+                    LastInvocationStatus = !written || result.Status == BindingStatus.InfrastructureFailure
+                        ? InvocationStatus.InfrastructureFailure
+                        : InvocationStatus.AuthorFailure;
+                    return 1;
+                }
+            case BindingStatus.Success:
+                LastInvocationStatus = InvocationStatus.SuccessfulBindingStub;
+                await Task.Yield();
+                throw new NotSupportedException("Command execution is implemented in a later Rafter phase.");
+            default:
+                throw new UnreachableException();
+        }
+    }
+
+    private static async Task<bool> TryWriteAsync(
+        CommandPresentation.Report report,
+        TextWriter writer,
+        bool rich,
+        TextRedactor redactor)
+    {
+        try
+        {
+            return await CommandPresentation.WriteAsync(report, writer, rich, redactor).ConfigureAwait(false);
+        }
+        catch
+        {
+            return false;
         }
     }
 
@@ -163,7 +280,15 @@ public sealed class Command
         ArgumentNullException.ThrowIfNull(name);
         long sequence = BeginMutation();
         bool isSnapshotSafeDefaultType = typeof(T) == typeof(string) || !RuntimeHelpers.IsReferenceOrContainsReferences<T>();
-        AuthoredOption option = new(_authored, name, typeof(T), isRequired, isRepeated, isSnapshotSafeDefaultType, sequence);
+        AuthoredOption option = new(
+            _authored,
+            name,
+            typeof(T),
+            isRequired,
+            isRepeated,
+            isSnapshotSafeDefaultType,
+            OptionBindingStrategy.Create<T>(),
+            sequence);
         _authored.Options.Add(option);
         return option;
     }
@@ -179,5 +304,15 @@ public sealed class Command
     {
         _authored.EnsureMutable();
         return _authored.NextSequence();
+    }
+
+    internal enum InvocationStatus
+    {
+        InvalidModel,
+        Help,
+        InputFailure,
+        AuthorFailure,
+        InfrastructureFailure,
+        SuccessfulBindingStub,
     }
 }

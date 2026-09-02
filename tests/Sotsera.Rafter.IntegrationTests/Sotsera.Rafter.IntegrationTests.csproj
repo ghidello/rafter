@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+    <ProjectReference Include="../../test-assets/Sotsera.Rafter.RunFixture/Sotsera.Rafter.RunFixture.csproj"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>
