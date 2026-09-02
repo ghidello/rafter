@@ -22,7 +22,8 @@ var mode = command.Option<ExecutionMode>("mode")
     .Default(ExecutionMode.Verify);
 
 var include = command.RepeatedOption<string>("include")
-    .Description("Path to include; may be supplied more than once.");
+    .Description("Path to include; may be supplied more than once.")
+    .Validate(values => values.Count <= 10, "No more than ten include paths may be supplied.");
 
 var inspect = command.Target("inspect")
     .Description("Print resolved option values.")

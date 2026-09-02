@@ -55,8 +55,9 @@ Rafter's public API.
       before attempting launch.
 - [ ] Apply no execution timeout by default; distinguish authored execution timeouts from bounded internal drain,
       graceful-termination, forced-kill, and retained-handle deadlines.
-- [ ] Resolve option handles from the invocation snapshot exactly once; never retain unresolved handles in the
-      runtime specification.
+- [ ] Reject option handles whose phase-2 ownership identity does not match the active invocation, resolve accepted
+      handles from the invocation snapshot exactly once, and never retain unresolved handles in the runtime
+      specification.
 - [ ] Validate environment edit keys before launch with the fallback-name rules: reject empty or whitespace-only
       text, NUL, and `=`, preserve authored spelling, and rely on the host operating system's case semantics.
 - [ ] Validate empty executable names, capture limits, and working directories before attempting launch.

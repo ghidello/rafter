@@ -73,6 +73,7 @@ definitions.
 - Multiple validators compose in authored order and stop at the first failure for that option.
 - Skip validators for complete optional absence; explicit empty values are present and validate, while required and
   defaulted options always validate.
+- Repeated-option validators receive the complete immutable list and run for absence as an empty list.
 - Treat `RequiredOption<string>` as a presence requirement only: an explicitly supplied empty command-line or
   environment value satisfies presence and must be rejected with `.Validate(...)` when the domain requires text.
 - Validators are synchronous value predicates; asynchronous environmental checks belong in conditions or targets.
@@ -83,8 +84,11 @@ definitions.
 - A validator exception aborts binding immediately, retains previously collected safe input diagnostics, and does
   not invoke later converters or validators.
 - `.Default(...)` accepts an already-computed value; deferred default factories are outside the initial API.
+- Permit authored defaults only for `string` and value types containing no managed references. Other supported
+  parsable types remain valid for external input but cannot place caller-owned mutable state in the frozen model.
 
-Completion requires the construction portions of the syntax portfolio to compile and focused model tests to pass.
+Completion requires mapped Phase 2 compile fixtures for every command-model syntax form used by the portfolio and
+focused model tests to pass; complete callback bodies compile only as their owning later-phase APIs are implemented.
 
 ## [Phase 3: bounded parsing and exactly-once binding](phases/phase-03-parsing-and-binding.md)
 
@@ -106,10 +110,10 @@ Implement only the command grammar demonstrated by the examples.
 - Accept short aliases only as `-c value`, plus a bare Boolean alias for `true`; reject equals, attached-value, and
   bundled short forms.
 - Match option names and aliases ordinally and case-sensitively on every platform; reject exact duplicates during
-  command construction.
+  model freeze.
 - Require authored option names without `--` in lowercase kebab-case, with no leading, trailing, or repeated hyphen.
-- Require target names to use the same lowercase kebab-case format and ordinal case-sensitive identity; reject
-  duplicates during command construction.
+- Require target names to use the same lowercase kebab-case format and ordinal case-sensitive identity; report
+  duplicates at model freeze.
 - Restrict `.Alias(char)` to lowercase ASCII letters and reject duplicate aliases or collisions with another
   option's one-character long name.
 - Allow at most one short alias per option; a second `.Alias(...)` call records a model diagnostic and preserves the
@@ -117,6 +121,8 @@ Implement only the command grammar demonstrated by the examples.
 - Bind one unsplit value per `RepeatedOption<T>` occurrence in occurrence order; reject repeated scalar options.
 - Resolve absent `RepeatedOption<T>` as an empty immutable `IReadOnlyList<T>`; do not use `Option<T[]>` as the
   repeated-option contract.
+- Do not expose authored defaults or environment fallbacks for repeated options in v1; validate the complete list
+  when collection-level requirements are needed.
 - Reject the `--` end-of-options marker in v1 because there is no positional or pass-through tail; hyphen-leading
   values use `--name=value`.
 - Report unknown options exactly without fuzzy suggestions or autocorrection in v1, never echo an attached value,
@@ -132,8 +138,7 @@ Implement only the command grammar demonstrated by the examples.
   `--version` for file-based commands.
 - Reserve the Rafter-owned long option names `plain` and `help` plus short alias `h`; reject authored collisions at
   model freeze.
-- Render sensitive option metadata but never sensitive values in help; show invariant non-sensitive scalar defaults
-  and do not enumerate mutable collection defaults.
+- Render sensitive option metadata but never sensitive values in help; show invariant non-sensitive scalar defaults.
 - Lay help out as command description and usage followed by separate `Command options`, `Common options`, and
   `Targets` sections. Keep `--plain` and `-h, --help` in common options rather than mixing Rafter-owned syntax into
   the command-owned list.
@@ -148,7 +153,7 @@ Implement only the command grammar demonstrated by the examples.
   registration before graph execution.
 - Distinguish an absent environment variable from a set-but-empty value; empty command-line and environment strings
   are present data subject to conversion and validation, and are never registered as redaction patterns.
-- Allow at most one `.FromEnvironment(...)` fallback per option; duplicate declarations follow the common
+- Allow at most one `.FromEnvironment(...)` fallback per scalar option; duplicate declarations follow the common
   model-freeze diagnostic policy.
 - Validate fallback and child-process environment names with the same portable minimum: require non-whitespace text
   and reject NUL or `=`; preserve authored spelling and use the host operating system's lookup case semantics.
@@ -157,11 +162,13 @@ Implement only the command grammar demonstrated by the examples.
 - Allow `.Sensitive()` on every scalar and repeated option type rather than restricting it to `string`.
 - Register selected non-empty raw sensitive text before conversion and any distinct converted representation before
   validation so conversion and validator failures are redacted; apply this independently to every repeated value.
+- Do not expose manual sensitive-value registration in v1. Values obtained outside option binding are not registered
+  automatically, and target-time mutation cannot protect earlier or concurrent output.
 - Bind every option exactly once per invocation and store an immutable snapshot.
-- Snapshot repeated or caller-owned mutable values.
+- Snapshot repeated values into immutable lists.
 - A binding failure prevents every condition, target, process, and cleanup callback from running.
 - `context.Value(option)` and context-owned APIs read the same snapshot without repeating conversion, validation,
-  environment reads, defaults, or caller collection access.
+  environment reads, or defaults.
 
 Completion requires parser diagnostics, help, binding precedence, sensitive binding, and exactly-once tests.
 

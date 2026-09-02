@@ -101,6 +101,8 @@ objects directly through the initial API.
 ### Redaction
 
 - [ ] Maintain an invocation-scoped immutable/redaction-safe registry populated during binding.
+- [ ] Keep manual sensitive-value registration outside v1; do not mutate the registry from target contexts because
+      target-time registration cannot protect earlier or concurrent output.
 - [ ] Define handling for duplicate, empty, overlapping, substring, Unicode, and multiline sensitive values.
 - [ ] Apply the recorded raw-capture trust model; in every case, redact before text reaches semantic sinks, original
       console writers, terminal renderers, diagnostics, exception rendering, command previews, or persistent

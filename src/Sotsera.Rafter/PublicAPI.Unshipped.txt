@@ -1,1 +1,62 @@
 #nullable enable
+Sotsera.Rafter.Command
+Sotsera.Rafter.Command.Concurrency(int concurrency) -> Sotsera.Rafter.Command!
+Sotsera.Rafter.Command.Description(string! description) -> Sotsera.Rafter.Command!
+Sotsera.Rafter.Command.Finally(System.Action! callback) -> Sotsera.Rafter.Command!
+Sotsera.Rafter.Command.Finally(System.Action<Sotsera.Rafter.RafterContext!>! callback) -> Sotsera.Rafter.Command!
+Sotsera.Rafter.Command.Finally(System.Func<Sotsera.Rafter.RafterContext!, System.Threading.Tasks.Task!>! callback) -> Sotsera.Rafter.Command!
+Sotsera.Rafter.Command.Finally(System.Func<System.Threading.Tasks.Task!>! callback) -> Sotsera.Rafter.Command!
+Sotsera.Rafter.Command.Option<T>(string! name) -> Sotsera.Rafter.Option<T>!
+Sotsera.Rafter.Command.RepeatedOption<T>(string! name) -> Sotsera.Rafter.RepeatedOption<T>!
+Sotsera.Rafter.Command.RequiredOption<T>(string! name) -> Sotsera.Rafter.RequiredOption<T>!
+Sotsera.Rafter.Command.RunAsync(Sotsera.Rafter.Target! entryTarget, string![]! args) -> System.Threading.Tasks.Task<int>!
+Sotsera.Rafter.Command.Target(string! name) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.DefaultedOption<T>
+Sotsera.Rafter.DefaultedOption<T>.Alias(char alias) -> Sotsera.Rafter.DefaultedOption<T>!
+Sotsera.Rafter.DefaultedOption<T>.Description(string! description) -> Sotsera.Rafter.DefaultedOption<T>!
+Sotsera.Rafter.DefaultedOption<T>.FromEnvironment(string! name) -> Sotsera.Rafter.DefaultedOption<T>!
+Sotsera.Rafter.DefaultedOption<T>.Sensitive() -> Sotsera.Rafter.DefaultedOption<T>!
+Sotsera.Rafter.DefaultedOption<T>.Validate(System.Func<T, bool>! predicate, string! message) -> Sotsera.Rafter.DefaultedOption<T>!
+Sotsera.Rafter.Option<T>
+Sotsera.Rafter.Option<T>.Alias(char alias) -> Sotsera.Rafter.Option<T>!
+Sotsera.Rafter.Option<T>.Default(T value) -> Sotsera.Rafter.DefaultedOption<T>!
+Sotsera.Rafter.Option<T>.Description(string! description) -> Sotsera.Rafter.Option<T>!
+Sotsera.Rafter.Option<T>.FromEnvironment(string! name) -> Sotsera.Rafter.Option<T>!
+Sotsera.Rafter.Option<T>.Sensitive() -> Sotsera.Rafter.Option<T>!
+Sotsera.Rafter.Option<T>.Validate(System.Func<T, bool>! predicate, string! message) -> Sotsera.Rafter.Option<T>!
+Sotsera.Rafter.Rafter
+Sotsera.Rafter.RepeatedOption<T>
+Sotsera.Rafter.RepeatedOption<T>.Alias(char alias) -> Sotsera.Rafter.RepeatedOption<T>!
+Sotsera.Rafter.RepeatedOption<T>.Description(string! description) -> Sotsera.Rafter.RepeatedOption<T>!
+Sotsera.Rafter.RepeatedOption<T>.Sensitive() -> Sotsera.Rafter.RepeatedOption<T>!
+Sotsera.Rafter.RepeatedOption<T>.Validate(System.Func<System.Collections.Generic.IReadOnlyList<T>!, bool>! predicate, string! message) -> Sotsera.Rafter.RepeatedOption<T>!
+Sotsera.Rafter.RequiredOption<T>
+Sotsera.Rafter.RequiredOption<T>.Alias(char alias) -> Sotsera.Rafter.RequiredOption<T>!
+Sotsera.Rafter.RequiredOption<T>.Description(string! description) -> Sotsera.Rafter.RequiredOption<T>!
+Sotsera.Rafter.RequiredOption<T>.FromEnvironment(string! name) -> Sotsera.Rafter.RequiredOption<T>!
+Sotsera.Rafter.RequiredOption<T>.Sensitive() -> Sotsera.Rafter.RequiredOption<T>!
+Sotsera.Rafter.RequiredOption<T>.Validate(System.Func<T, bool>! predicate, string! message) -> Sotsera.Rafter.RequiredOption<T>!
+Sotsera.Rafter.Root
+Sotsera.Rafter.Target
+Sotsera.Rafter.Target.DependsOn(params Sotsera.Rafter.Target![]! dependencies) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Description(string! description) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Finally(System.Action! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Finally(System.Action<Sotsera.Rafter.RafterContext!>! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Finally(System.Func<Sotsera.Rafter.RafterContext!, System.Threading.Tasks.Task!>! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Finally(System.Func<System.Threading.Tasks.Task!>! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Run(System.Action! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Run(System.Action<Sotsera.Rafter.RafterContext!>! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Run(System.Func<Sotsera.Rafter.RafterContext!, System.Threading.Tasks.Task!>! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.Run(System.Func<System.Threading.Tasks.Task!>! callback) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.When(bool condition) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.When(System.Func<bool>! condition) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.When(System.Func<Sotsera.Rafter.RafterContext!, bool>! condition) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.When(System.Func<Sotsera.Rafter.RafterContext!, System.Threading.Tasks.Task<bool>!>! condition) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.WorkingDirectory(Sotsera.Rafter.DefaultedOption<string!>! option) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.WorkingDirectory(Sotsera.Rafter.RequiredOption<string!>! option) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.Target.WorkingDirectory(string! path) -> Sotsera.Rafter.Target!
+Sotsera.Rafter.RafterContext
+static Sotsera.Rafter.Rafter.Command(Sotsera.Rafter.Root! root) -> Sotsera.Rafter.Command!
+static Sotsera.Rafter.Root.At(string! path) -> Sotsera.Rafter.Root!
+static Sotsera.Rafter.Root.Invocation.get -> Sotsera.Rafter.Root!
+static Sotsera.Rafter.Root.Source.get -> Sotsera.Rafter.Root!

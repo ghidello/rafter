@@ -44,7 +44,8 @@ operations with a fail-closed containment and link-traversal contract.
 - [ ] Make context filesystem operations default to the target directory.
 - [ ] Make target cleanup inherit its owner's target directory.
 - [ ] Make command cleanup use the command root.
-- [ ] Support required/defaulted string option handles without rebinding them.
+- [ ] Support required/defaulted string option handles without rebinding them and reject a handle whose phase-2
+      ownership identity does not match the active command.
 - [ ] Prove two concurrent targets can use different directories without changing `Environment.CurrentDirectory`.
 
 ### `EnsureDirectory`

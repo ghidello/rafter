@@ -52,7 +52,8 @@ may improve syntax and validation; it may not own another launch, output, cancel
 ### Shared typed-builder foundation
 
 - [ ] Create internal token-building primitives for flags, arguments, options, repeated values, and optional omission.
-- [ ] Accept required/defaulted option handles only where context resolution is guaranteed.
+- [ ] Accept required/defaulted option handles only where context resolution is guaranteed and enforce the active
+      invocation's phase-2 ownership identity before resolution.
 - [ ] Preserve authored call order unless a tool's grammar requires a documented canonical order.
 - [ ] Apply the phase-7 single-valued process-policy and repeatable-token rules identically to typed builders.
 - [ ] Verify a typed builder can derive multiple variants and launch each variant independently, including

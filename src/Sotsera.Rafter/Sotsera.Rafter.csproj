@@ -17,6 +17,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="Sotsera.Rafter.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="../../README.md" Pack="true" PackagePath="/" Link="README.md" />
   </ItemGroup>
 </Project>

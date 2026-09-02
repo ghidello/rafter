@@ -104,8 +104,8 @@ Optional reference-type handles resolve as nullable references. Optional value t
 `default(T)`.
 
 Rafter binds every authored option exactly once per invocation, before graph execution begins. Binding parses command-line input, reads declared
-environment fallbacks, applies defaults, converts values, validates constraints, registers sensitive values for redaction, and snapshots repeated
-or mutable values. A binding failure prevents every condition, target, cleanup callback, and child process from running.
+scalar environment fallbacks, applies scalar defaults, converts values, validates constraints, registers sensitive values for redaction, and
+snapshots repeated values. A binding failure prevents every condition, target, cleanup callback, and child process from running.
 
 An unset environment fallback means absence and continues to an authored default or optional absence. A set-but-empty environment value, like
 an explicit `--name=`, is present data and goes through ordinary conversion and validation rather than silently falling through. Empty strings
@@ -113,19 +113,32 @@ are never registered as redaction patterns.
 Requiredness checks presence, not string content. Consequently, an explicit empty command-line or environment value
 satisfies `RequiredOption<string>`; authors use `.Validate(...)` when empty or whitespace-only text is invalid for
 their domain.
-Each option may declare at most one `.FromEnvironment(...)` fallback. A second declaration is a duplicate
+Each scalar option may declare at most one `.FromEnvironment(...)` fallback. A second declaration is a duplicate
 single-valued model setting and is reported with the other model-freeze diagnostics.
 Fallback names and child-process environment edit keys require non-whitespace text and cannot contain NUL or `=`.
 Rafter preserves their authored spelling and follows the host operating system's normal lookup case semantics; it
 does not impose uppercase naming or emulate case sensitivity across platforms.
-`.Default(...)` and `.Sensitive()` are likewise single-valued. Repetition records a model error; fluent type-state
-prevents duplicate defaults where possible, while model-freeze validation remains the complete guard.
+Scalar `.Default(...)` and every option's `.Sensitive()` are likewise single-valued. Repetition records a model
+error; fluent type-state prevents duplicate scalar defaults where possible, while model-freeze validation remains
+the complete guard.
+Authored defaults must also be snapshot-safe: `string` or a value type containing no managed references. A custom
+reference-type `IParsable<T>` can still bind external input, but cannot be used as an authored default because the
+frozen command would otherwise retain caller-owned mutable state.
 
-For a sensitive option, Rafter registers the selected non-empty raw command-line, environment, or authored-default text before conversion, then
-registers any distinct converted representation before validation. Conversion failures and throwing validators therefore pass through the same
-redaction boundary as later output.
+For a sensitive scalar option, Rafter registers the selected non-empty raw command-line, environment, or authored-default text before conversion,
+then registers any distinct converted representation before validation. Conversion failures and throwing validators therefore pass through the
+same redaction boundary as later output.
 `.Sensitive()` is available for every supported scalar and repeated option type, not only `string`. Repeated options
-register each occurrence independently, and empty representations are never added as redaction patterns.
+register each command-line occurrence independently, and empty representations are never added as redaction patterns.
+
+`.Sensitive()` is redaction metadata, not secure input transport. It prevents registered values from being emitted
+through Rafter-managed output, but it cannot remove a command-line value from shell history or process inspection.
+Environment variables can also leak through process inheritance, diagnostics, or host tooling, so
+`.FromEnvironment(...)` is a configuration fallback rather than a secret-store recommendation. Real credentials
+should normally come from application-owned secret stores, credential files, standard input, or another secure
+channel appropriate to the environment. Values obtained outside Rafter option binding are not registered
+automatically and must not be emitted through output channels. V1 has no manual sensitive-value registration API;
+adding one requires a command-level, pre-invocation contract and a syntax example rather than target-time mutation.
 
 Boolean options accept a bare `--name` shorthand for `true` and explicit `--name true` or `--name false` values. Absence continues through the
 normal environment/default/optional precedence. Rafter does not synthesize `--no-name` aliases in v1.
@@ -134,20 +147,23 @@ Long option values may be separated by whitespace or the first equals sign, so `
 Short aliases use only the separated `-c Release` form. A bare Boolean alias means `true`; `-c=Release`, attached
 values such as `-cRelease`, and bundled flags such as `-abc` are rejected in v1.
 Option names and aliases use ordinal case-sensitive matching on every platform. A spelling with different casing is
-unknown rather than an alias, and exact duplicate names or aliases are rejected during command construction.
+unknown rather than an alias, and exact duplicate names or aliases are reported with the other model-freeze
+diagnostics.
 Authored option names omit `--` and use lowercase kebab-case: they start with `a`–`z`, continue with lowercase
 letters, digits, or single hyphens, and contain no trailing or repeated hyphen. One-character aliases are declared
 separately with `.Alias(...)`.
 Target names use the same lowercase kebab-case format and ordinal case-sensitive identity. Duplicate target names
-are rejected during command construction.
+are reported with the other model-freeze diagnostics.
 `.Alias(char)` accepts one lowercase ASCII letter from `a` through `z`. Duplicate aliases and an alias colliding
-with another option's one-character long name are rejected during command construction. Each option may declare at
-most one alias; a second `.Alias(...)` call follows the common model-freeze diagnostic policy.
+with another option's one-character long name are reported at model freeze. Each option may declare at most one
+alias; a second `.Alias(...)` call follows the same policy.
 Every command, target, and option must have a non-empty, non-whitespace description before model freeze. Rafter
 preserves authored wording and does not invent fallback descriptions from identifiers.
 `RepeatedOption<T>` accepts one value per occurrence, preserves occurrence order, and resolves absence to an empty
 immutable `IReadOnlyList<T>`. It never splits commas or semicolons. Repeating a scalar `Option<T>` is an error;
-`Option<T[]>` is not the repeated-option API.
+`Option<T[]>` is not the repeated-option API. Repeated options have no authored default or environment fallback in
+v1. Their validators receive the complete immutable list and run even when it is empty, allowing an authored
+validation message to require at least one occurrence when necessary.
 Scalar conversion is invariant and deliberately extensible through the .NET type system: `string` passes through
 unchanged, Boolean and enum values use Rafter's dedicated grammars, nullable value types delegate to their
 underlying type, and other supported values implement `IParsable<T>`. This includes framework types such as numeric
@@ -165,11 +181,11 @@ beginning with hyphens is supplied with the unambiguous `--name=value` form.
 Unknown options are reported exactly without fuzzy suggestions or autocorrection in v1, followed by the ordinary
 safe help/usage output. Diagnostics show only an unknown option's name and never an attached `=value` payload.
 Rafter reserves `--plain`, `--help`, and `-h` as built-ins. Help succeeds without binding options, reading environment fallbacks,
-running validators, resolving roots, snapshotting caller collections, or executing graph callbacks. Authors cannot
+running validators, resolving roots, or executing graph callbacks. Authors cannot
 declare the `plain` or `help` name or the `h` alias. File-based commands receive no synthesized `--version` option.
-Help shows each sensitive option's name, alias, description, required/optional state, environment fallback name, and
-sensitive marker, but never its default or environment value. Non-sensitive scalar defaults are formatted
-invariantly. Collection defaults are described without enumerating mutable caller-owned data.
+Help shows each sensitive option's name, alias, description, required/optional state, scalar environment fallback
+name, and sensitive marker, but never its default or environment value. Non-sensitive scalar defaults are formatted
+invariantly.
 Help begins with the command description and a usage line whose invocation name is derived from the executable or
 file-based application; v1 has no command-name API. Authored `Command options` are separate from Rafter-owned
 `Common options`, which contain `--plain` and `-h, --help`. Friendly metavariables describe scalar and enum
@@ -223,7 +239,7 @@ the binding barrier, and sensitive values remain redacted from both diagnostic p
 safe ordinary diagnostics already collected, and prevents later converters or validators from running.
 
 `context.Value(option)` and context-owned APIs both read the same immutable bound snapshot. Reading an option from multiple targets never repeats
-conversion, validation, environment access, default selection, or caller-owned collection access.
+conversion, validation, environment access, or default selection.
 
 Conditions support an authored Boolean, a deferred `Func<bool>`, a context-aware synchronous predicate, or a context-aware asynchronous
 predicate. There is no context-free asynchronous overload: asynchronous conditions receive the target context so they can observe invocation

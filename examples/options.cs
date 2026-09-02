@@ -17,6 +17,7 @@ var publish = command.Option<bool>("publish")
     .Description("Create publish output after building.")
     .Default(false);
 
+// Sensitive requests output redaction; command-line and environment values are not secure secret transport.
 var token = command.Option<string>("token")
     .Description("Optional service token.")
     .FromEnvironment("RAFTER_EXAMPLE_TOKEN")

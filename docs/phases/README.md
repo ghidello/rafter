@@ -6,7 +6,7 @@ phase explicitly leaves an integration seam for a later one.
 | Phase | Plan | Outcome |
 | --- | --- | --- |
 | 1 | [Foundation](phase-01-foundation.md) | Reproducible product solution and package skeleton |
-| 2 | [Command model](phase-02-command-model.md) | Immutable authored definitions matching the examples |
+| 2 | [Command model](phase-02-command-model.md) ([evidence](phase-02-command-model-evidence.md)) | Immutable authored definitions matching the examples |
 | 3 | [Parsing and binding](phase-03-parsing-and-binding.md) | Bounded grammar and exactly-once values |
 | 4 | [Roots and filesystem](phase-04-roots-and-filesystem.md) | Scoped working directories and guarded mutations |
 | 5 | [Graph execution](phase-05-graph-execution.md) | Deterministic concurrent target lifecycle |

@@ -11,6 +11,8 @@ The accepted grammar is derived from the option examples. Unsupported command-sy
 than accidental compatibility promises.
 
 `.Default(...)` stores an already-computed authored value. Binding does not invoke a default factory.
+Phase 2 permits that value only when its type can be copied safely into the frozen model: `string` or a value type
+containing no managed references.
 
 ## Implementation checklist
 
@@ -32,9 +34,9 @@ than accidental compatibility promises.
       scalar occurrences; do not split comma- or semicolon-delimited text.
 - [ ] Reject `--` as unsupported in v1; document `--name=value` for values beginning with hyphens.
 - [ ] Recognize reserved `--help` and `-h` before binding and return success without environment reads, validation,
-      root resolution, caller-collection enumeration, or graph callbacks.
+      root resolution, or graph callbacks.
 - [ ] Render sensitive metadata and environment variable names but never sensitive defaults or values; render
-      non-sensitive scalar defaults invariantly and describe collection defaults without enumeration.
+      non-sensitive scalar defaults invariantly.
 - [ ] Render command description and `Usage` first, deriving the invocation name from the executable or file-based
       application without adding a command-name API.
 - [ ] Separate authored `Command options` from Rafter-owned `Common options`; list `--plain` and `-h, --help` as the
@@ -94,6 +96,7 @@ than accidental compatibility promises.
 - [ ] Run validators once each in authored order and stop evaluating that option at its first failed predicate.
 - [ ] Skip validators for complete optional absence; run them for explicit empty values and every required or
       defaulted value.
+- [ ] Pass the complete immutable list to repeated-option validators and run them for absence as an empty list.
 - [ ] Continue binding independent options after an ordinary conversion or validation rejection and order those
       diagnostics by option declaration after token-level syntax errors.
 - [ ] Treat a thrown validator as an authoring failure, preserve its original exception, identify the option safely,
@@ -108,10 +111,10 @@ than accidental compatibility promises.
 
 - [ ] Store values by option identity in a read-only invocation snapshot.
 - [ ] Resolve absent `RepeatedOption<T>` as an empty immutable `IReadOnlyList<T>` and preserve occurrence order;
-      expose no mutable array or caller-owned collection.
-- [ ] Register selected non-empty raw command-line, environment, or default text for a sensitive option before
-      conversion, then register any distinct converted representation before validation; for `RepeatedOption<T>`,
-      perform both steps independently for every occurrence.
+      expose no mutable array.
+- [ ] Register selected non-empty raw command-line, environment, or default text for a sensitive scalar option before
+      conversion, then register any distinct converted representation before validation. For `RepeatedOption<T>`,
+      perform both steps independently for every command-line occurrence.
 - [ ] Never register an empty string as a redaction pattern.
 - [ ] Test sensitive scalar and repeated options across non-string framework and application-defined parsable types.
 - [ ] Ensure diagnostics never echo sensitive raw tokens or environment values.
@@ -129,10 +132,11 @@ than accidental compatibility promises.
 
 - [ ] Table-test every grammar rule, including empty input and malformed final tokens.
 - [ ] Supply multiple independent malformed and invalid options and assert the complete deterministic diagnostic set.
-- [ ] Test command-line/environment/default/absence precedence for every option category.
-- [ ] Count calls to fallback readers, converters, validators, and caller enumerables.
+- [ ] Test command-line/environment/default/absence precedence for every scalar option category and command-line
+      occurrence/absence behavior for repeated options.
+- [ ] Count calls to fallback readers, converters, and validators.
 - [ ] Read one option from multiple targets and through multiple context APIs; every counter remains one.
-- [ ] Mutate source collections after binding and prove the snapshot is unchanged.
+- [ ] Prove repeated results expose no mutable collection and cannot alter the bound snapshot.
 - [ ] Verify sensitive invalid input is absent from all diagnostics and exception text.
 - [ ] Snapshot zero, one, twenty, and more-than-twenty input errors in rich and plain modes, including safe escaping,
       sensitive replacement, omitted counts, and exactly one following help block.
@@ -145,9 +149,9 @@ than accidental compatibility promises.
 ## Completion gates
 
 - [ ] **B1 — Grammar locked:** the accepted and rejected grammar table is documented and fully tested.
-- [ ] **B2 — Exactly once:** instrumentation proves every binding stage and mutable enumeration occurs at most once.
+- [ ] **B2 — Exactly once:** instrumentation proves every binding stage occurs at most once.
 - [ ] **B3 — Atomic barrier:** binding-failure tests prove no condition, target, process, or cleanup side effect occurs.
-- [ ] **B4 — Immutable values:** repeated and mutable value snapshot tests pass.
+- [ ] **B4 — Immutable values:** repeated-value snapshot tests pass.
 - [ ] **B5 — Secret safety:** raw sensitive values are absent from all captured failure channels.
 - [ ] **B6 — Portfolio behavior:** all option, condition-input, and user-secret examples bind as designed.
 - [ ] **B7 — Evidence recorded:** grammar table, precedence table, and exactly-once counter report are committed.

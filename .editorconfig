@@ -395,3 +395,15 @@ dotnet_naming_style.s_camelcase.capitalization = camel_case
 # Markdown files
 [*.md]
 trim_trailing_whitespace = false
+
+#### Project customizations ####
+
+[*.cs]
+max_line_length = 120
+
+# These public names are part of the approved Rafter syntax. Each file contains only the named public type.
+[src/Sotsera.Rafter/Option.cs]
+dotnet_diagnostic.CA1716.severity = none
+
+[src/Sotsera.Rafter/Rafter.cs]
+dotnet_diagnostic.MA0049.severity = none
