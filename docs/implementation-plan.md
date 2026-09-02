@@ -205,6 +205,9 @@ Implement invocation, source, and explicit roots plus target- and process-scoped
   a link found inside the directory as an entry without traversing its destination.
 
 Completion requires cross-platform path, containment, link, rejection-without-mutation, and working-directory tests.
+Phase 4 proves the path engine and internal context scopes without graph execution. Phase 5 owns real concurrent
+target and cleanup-directory verification, and Phase 7 owns per-process working-directory integration through the
+same resolver.
 
 ## [Phase 5: graph planning and execution](phases/phase-05-graph-execution.md)
 
