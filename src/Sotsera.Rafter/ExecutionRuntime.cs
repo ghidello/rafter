@@ -66,7 +66,8 @@ internal static class ExecutionRuntime
             BindingEngine.InvocationSnapshot snapshot,
             InvocationPaths paths,
             IFileSystemPrimitives fileSystem,
-            CancellationToken cancellationToken)
+            CancellationToken cancellationToken,
+            InvocationOutput? output = null)
         {
             Model = model;
             Plan = plan;
@@ -74,6 +75,7 @@ internal static class ExecutionRuntime
             Paths = paths;
             FileSystem = fileSystem;
             CancellationToken = cancellationToken;
+            Output = output;
         }
 
         internal CommandDefinition Model { get; }
@@ -87,6 +89,8 @@ internal static class ExecutionRuntime
         internal IFileSystemPrimitives FileSystem { get; }
 
         internal CancellationToken CancellationToken { get; }
+
+        internal InvocationOutput? Output { get; }
     }
 
     internal static async Task<ExecutionOutcome> ExecuteAsync(ExecutionScope scope)
@@ -108,7 +112,8 @@ internal static class ExecutionRuntime
             scope.Model.Cleanup,
             scope.Snapshot,
             scope.Paths,
-            scope.FileSystem).ConfigureAwait(false);
+            scope.FileSystem,
+            scope.Output).ConfigureAwait(false);
 
         bool cancellationRequested = scope.CancellationToken.IsCancellationRequested;
         int exitCode = GetExitCode(
@@ -318,30 +323,42 @@ internal static class ExecutionRuntime
             scope.Paths,
             target.Id,
             scope.FileSystem,
+            scope.Output!,
+            target.Name,
             scope.CancellationToken);
-
-        TargetCompletion? conditionResult = await EvaluateConditionsAsync(target, context, scope.CancellationToken)
-            .ConfigureAwait(false);
-        if (conditionResult is not null)
+        using ConsoleOutputCoordinator.TargetLease consoleScope = ConsoleOutputCoordinator.EnterTarget(
+            context.OutputScope);
+        TargetCompletion executionResult;
+        try
         {
-            return conditionResult;
+            TargetCompletion? conditionResult = await EvaluateConditionsAsync(target, context, scope.CancellationToken)
+                .ConfigureAwait(false);
+            if (conditionResult is not null)
+            {
+                return conditionResult;
+            }
+
+            if (target.Execution is null)
+            {
+                return TargetCompletion.Succeeded(GetCallbackFreeShape(target));
+            }
+
+            if (scope.CancellationToken.IsCancellationRequested)
+            {
+                return TargetCompletion.Cancelled();
+            }
+
+            executionResult = await InvokeExecutionAsync(
+                target.Execution,
+                context,
+                scope.CancellationToken)
+                .ConfigureAwait(false);
+        }
+        finally
+        {
+            context.CloseOutputScope();
         }
 
-        if (target.Execution is null)
-        {
-            return TargetCompletion.Succeeded(GetCallbackFreeShape(target));
-        }
-
-        if (scope.CancellationToken.IsCancellationRequested)
-        {
-            return TargetCompletion.Cancelled();
-        }
-
-        TargetCompletion executionResult = await InvokeExecutionAsync(
-            target.Execution,
-            context,
-            scope.CancellationToken)
-            .ConfigureAwait(false);
         return await RunTargetCleanupAsync(node, scope, executionResult).ConfigureAwait(false);
     }
 
@@ -369,6 +386,10 @@ internal static class ExecutionRuntime
             {
                 return ClassifyCallbackException(exception, FailurePhase.Condition, cancellationToken);
             }
+            finally
+            {
+                ConsoleOutputCoordinator.VerifyActiveOwnership();
+            }
         }
 
         return null;
@@ -387,6 +408,10 @@ internal static class ExecutionRuntime
         catch (Exception exception)
         {
             return ClassifyCallbackException(exception, FailurePhase.Execution, cancellationToken);
+        }
+        finally
+        {
+            ConsoleOutputCoordinator.VerifyActiveOwnership();
         }
     }
 
@@ -408,8 +433,20 @@ internal static class ExecutionRuntime
             scope.Paths,
             target.Id,
             scope.FileSystem,
+            scope.Output!,
+            target.Name,
             CancellationToken.None);
-        Exception? cleanupException = await TryInvokeCleanupAsync(cleanup, cleanupContext).ConfigureAwait(false);
+        using ConsoleOutputCoordinator.TargetLease consoleScope = ConsoleOutputCoordinator.EnterTarget(
+            cleanupContext.OutputScope);
+        Exception? cleanupException;
+        try
+        {
+            cleanupException = await TryInvokeCleanupAsync(cleanup, cleanupContext).ConfigureAwait(false);
+        }
+        finally
+        {
+            cleanupContext.CloseOutputScope();
+        }
         TargetOutcome outcome = executionResult.Outcome;
         FailurePhase? failurePhase = executionResult.FailurePhase;
         Exception? primaryException = executionResult.PrimaryException;
@@ -447,19 +484,25 @@ internal static class ExecutionRuntime
         NormalizedCallback? cleanup,
         BindingEngine.InvocationSnapshot snapshot,
         InvocationPaths paths,
-        IFileSystemPrimitives fileSystem)
+        IFileSystemPrimitives fileSystem,
+        InvocationOutput? output)
     {
         if (cleanup is null)
         {
             return null;
         }
 
-        RafterContext context = CreateCommandContext(
-            snapshot,
-            paths,
-            fileSystem,
-            CancellationToken.None);
-        return await Task.Run(() => TryInvokeCleanupAsync(cleanup, context)).ConfigureAwait(false);
+        RafterContext context = output is null
+            ? CreateCommandContext(snapshot, paths, fileSystem, CancellationToken.None)
+            : CreateCommandContext(snapshot, paths, fileSystem, output, CancellationToken.None);
+        try
+        {
+            return await Task.Run(() => TryInvokeCleanupAsync(cleanup, context)).ConfigureAwait(false);
+        }
+        finally
+        {
+            context.CloseOutputScope();
+        }
     }
 
     private static async Task<Exception?> TryInvokeCleanupAsync(
@@ -474,6 +517,10 @@ internal static class ExecutionRuntime
         catch (Exception exception)
         {
             return exception;
+        }
+        finally
+        {
+            ConsoleOutputCoordinator.VerifyActiveOwnership();
         }
     }
 

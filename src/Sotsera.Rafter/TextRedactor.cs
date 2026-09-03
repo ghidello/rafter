@@ -21,6 +21,8 @@ internal sealed class TextRedactor
 
     internal string? Marker { get; }
 
+    internal ImmutableArray<string> Patterns => _patterns;
+
     internal static TextRedactor Create(ImmutableArray<string> patterns)
     {
         ImmutableArray<string> distinct = patterns

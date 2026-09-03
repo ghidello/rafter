@@ -34,6 +34,8 @@ public sealed class Command
 
     internal GraphPlanningResult? LastGraphPlanningResult { get; private set; }
 
+    internal Exception? LastOutputFailure { get; private set; }
+
     internal PathRuntime.InvocationPaths? LastInvocationPaths { get; private set; }
 
     internal InvocationStatus? LastInvocationStatus { get; private set; }
@@ -157,6 +159,7 @@ public sealed class Command
             LastBindingResult = null;
             LastExecutionOutcome = null;
             LastGraphPlanningResult = null;
+            LastOutputFailure = null;
             LastInvocationPaths = null;
             LastInvocationStatus = null;
             _lastInvocationDiagnostics = entryTarget.Authored.Command.Id == _authored.Id
@@ -411,15 +414,95 @@ public sealed class Command
             return 1;
         }
 
+        return await ExecuteWithOutputAsync(execution, result, LastInvocationPaths!).ConfigureAwait(false);
+    }
+
+    private async Task<int> ExecuteWithOutputAsync(
+        InvocationExecution execution,
+        BindingResult result,
+        InvocationPaths paths)
+    {
+        InvocationOutput output = new(
+            execution.Services.StandardOutput,
+            execution.Services.StandardError,
+            !result.Plain && execution.Services.StandardOutputSupportsAnsi,
+            !result.Plain && execution.Services.StandardErrorSupportsAnsi,
+            result.Redactor);
+        ConsoleOutputCoordinator.Lease consoleLease;
+        try
+        {
+            consoleLease = ConsoleOutputCoordinator.Register(output);
+        }
+        catch (Exception exception)
+        {
+            LastOutputFailure = exception;
+            return await CompleteInfrastructureFailureAsync(
+                execution.Services,
+                result.Plain,
+                result.Redactor,
+                "Console output coordination could not be initialized.").ConfigureAwait(false);
+        }
+
+        int exitCode;
+        using (consoleLease)
+        {
+            exitCode = await ExecuteWithRegisteredOutputAsync(
+                execution,
+                result,
+                paths,
+                output).ConfigureAwait(false);
+        }
+
+        LastOutputFailure = output.Failure;
+        if (LastOutputFailure is not null)
+        {
+            LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+            return 1;
+        }
+
+        return exitCode;
+    }
+
+    private async Task<int> ExecuteWithRegisteredOutputAsync(
+        InvocationExecution execution,
+        BindingResult result,
+        InvocationPaths paths,
+        InvocationOutput output)
+    {
         ExecutionScope scope = new(
             execution.Model,
             execution.Plan,
             result.Snapshot!,
-            LastInvocationPaths,
+            paths,
             execution.Services.FileSystem,
-            execution.CancellationToken);
+            execution.CancellationToken,
+            output);
         LastExecutionOutcome = await ExecutionRuntime.ExecuteAsync(scope).ConfigureAwait(false);
-        return await CompleteExecutionAsync(execution.Services, result, LastExecutionOutcome).ConfigureAwait(false);
+        ConsoleOutputCoordinator.VerifyActiveOwnership();
+        await output.SealAsync().ConfigureAwait(false);
+        LastOutputFailure = output.Failure;
+        if (LastOutputFailure is not null)
+        {
+            return await CompleteInfrastructureFailureAsync(
+                execution.Services,
+                result.Plain,
+                result.Redactor,
+                "Command output failed.").ConfigureAwait(false);
+        }
+
+        int exitCode = await CompleteExecutionAsync(
+            execution.Services,
+            result,
+            LastExecutionOutcome).ConfigureAwait(false);
+        ConsoleOutputCoordinator.VerifyActiveOwnership();
+        LastOutputFailure = output.Failure;
+        if (LastOutputFailure is null)
+        {
+            return exitCode;
+        }
+
+        LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+        return 1;
     }
 
     private async Task<int> CompleteExecutionAsync(

@@ -58,6 +58,7 @@ Sotsera.Rafter.Target.WorkingDirectory(string! path) -> Sotsera.Rafter.Target!
 Sotsera.Rafter.RafterContext
 Sotsera.Rafter.RafterContext.CancellationToken.get -> System.Threading.CancellationToken
 Sotsera.Rafter.RafterContext.FileSystem.get -> Sotsera.Rafter.RafterFileSystem!
+Sotsera.Rafter.RafterContext.Output.get -> Sotsera.Rafter.RafterOutput!
 Sotsera.Rafter.RafterContext.Root.get -> string!
 Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.DefaultedOption<T>! option) -> T
 Sotsera.Rafter.RafterContext.Value<T>(Sotsera.Rafter.Option<T>! option) -> T?
@@ -71,6 +72,12 @@ Sotsera.Rafter.RafterFileSystem.EnsureDirectory(string! path) -> void
 Sotsera.Rafter.RafterFileSystem.EnsureEmptyDirectory(Sotsera.Rafter.DefaultedOption<string!>! option) -> void
 Sotsera.Rafter.RafterFileSystem.EnsureEmptyDirectory(Sotsera.Rafter.RequiredOption<string!>! option) -> void
 Sotsera.Rafter.RafterFileSystem.EnsureEmptyDirectory(string! path) -> void
+Sotsera.Rafter.RafterOutput
+Sotsera.Rafter.RafterOutput.Error(string! text, string? recovery = null) -> void
+Sotsera.Rafter.RafterOutput.Line(string! text) -> void
+Sotsera.Rafter.RafterOutput.Property(string! name, object? value) -> void
+Sotsera.Rafter.RafterOutput.Success(string! text) -> void
+Sotsera.Rafter.RafterOutput.Warning(string! text) -> void
 static Sotsera.Rafter.Rafter.Command(Sotsera.Rafter.Root! root) -> Sotsera.Rafter.Command!
 static Sotsera.Rafter.Root.At(string! path) -> Sotsera.Rafter.Root!
 static Sotsera.Rafter.Root.Invocation.get -> Sotsera.Rafter.Root!

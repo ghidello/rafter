@@ -10,6 +10,8 @@ public sealed class RafterContext
     private readonly string? _workingDirectory;
     private readonly IFileSystemPrimitives? _fileSystem;
     private readonly CancellationToken _cancellationToken;
+    private readonly OutputScope? _outputScope;
+    private readonly RafterOutput? _output;
 
     internal RafterContext()
     {
@@ -25,13 +27,20 @@ public sealed class RafterContext
         string root,
         string workingDirectory,
         IFileSystemPrimitives fileSystem,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        InvocationOutput? output = null,
+        string? targetName = null)
     {
         _snapshot = snapshot;
         _root = root;
         _workingDirectory = workingDirectory;
         _fileSystem = fileSystem;
         _cancellationToken = cancellationToken;
+        if (output is not null)
+        {
+            _outputScope = new OutputScope(targetName);
+            _output = new RafterOutput(output, _outputScope);
+        }
     }
 
     /// <summary>Gets the token that signals cancellation of the current invocation callback.</summary>
@@ -52,6 +61,10 @@ public sealed class RafterContext
         Root,
         WorkingDirectory,
         _fileSystem ?? throw new InvalidOperationException("The context has no filesystem services."));
+
+    /// <summary>Gets semantic output for the current invocation.</summary>
+    public RafterOutput Output => _output
+        ?? throw new InvalidOperationException("The context has no invocation output services.");
 
     /// <summary>Gets the bound value of an optional option.</summary>
     public T? Value<T>(Option<T> option)
@@ -98,4 +111,14 @@ public sealed class RafterContext
 
     private BindingEngine.InvocationSnapshot GetSnapshot()
         => _snapshot ?? throw new InvalidOperationException("The context is not associated with a bound invocation.");
+
+    internal OutputScope? OutputScope => _outputScope;
+
+    internal void CloseOutputScope()
+    {
+        if (_outputScope is not null)
+        {
+            _outputScope.Close();
+        }
+    }
 }

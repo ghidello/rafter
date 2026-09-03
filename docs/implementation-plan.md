@@ -316,9 +316,12 @@ Implement semantic output and its Spectre.Console presentation.
 - Attribute managed `Console.Out` and `Console.Error` writes to the active target across ordinary awaits,
   `Task.Run`, and `ConfigureAwait(false)` without corrupting concurrent target output.
 - Scope managed console attribution to target conditions/execution/cleanup when active, otherwise to the command
-  during invocation work and command cleanup; expired target scopes fall back to command attribution.
-- Install interception only for `RunAsync` and restore the host writers exactly afterward. Require callbacks to await
-  spawned work: output that outlives `RunAsync` is application-owned and has no Rafter attribution/redaction promise.
+  during invocation work and command cleanup; expired target scopes fall back to command attribution until the
+  managed-input seal immediately after command cleanup.
+- Share one reference-counted process-wide coordinator across overlapping commands, install one writer pair only for
+  normal `RunAsync` execution, and restore the host writers exactly after the last registration. Require callbacks to
+  await spawned work: output after the managed-input seal is application-owned and has no Rafter
+  attribution/redaction promise, even while final presentation is still settling.
 - Treat `Console.SetOut` or `Console.SetError` during interception as unsupported global-state mutation: detect loss
   of either coordinating writer at callback/presentation boundaries, record an infrastructure failure, never adopt
   the replacement, and restore both exact entry writers in `finally`.

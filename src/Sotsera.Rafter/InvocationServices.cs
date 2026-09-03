@@ -26,10 +26,11 @@ internal sealed record InvocationServices(
         string? launchToken = Environment.GetCommandLineArgs().FirstOrDefault();
         string invocationName = InvocationNameResolver.Resolve(filePath, processPath, entryAssembly, launchToken);
 
+        (TextWriter Output, TextWriter Error)? coordinated = ConsoleOutputCoordinator.TryGetHostWriters();
         return new InvocationServices(
             Environment.GetEnvironmentVariable,
-            Console.Out,
-            Console.Error,
+            coordinated?.Output ?? Console.Out,
+            coordinated?.Error ?? Console.Error,
             !Console.IsOutputRedirected,
             !Console.IsErrorRedirected,
             invocationName)

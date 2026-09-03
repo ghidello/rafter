@@ -51,12 +51,37 @@ internal static class PathRuntime
         CancellationToken cancellationToken = default)
         => new(snapshot, paths.Root, paths.GetTargetDirectory(targetId), fileSystem, cancellationToken);
 
+    internal static RafterContext CreateTargetContext(
+        InvocationSnapshot snapshot,
+        InvocationPaths paths,
+        Guid targetId,
+        IFileSystemPrimitives fileSystem,
+        InvocationOutput output,
+        string targetName,
+        CancellationToken cancellationToken = default)
+        => new(
+            snapshot,
+            paths.Root,
+            paths.GetTargetDirectory(targetId),
+            fileSystem,
+            cancellationToken,
+            output,
+            targetName);
+
     internal static RafterContext CreateCommandContext(
         InvocationSnapshot snapshot,
         InvocationPaths paths,
         IFileSystemPrimitives fileSystem,
         CancellationToken cancellationToken = default)
         => new(snapshot, paths.Root, paths.Root, fileSystem, cancellationToken);
+
+    internal static RafterContext CreateCommandContext(
+        InvocationSnapshot snapshot,
+        InvocationPaths paths,
+        IFileSystemPrimitives fileSystem,
+        InvocationOutput output,
+        CancellationToken cancellationToken = default)
+        => new(snapshot, paths.Root, paths.Root, fileSystem, cancellationToken, output);
 
     private static string ResolveRoot(RootDefinition root, InvocationServices services)
     {
