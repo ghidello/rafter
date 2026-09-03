@@ -271,10 +271,13 @@ Targets may register multiple conditions. They form a short-circuit AND chain ev
 becomes ready and acquires its permit. The first `false` skips the target; the first thrown condition fails it; either outcome prevents later
 conditions and target execution.
 
-A condition returning `false` skips that target and satisfies its dependents; it does not fail or block the graph. Failed or cancelled
-prerequisites do block dependents. To suppress a complete branch, authors put the condition on that branch's aggregate or selected entry target.
-Target cleanup does not run when a condition returns `false` or throws because the execution callback never started. Once execution starts,
-target cleanup runs after success, failure, or cancellation; command cleanup remains invocation-wide.
+A condition returning `false` skips that target and satisfies its dependents; it does not fail or block the graph. Conditions run only after
+dependencies settle, so they control their target without suppressing prerequisite work. V1 has no branch-wide condition construct: apply the
+condition to every target whose own work should be skipped. A failed or blocked prerequisite blocks its dependents; invocation cancellation
+instead cancels unstarted targets whose direct dependencies did not fail or block. When both happen concurrently, dependency failure wins for
+affected dependents so their final states do not depend on race timing. Target cleanup does not run when a condition returns `false` or throws
+because the execution callback never started. Once execution starts, target cleanup runs after success, failure, or cancellation; command
+cleanup remains invocation-wide.
 
 Target callbacks may omit the context when they do not use Rafter services. Both synchronous `Action` and asynchronous `Func<Task>` forms are
 supported for execution and cleanup; context-aware callbacks remain the path to output, bound values, working directories, processes, and
@@ -288,7 +291,8 @@ with no work. A target with dependencies but no callback is an aggregate, while 
 
 Commands execute at most one target callback at a time unless `.Concurrency(...)` explicitly opts into parallel graph execution. The configured
 value must be positive. A target holds no permit while waiting for dependencies. Once ready, it holds one permit across deferred condition
-evaluation, execution, and target cleanup. Callback-free aggregate and implicit no-op settlement consume no permit.
+evaluation, execution, and target cleanup. Condition-free aggregate and implicit no-op settlement consume no permit. Rafter dispatches admitted
+target lifecycles independently, so synchronous and asynchronous callbacks share the same bound; callback thread identity is not guaranteed.
 
 `.DependsOn(params Target[] dependencies)` declares a target's complete dependency set in one call. A second call or
 the same dependency appearing more than once records a model error; dependencies are never silently deduplicated.
@@ -298,29 +302,41 @@ or creating an implicitly ordered cleanup stack. Authors compose multiple cleanu
 Duplicate single-valued model settings such as descriptions, concurrency, target working directories, execution, and cleanup preserve their
 first value internally and accumulate authored-order diagnostics. `RunAsync` reports all such errors when it freezes the model, before parsing,
 binding, or execution.
-Target `.Finally(...)` requires that target to declare `.Run(...)`; aggregate and implicit no-op targets cannot own cleanup. Cleanup that belongs
-to the invocation as a whole is declared with `command.Finally(...)` and runs after target settlement and qualified target cleanup.
-Command cleanup begins only after parsing, binding, graph preflight, and invocation initialization succeed. From that point it runs exactly once
+Target `.Finally(...)` requires that target to declare `.Run(...)`; aggregate and implicit no-op targets cannot own cleanup. A condition-bearing
+callback-free target settles atomically in its aggregate or no-work success shape when its final condition returns `true`; cancellation requested
+concurrently with or after that callback does not revise the target, although it can still cancel the invocation and other work. Cleanup that belongs to the invocation
+as a whole is declared with `command.Finally(...)` and runs after target settlement and qualified target cleanup. Target cleanup is part of
+dependency settlement: a cleanup-only failure makes the target failed and blocks its dependents. Command cleanup begins only after graph
+planning, parsing, binding, and invocation path initialization succeed. Successful path initialization qualifies it atomically before the next
+cancellation checkpoint, even if cancellation raced that successful initialization. From that point it runs exactly once
 after every success, failure, cancellation, or all-skipped outcome. Earlier failures run no Rafter callback; resources acquired during ordinary
 C# authoring remain the application's responsibility through `using` or language-level `try`/`finally`.
-Cleanup receives a dedicated token that is not already cancelled merely because invocation cancellation caused the
-cleanup path. Rafter awaits managed cleanup to settlement: it cannot safely kill or detach arbitrary callback code,
-so cleanup authors keep callbacks finite and apply operation-specific timeouts themselves. Hard bounded teardown is
-promised only for resources Rafter owns and can terminate, such as child processes.
-Execution failure or cancellation remains the primary command outcome when cleanup also fails. Target-cleanup
+Cleanup receives a distinct context with the same immutable option and path values and `CancellationToken.None`, even
+when invocation cancellation caused the cleanup path. Context object identity is not part of the contract. Rafter
+awaits managed cleanup to settlement: it cannot safely kill or detach arbitrary callback code, so cleanup authors
+keep callbacks finite and apply operation-specific timeouts themselves. Hard bounded teardown is promised only for
+resources Rafter owns and can terminate, such as child processes.
+An ordinary condition or execution failure, or invocation cancellation, remains the primary command outcome when cleanup also fails. Target-cleanup
 failures are reported separately in stable target plan order, followed by command cleanup, under `Cleanup also
-failed`; none replaces an earlier exception. If execution succeeded, any cleanup failure still makes the command
-unsuccessful and becomes its sole failure category. Rafter retains all original exceptions in its internal outcome
+failed`; none replaces an earlier exception. If execution succeeded and the invocation was not cancelled, any cleanup failure still makes the
+command unsuccessful and becomes its sole failure category. Rafter retains all original exceptions in its internal outcome
 for classification, presentation, and verification; none is wrapped or replaced. `RunAsync` exposes no
 structured public outcome in v1. Authors who need programmatic handling catch an exception inside their execution or
 cleanup callback before it escapes to Rafter; typed process exceptions remain catchable there.
 
-`RunAsync` returns `0` for success, help, skipped/no-op completion, and explicitly valid nonzero child-process exits;
+`RunAsync` accepts an optional cancellation token without changing existing two-argument calls. While normal
+invocations are active, Rafter handles the first Ctrl+C through one shared coordinator and cancels every active
+invocation. A repeated Ctrl+C is left to the host's default hard termination, providing an escape when managed code
+does not cooperate. Valid exact help remains independent from cancellation. `RunAsync` returns `0` for success, help,
+skipped/no-op completion, and explicitly valid nonzero child-process exits;
 `1` for converter or validator author exceptions and execution, process, infrastructure, or cleanup failure; `2`
 for command-model, syntax, failed-conversion, missing-required, validator-rejection, or graph-planning diagnostics;
-and `130` for invocation cancellation. An `OperationCanceledException` counts as
-invocation cancellation only when that invocation's token was actually requested; otherwise it is a callback
-failure. A process timeout is likewise failure rather than cancellation. Concurrent and cleanup details affect the
+and `130` for invocation cancellation when no ordinary target failure from a condition or execution callback exists. An `OperationCanceledException` counts as
+invocation cancellation only when it carries that invocation's token and the token was requested when the callback settled. A tokenless exception
+or one carrying another token is a callback failure even when invocation cancellation races it. Authors use
+`context.CancellationToken.ThrowIfCancellationRequested()` or pass that token to cancellable operations. An observed ordinary target failure from
+a condition or execution callback remains primary over concurrent cancellation. A process timeout is
+likewise failure rather than cancellation. Concurrent and cleanup details affect the
 diagnostic outcome, not the numeric mapping.
 
 `Output.Property(string, object?)` keeps the calling syntax uniform for nulls, scalars, strings, and collections.

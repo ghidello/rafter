@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static Sotsera.Rafter.BindingEngine;
 using static Sotsera.Rafter.CommandModel;
+using static Sotsera.Rafter.ExecutionRuntime;
+using static Sotsera.Rafter.GraphPlanner;
 using static Sotsera.Rafter.PathRuntime;
 
 namespace Sotsera.Rafter;
@@ -28,11 +30,18 @@ public sealed class Command
 
     internal BindingResult? LastBindingResult { get; private set; }
 
+    internal ExecutionOutcome? LastExecutionOutcome { get; private set; }
+
+    internal GraphPlanningResult? LastGraphPlanningResult { get; private set; }
+
     internal PathRuntime.InvocationPaths? LastInvocationPaths { get; private set; }
 
     internal InvocationStatus? LastInvocationStatus { get; private set; }
 
     internal Func<InvocationServices> InvocationServicesFactory { get; set; } = InvocationServices.Capture;
+
+    internal ConsoleCancellationCoordinator CancellationCoordinator { get; set; }
+        = ConsoleCancellationCoordinator.Shared;
 
     internal Task? InvocationBarrier { get; set; }
 
@@ -121,7 +130,14 @@ public sealed class Command
     }
 
     /// <summary>Freezes the command and starts an invocation.</summary>
-    public Task<int> RunAsync(Target entryTarget, string[] args)
+    /// <param name="entryTarget">The target whose reachable dependency graph is executed.</param>
+    /// <param name="args">The command-line arguments to parse.</param>
+    /// <param name="cancellationToken">A token that requests cooperative invocation cancellation.</param>
+    /// <returns>The command exit code.</returns>
+    public Task<int> RunAsync(
+        Target entryTarget,
+        string[] args,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(entryTarget);
         ArgumentNullException.ThrowIfNull(args);
@@ -139,13 +155,20 @@ public sealed class Command
         {
             _lastArguments = [.. args];
             LastBindingResult = null;
+            LastExecutionOutcome = null;
+            LastGraphPlanningResult = null;
             LastInvocationPaths = null;
             LastInvocationStatus = null;
             _lastInvocationDiagnostics = entryTarget.Authored.Command.Id == _authored.Id
                 ? []
-                : [new ModelDiagnostic("RAFTER1301", "The entry target must belong to the invoked command.", 0, null, DiagnosticStage.OwnershipOrReference)];
+                : [new ModelDiagnostic(
+                    "RAFTER1301",
+                    "The entry target must belong to the invoked command.",
+                    0,
+                    null,
+                    DiagnosticStage.OwnershipOrReference)];
             ModelFreezeResult freezeResult = ModelValidation.Freeze(_authored);
-            return CompleteInvocationAsync(entryTarget.Authored.Id, freezeResult);
+            return CompleteInvocationAsync(entryTarget.Authored.Id, freezeResult, cancellationToken);
         }
         catch
         {
@@ -154,7 +177,10 @@ public sealed class Command
         }
     }
 
-    private async Task<int> CompleteInvocationAsync(Guid entryTargetId, ModelFreezeResult freezeResult)
+    private async Task<int> CompleteInvocationAsync(
+        Guid entryTargetId,
+        ModelFreezeResult freezeResult,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -163,7 +189,7 @@ public sealed class Command
                 await InvocationBarrier.ConfigureAwait(false);
             }
 
-            return await ExecuteInvocationAsync(entryTargetId, freezeResult).ConfigureAwait(false);
+            return await ExecuteInvocationAsync(entryTargetId, freezeResult, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -171,7 +197,10 @@ public sealed class Command
         }
     }
 
-    private async Task<int> ExecuteInvocationAsync(Guid entryTargetId, ModelFreezeResult freezeResult)
+    private async Task<int> ExecuteInvocationAsync(
+        Guid entryTargetId,
+        ModelFreezeResult freezeResult,
+        CancellationToken cancellationToken)
     {
         InvocationServices services;
         try
@@ -184,43 +213,118 @@ public sealed class Command
             return 1;
         }
 
-        ImmutableArray<ModelDiagnostic> modelDiagnostics = [.. freezeResult.Diagnostics, .. _lastInvocationDiagnostics];
         TextRedactor defaultRedactor = ModelValidation.CreateSensitiveDefaultRedactor(_authored);
+        ImmutableArray<ModelDiagnostic> modelDiagnostics = [.. freezeResult.Diagnostics, .. _lastInvocationDiagnostics];
         if (!modelDiagnostics.IsEmpty)
         {
-            CommandPresentation.Report report = CommandPresentation.CreateModelFailure(modelDiagnostics);
-            bool written = await TryWriteAsync(
-                report,
-                services.StandardError,
-                services.StandardErrorSupportsAnsi,
-                defaultRedactor).ConfigureAwait(false);
-            LastInvocationStatus = written ? InvocationStatus.InvalidModel : InvocationStatus.InfrastructureFailure;
-            return written ? 2 : 1;
+            return await CompleteModelFailureAsync(services, modelDiagnostics, defaultRedactor).ConfigureAwait(false);
         }
 
         CommandDefinition model = freezeResult.Model!;
         bool help = _lastArguments.Any(static argument => argument is "--help" or "-h");
-        bool plain = _lastArguments.Any(static argument => string.Equals(argument, "--plain", StringComparison.Ordinal));
+        bool plain = _lastArguments.Any(static argument =>
+            string.Equals(argument, "--plain", StringComparison.Ordinal));
         if (help)
         {
-            CommandPresentation.Report report = CommandPresentation.CreateHelp(model, entryTargetId, services.InvocationName);
-            bool written = await TryWriteAsync(
-                report,
-                services.StandardOutput,
-                !plain && services.StandardOutputSupportsAnsi,
+            return await CompleteHelpAsync(
+                model,
+                entryTargetId,
+                services,
+                plain,
                 defaultRedactor).ConfigureAwait(false);
-            LastInvocationStatus = written ? InvocationStatus.Help : InvocationStatus.InfrastructureFailure;
-            return written ? 0 : 1;
         }
 
-        LastBindingResult = BindingEngine.Bind(model, _lastArguments, services);
-        return await CompleteBindingAsync(model, entryTargetId, services, LastBindingResult).ConfigureAwait(false);
+        if (cancellationToken.IsCancellationRequested)
+        {
+            return await CompleteCancellationAsync(
+                services,
+                plain,
+                defaultRedactor).ConfigureAwait(false);
+        }
+
+        InvocationStart start = new(model, entryTargetId, services, plain, defaultRedactor, cancellationToken);
+        return await ExecuteNormalInvocationAsync(start).ConfigureAwait(false);
+    }
+
+    private async Task<int> ExecuteNormalInvocationAsync(InvocationStart start)
+    {
+        ConsoleCancellationCoordinator.Lease cancellationLease;
+        try
+        {
+            cancellationLease = CancellationCoordinator.Register(start.CallerToken);
+        }
+        catch
+        {
+            return await CompleteInfrastructureFailureAsync(
+                start.Services,
+                start.Plain,
+                start.Redactor,
+                "Cancellation coordination could not be initialized.").ConfigureAwait(false);
+        }
+
+        using (cancellationLease)
+        {
+            CancellationToken invocationToken = cancellationLease.Token;
+            if (invocationToken.IsCancellationRequested)
+            {
+                return await CompleteCancellationAsync(
+                    start.Services,
+                    start.Plain,
+                    start.Redactor).ConfigureAwait(false);
+            }
+
+            if (!TryPlanGraph(start, out GraphPlanningResult planningResult))
+            {
+                return await CompleteInfrastructureFailureAsync(
+                    start.Services,
+                    start.Plain,
+                    start.Redactor,
+                    "Target graph planning failed because the frozen model was inconsistent.").ConfigureAwait(false);
+            }
+
+            if (!planningResult.IsSuccess)
+            {
+                return await CompleteGraphFailureAsync(start, planningResult.Diagnostics)
+                    .ConfigureAwait(false);
+            }
+
+            if (invocationToken.IsCancellationRequested)
+            {
+                return await CompleteCancellationAsync(
+                    start.Services,
+                    start.Plain,
+                    start.Redactor).ConfigureAwait(false);
+            }
+
+            InvocationExecution execution = new(
+                start.Model,
+                planningResult.Plan!,
+                start.Services,
+                invocationToken);
+            LastBindingResult = BindingEngine.Bind(start.Model, _lastArguments, start.Services);
+            return await CompleteBindingAsync(execution, LastBindingResult).ConfigureAwait(false);
+        }
+    }
+
+    private bool TryPlanGraph(
+        InvocationStart start,
+        out GraphPlanningResult planningResult)
+    {
+        try
+        {
+            planningResult = GraphPlanner.Plan(start.Model, start.EntryTargetId);
+            LastGraphPlanningResult = planningResult;
+            return true;
+        }
+        catch
+        {
+            planningResult = null!;
+            return false;
+        }
     }
 
     private async Task<int> CompleteBindingAsync(
-        CommandDefinition model,
-        Guid entryTargetId,
-        InvocationServices services,
+        InvocationExecution execution,
         BindingResult result)
     {
         switch (result.Status)
@@ -228,16 +332,18 @@ public sealed class Command
             case BindingStatus.InputFailure:
                 {
                     CommandPresentation.Report report = CommandPresentation.CreateInputFailure(
-                        model,
-                        entryTargetId,
-                        services.InvocationName,
+                        execution.Model,
+                        execution.Plan.Targets[^1].Id,
+                        execution.Services.InvocationName,
                         result.Diagnostics);
                     bool written = await TryWriteAsync(
                         report,
-                        services.StandardError,
-                        !result.Plain && services.StandardErrorSupportsAnsi,
+                        execution.Services.StandardError,
+                        !result.Plain && execution.Services.StandardErrorSupportsAnsi,
                         result.Redactor).ConfigureAwait(false);
-                    LastInvocationStatus = written ? InvocationStatus.InputFailure : InvocationStatus.InfrastructureFailure;
+                    LastInvocationStatus = written
+                        ? InvocationStatus.InputFailure
+                        : InvocationStatus.InfrastructureFailure;
                     return written ? 2 : 1;
                 }
             case BindingStatus.AuthorFailure:
@@ -246,8 +352,8 @@ public sealed class Command
                     CommandPresentation.Report report = CommandPresentation.CreateBindingFailure(result);
                     bool written = await TryWriteAsync(
                         report,
-                        services.StandardError,
-                        !result.Plain && services.StandardErrorSupportsAnsi,
+                        execution.Services.StandardError,
+                        !result.Plain && execution.Services.StandardErrorSupportsAnsi,
                         result.Redactor).ConfigureAwait(false);
                     LastInvocationStatus = !written || result.Status == BindingStatus.InfrastructureFailure
                         ? InvocationStatus.InfrastructureFailure
@@ -255,28 +361,39 @@ public sealed class Command
                     return 1;
                 }
             case BindingStatus.Success:
-                return await CompletePathInitializationAsync(model, services, result).ConfigureAwait(false);
+                if (execution.CancellationToken.IsCancellationRequested)
+                {
+                    return await CompleteCancellationAsync(
+                        execution.Services,
+                        result.Plain,
+                        result.Redactor).ConfigureAwait(false);
+                }
+
+                return await CompletePathInitializationAsync(execution, result).ConfigureAwait(false);
             default:
                 throw new UnreachableException();
         }
     }
 
     private async Task<int> CompletePathInitializationAsync(
-        CommandDefinition model,
-        InvocationServices services,
+        InvocationExecution execution,
         BindingResult result)
     {
         try
         {
-            LastInvocationPaths = PathRuntime.Resolve(model, result.Snapshot!, services);
+            LastInvocationPaths = PathRuntime.Resolve(
+                execution.Model,
+                execution.Plan,
+                result.Snapshot!,
+                execution.Services);
         }
         catch (PathPolicyException exception)
         {
             CommandPresentation.Report report = CommandPresentation.CreatePathFailure(exception.Message);
             bool written = await TryWriteAsync(
                 report,
-                services.StandardError,
-                !result.Plain && services.StandardErrorSupportsAnsi,
+                execution.Services.StandardError,
+                !result.Plain && execution.Services.StandardErrorSupportsAnsi,
                 result.Redactor).ConfigureAwait(false);
             LastInvocationStatus = written ? InvocationStatus.PathFailure : InvocationStatus.InfrastructureFailure;
             return written ? 2 : 1;
@@ -287,16 +404,131 @@ public sealed class Command
                 "Command path initialization failed because filesystem metadata was unavailable.");
             _ = await TryWriteAsync(
                 report,
-                services.StandardError,
-                !result.Plain && services.StandardErrorSupportsAnsi,
+                execution.Services.StandardError,
+                !result.Plain && execution.Services.StandardErrorSupportsAnsi,
                 result.Redactor).ConfigureAwait(false);
             LastInvocationStatus = InvocationStatus.InfrastructureFailure;
             return 1;
         }
 
-        LastInvocationStatus = InvocationStatus.SuccessfulPathStub;
-        await Task.Yield();
-        throw new NotSupportedException("Command execution is implemented in a later Rafter phase.");
+        ExecutionScope scope = new(
+            execution.Model,
+            execution.Plan,
+            result.Snapshot!,
+            LastInvocationPaths,
+            execution.Services.FileSystem,
+            execution.CancellationToken);
+        LastExecutionOutcome = await ExecutionRuntime.ExecuteAsync(scope).ConfigureAwait(false);
+        return await CompleteExecutionAsync(execution.Services, result, LastExecutionOutcome).ConfigureAwait(false);
+    }
+
+    private async Task<int> CompleteExecutionAsync(
+        InvocationServices services,
+        BindingResult result,
+        ExecutionOutcome outcome)
+    {
+        if (outcome.ExitCode == 0)
+        {
+            LastInvocationStatus = InvocationStatus.Success;
+            return 0;
+        }
+
+        CommandPresentation.Report outcomeReport = outcome.ExitCode == 130
+            ? CommandPresentation.CreateCancellation(outcome)
+            : CommandPresentation.CreateExecutionFailure(outcome);
+        bool outcomeWritten = await TryWriteAsync(
+            outcomeReport,
+            services.StandardError,
+            !result.Plain && services.StandardErrorSupportsAnsi,
+            result.Redactor).ConfigureAwait(false);
+        if (!outcomeWritten)
+        {
+            LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+            return 1;
+        }
+
+        LastInvocationStatus = outcome.ExitCode == 130
+            ? InvocationStatus.Cancelled
+            : InvocationStatus.ExecutionFailure;
+        return outcome.ExitCode;
+    }
+
+    private async Task<int> CompleteModelFailureAsync(
+        InvocationServices services,
+        ImmutableArray<ModelDiagnostic> diagnostics,
+        TextRedactor redactor)
+    {
+        CommandPresentation.Report report = CommandPresentation.CreateModelFailure(diagnostics);
+        bool written = await TryWriteAsync(
+            report,
+            services.StandardError,
+            services.StandardErrorSupportsAnsi,
+            redactor).ConfigureAwait(false);
+        LastInvocationStatus = written ? InvocationStatus.InvalidModel : InvocationStatus.InfrastructureFailure;
+        return written ? 2 : 1;
+    }
+
+    private async Task<int> CompleteHelpAsync(
+        CommandDefinition model,
+        Guid entryTargetId,
+        InvocationServices services,
+        bool plain,
+        TextRedactor redactor)
+    {
+        CommandPresentation.Report report = CommandPresentation.CreateHelp(
+            model,
+            entryTargetId,
+            services.InvocationName);
+        bool written = await TryWriteAsync(
+            report,
+            services.StandardOutput,
+            !plain && services.StandardOutputSupportsAnsi,
+            redactor).ConfigureAwait(false);
+        LastInvocationStatus = written ? InvocationStatus.Help : InvocationStatus.InfrastructureFailure;
+        return written ? 0 : 1;
+    }
+
+    private async Task<int> CompleteGraphFailureAsync(
+        InvocationStart start,
+        ImmutableArray<GraphDiagnostic> diagnostics)
+    {
+        CommandPresentation.Report report = CommandPresentation.CreateGraphFailure(diagnostics);
+        bool written = await TryWriteAsync(
+            report,
+            start.Services.StandardError,
+            !start.Plain && start.Services.StandardErrorSupportsAnsi,
+            start.Redactor).ConfigureAwait(false);
+        LastInvocationStatus = written ? InvocationStatus.GraphFailure : InvocationStatus.InfrastructureFailure;
+        return written ? 2 : 1;
+    }
+
+    private async Task<int> CompleteCancellationAsync(
+        InvocationServices services,
+        bool plain,
+        TextRedactor redactor)
+    {
+        bool written = await TryWriteAsync(
+            CommandPresentation.CreateCancellation(),
+            services.StandardError,
+            !plain && services.StandardErrorSupportsAnsi,
+            redactor).ConfigureAwait(false);
+        LastInvocationStatus = written ? InvocationStatus.Cancelled : InvocationStatus.InfrastructureFailure;
+        return written ? 130 : 1;
+    }
+
+    private async Task<int> CompleteInfrastructureFailureAsync(
+        InvocationServices services,
+        bool plain,
+        TextRedactor redactor,
+        string message)
+    {
+        _ = await TryWriteAsync(
+            CommandPresentation.CreateInfrastructureFailure(message),
+            services.StandardError,
+            !plain && services.StandardErrorSupportsAnsi,
+            redactor).ConfigureAwait(false);
+        LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+        return 1;
     }
 
     private static async Task<bool> TryWriteAsync(
@@ -319,7 +551,8 @@ public sealed class Command
     {
         ArgumentNullException.ThrowIfNull(name);
         long sequence = BeginMutation();
-        bool isSnapshotSafeDefaultType = typeof(T) == typeof(string) || !RuntimeHelpers.IsReferenceOrContainsReferences<T>();
+        bool isSnapshotSafeDefaultType = typeof(T) == typeof(string)
+            || !RuntimeHelpers.IsReferenceOrContainsReferences<T>();
         AuthoredOption option = new(
             _authored,
             name,
@@ -346,14 +579,31 @@ public sealed class Command
         return _authored.NextSequence();
     }
 
+    private sealed record InvocationStart(
+        CommandDefinition Model,
+        Guid EntryTargetId,
+        InvocationServices Services,
+        bool Plain,
+        TextRedactor Redactor,
+        CancellationToken CallerToken);
+
+    private sealed record InvocationExecution(
+        CommandDefinition Model,
+        GraphPlan Plan,
+        InvocationServices Services,
+        CancellationToken CancellationToken);
+
     internal enum InvocationStatus
     {
         InvalidModel,
         Help,
+        GraphFailure,
         InputFailure,
         AuthorFailure,
         InfrastructureFailure,
         PathFailure,
-        SuccessfulPathStub,
+        Success,
+        ExecutionFailure,
+        Cancelled,
     }
 }

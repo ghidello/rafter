@@ -2,6 +2,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using static Sotsera.Rafter.BindingEngine;
 using static Sotsera.Rafter.CommandModel;
+using static Sotsera.Rafter.GraphPlanner;
 
 namespace Sotsera.Rafter;
 
@@ -17,12 +18,13 @@ internal static class PathRuntime
 
     internal static InvocationPaths Resolve(
         CommandDefinition model,
+        GraphPlan plan,
         InvocationSnapshot snapshot,
         InvocationServices services)
     {
         string root = ResolveRoot(model.Root, services);
         ImmutableDictionary<Guid, string>.Builder targets = ImmutableDictionary.CreateBuilder<Guid, string>();
-        foreach (TargetDefinition target in model.Targets)
+        foreach (TargetDefinition target in plan.Targets)
         {
             string workingDirectory = target.WorkingDirectory switch
             {
@@ -45,14 +47,16 @@ internal static class PathRuntime
         InvocationSnapshot snapshot,
         InvocationPaths paths,
         Guid targetId,
-        IFileSystemPrimitives fileSystem)
-        => new(snapshot, paths.Root, paths.GetTargetDirectory(targetId), fileSystem);
+        IFileSystemPrimitives fileSystem,
+        CancellationToken cancellationToken = default)
+        => new(snapshot, paths.Root, paths.GetTargetDirectory(targetId), fileSystem, cancellationToken);
 
     internal static RafterContext CreateCommandContext(
         InvocationSnapshot snapshot,
         InvocationPaths paths,
-        IFileSystemPrimitives fileSystem)
-        => new(snapshot, paths.Root, paths.Root, fileSystem);
+        IFileSystemPrimitives fileSystem,
+        CancellationToken cancellationToken = default)
+        => new(snapshot, paths.Root, paths.Root, fileSystem, cancellationToken);
 
     private static string ResolveRoot(RootDefinition root, InvocationServices services)
     {

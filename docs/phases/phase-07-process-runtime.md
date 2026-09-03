@@ -47,6 +47,7 @@ Rafter's public API.
 - [ ] Compile and execute the base-builder reuse and defaulted `Option<TimeSpan>` timeout syntax in `processes.cs`.
 - [ ] Tie execution authority to the creating invocation and reject a terminal call made after that invocation has
       settled with a clear Rafter-owned failure.
+- [ ] Prove a Phase 5 graph-planning diagnostic occurs before any process builder can launch a child process.
 - [ ] Allow one working directory, timeout, capture limit, valid-exit declaration, and environment block per process
       specification; preserve first values and accumulate duplicate-setting diagnostics.
 - [ ] Validate all accumulated specification diagnostics at terminal `Run()` or `Capture()` and launch nothing on

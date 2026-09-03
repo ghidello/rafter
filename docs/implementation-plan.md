@@ -44,7 +44,7 @@ definitions.
 - Command concurrency defaults to `1`; `.Concurrency(...)` accepts only positive values and explicitly opts into
   parallel target execution.
 - A target holds no permit while waiting, then holds one permit across its ready-state condition, execution, and
-  target cleanup; callback-free aggregate and no-op settlement consume none.
+  target cleanup; condition-free aggregate and no-op settlement consume none.
 - Declare each target's complete dependency set through one `.DependsOn(params Target[])` call; report a second call
   or duplicate dependency at model freeze rather than accumulating or silently deduplicating.
 - Callback overloads cover context-free and context-aware synchronous and asynchronous delegates.
@@ -213,27 +213,55 @@ same resolver.
 
 Validate and execute the target graph with deterministic lifecycle behavior.
 
-- Detect unknown dependencies and cycles before callbacks run.
-- Schedule ready targets up to the configured concurrency.
+- Preserve exact help independently, then check cancellation and iteratively plan only the selected entry target's
+  reachable graph before command-wide binding or root resolution. Pass that plan into path initialization so it
+  resolves the command root and only planned target working directories. Treat impossible missing or foreign
+  dependency IDs in a frozen model as infrastructure invariant failures.
+- Preserve immediate argument checks, caller-array snapshotting, permanent freeze, and same-command overlap rejection.
+  Hold the overlap guard until cleanup, minimal reporting, signal unregistration, and linked-token disposal finish;
+  release it on every terminal path before allowing sequential reuse.
+- Diagnose each reachable cyclic strongly connected component once in stable declaration order; disconnected cycles
+  do not invalidate an unrelated entry invocation.
+- Give valid reachable targets one dependency-first plan index derived from authored dependency order and reuse it
+  for admission, failure aggregation, cleanup ordering, and later target presentation. Preserve each target's direct
+  blockers in authored dependency order even when shared dependencies make that differ from plan order.
+- Schedule ready targets up to the configured concurrency and dispatch admitted lifecycles independently so
+  synchronous callbacks can overlap without thread-affinity guarantees.
 - Run each target at most once, including shared dependencies.
-- Block dependents after a prerequisite fails while allowing already-running and independent work to settle.
-- Treat condition-skipped prerequisites as successful enough for their dependents to proceed; apply a condition to
-  a branch aggregate or entry target when the whole branch should be suppressed.
+- Block dependents after a prerequisite fails while continuing to admit eligible independent work.
+- Evaluate conditions after dependencies settle and the target acquires its permit. Treat a condition-skipped
+  prerequisite as successful enough for dependents; conditions affect only their own target and v1 has no
+  branch-suppression construct.
+- Settle a condition-bearing callback-free target atomically in its aggregate or no-work success shape when its final
+  condition returns `true`; that admitted callback result wins concurrent cancellation and is not revised.
 - Aggregate concurrent failures deterministically.
-- Propagate cancellation and run target and command cleanup in the documented order.
+- Add the optional `CancellationToken` parameter to `RunAsync`, preserving ordinary two-argument invocation
+  expressions, and expose it through `RafterContext.CancellationToken`. Coordinate the first Ctrl+C across every
+  active Rafter invocation while restoring the process-wide handler exactly; leave a repeated signal unhandled as the
+  host's hard termination escape hatch.
+- Observe cancellation at deterministic stage and callback boundaries without attempting to interrupt synchronous
+  managed code already in progress. Preserve an ordinary target failure from a condition or execution callback over
+  concurrent cancellation.
+- After cancellation stops admission and running work settles, make direct `Failed` or `Blocked` dependencies win over
+  cancellation for an unstarted target; otherwise settle that target as `Cancelled`. Retain only direct blockers in
+  authored dependency order.
 - Qualify target cleanup only after its execution callback starts; skipped targets and condition failures do not run
   target cleanup, while command cleanup remains invocation-wide.
-- Qualify command cleanup only after parsing, binding, graph preflight, and invocation initialization succeed; once
-  qualified, run it exactly once on every terminal execution path.
-- Start qualified cleanup with a dedicated token that is not pre-cancelled by invocation cancellation, and await
-  each managed cleanup callback to settlement.
+- Qualify command cleanup atomically when invocation path initialization succeeds, before the next cancellation
+  checkpoint; cancellation racing successful initialization does not undo qualification. Once qualified, run cleanup
+  exactly once on every terminal execution path.
+- Give qualified cleanup a distinct context with the same immutable snapshot and paths and
+  `CancellationToken.None`; context identity is not part of the contract. Await each managed cleanup callback to
+  settlement.
 - Keep managed cleanup cooperative: Rafter cannot safely terminate or detach an arbitrary callback, so authors own
   any operation-specific deadline. Reserve hard bounded teardown guarantees for Rafter-owned resources such as
   child processes.
-- Model execution failure or cancellation separately from cleanup failures in one unsuccessful command outcome;
-  cleanup never masks the primary state, and cleanup-only failure still makes an otherwise successful command fail.
-- Order target-cleanup failures by deterministic target plan order, followed by command cleanup, preserve every
-  original exception, and present secondary cleanup failures under a distinct `Cleanup also failed` section.
+- Model ordinary condition or execution failure, or invocation cancellation, separately from cleanup failures in one
+  unsuccessful command outcome; cleanup never masks the primary state, and cleanup-only failure still makes an
+  otherwise successful command fail.
+- Order target-cleanup failures by deterministic target plan order, followed by command cleanup, and preserve every
+  original exception so Phase 6 can present secondary cleanup failures under a distinct `Cleanup also failed`
+  section.
 - Keep escaped callback and cleanup exceptions in Rafter's internal outcome for classification, presentation, and
   verification without adding a structured public command-result API in v1. Authors needing programmatic handling
   catch exceptions inside their callback; `RunAsync` remains the integer-returning script entry point.
@@ -241,9 +269,11 @@ Validate and execute the target graph with deterministic lifecycle behavior.
   converter or validator author exceptions and execution, process, infrastructure, or cleanup failure; `2` for
   model, syntax, failed conversion, missing-required, validator-rejection, or planning diagnostics; and `130` for
   invocation cancellation.
-- Classify `OperationCanceledException` as invocation cancellation only when the invocation token was actually
-  requested; otherwise treat it as an ordinary callback failure. Treat process timeout as failure, not cancellation.
-- Preserve the distinction between executable, aggregate, and intentional no-op targets.
+- Classify `OperationCanceledException` as invocation cancellation only when it carries the invocation token and that
+  token was requested when the callback settled. Treat a tokenless or unrelated-token exception as an ordinary
+  callback failure even when invocation cancellation races it. Treat process timeout as failure, not cancellation.
+- Separate scheduler lifecycle (`Pending`, `Ready`, `Running`, `CleaningUp`, `Settled`) from terminal outcome and
+  preserve the distinction between executed, aggregate, and intentional no-op successful targets.
 - Treat a target with neither a callback nor dependencies as an implicit successful no-op and present it as
   completed with no work; do not add a `.NoOp()` marker or analyzer warning.
 

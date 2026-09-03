@@ -47,7 +47,10 @@ public sealed class PhaseThreePresentationTests
             false,
             "build-script");
 
-        int exitCode = await command.RunAsync(entry, ["--bad=value", "--plain", "--help"]);
+        int exitCode = await command.RunAsync(
+            entry,
+            ["--bad=value", "--plain", "--help"],
+            TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
         environmentReads.Should().Be(0);
@@ -78,14 +81,17 @@ public sealed class PhaseThreePresentationTests
         StringWriter error = new(CultureInfo.InvariantCulture);
         ConfigureServices(command, output, error);
 
-        int helpExit = await command.RunAsync(entry, ["--unknown=secret", helpToken]);
+        int helpExit = await command.RunAsync(
+            entry,
+            ["--unknown=secret", helpToken],
+            TestContext.Current.CancellationToken);
 
         helpExit.Should().Be(0);
         output.ToString().Should().Contain("Usage");
         error.ToString().Should().BeEmpty();
 
         output.GetStringBuilder().Clear();
-        int malformedExit = await command.RunAsync(entry, ["--help=secret"]);
+        int malformedExit = await command.RunAsync(entry, ["--help=secret"], TestContext.Current.CancellationToken);
 
         malformedExit.Should().Be(2);
         output.ToString().Should().BeEmpty();
@@ -112,12 +118,13 @@ public sealed class PhaseThreePresentationTests
         StringWriter error = new(CultureInfo.InvariantCulture);
         ConfigureServices(command, output, error);
 
-        int rejectedExit = await command.RunAsync(entry, ["--count=invalid"]);
-        await FluentActions.Awaiting(() => command.RunAsync(entry, ["--count=1"]))
-            .Should().ThrowAsync<NotSupportedException>();
+        int rejectedExit = await command.RunAsync(entry, ["--count=invalid"], TestContext.Current.CancellationToken);
 
         rejectedExit.Should().Be(2);
         callbacks.Should().Be(0);
+
+        (await command.RunAsync(entry, ["--count=1"], TestContext.Current.CancellationToken)).Should().Be(0);
+        callbacks.Should().Be(4);
     }
 
     [Fact]
@@ -130,7 +137,10 @@ public sealed class PhaseThreePresentationTests
         StringWriter error = new(CultureInfo.InvariantCulture);
         ConfigureServices(command, output, error);
 
-        int exitCode = await command.RunAsync(entry, ["--count=bad", "unexpected"]);
+        int exitCode = await command.RunAsync(
+            entry,
+            ["--count=bad", "unexpected"],
+            TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(2);
         output.ToString().Should().BeEmpty();
@@ -148,7 +158,7 @@ public sealed class PhaseThreePresentationTests
         StringWriter error = new(CultureInfo.InvariantCulture);
         ConfigureServices(command, output, error);
 
-        int exitCode = await command.RunAsync(entry, ["--help"]);
+        int exitCode = await command.RunAsync(entry, ["--help"], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(2);
         output.ToString().Should().BeEmpty();
@@ -172,7 +182,10 @@ public sealed class PhaseThreePresentationTests
             true,
             "test-command");
 
-        int exitCode = await command.RunAsync(entry, [string.Concat("--token=", '\u001B'), "unexpected"]);
+        int exitCode = await command.RunAsync(
+            entry,
+            [string.Concat("--token=", '\u001B'), "unexpected"],
+            TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(1);
         output.ToString().Should().BeEmpty();
@@ -194,7 +207,7 @@ public sealed class PhaseThreePresentationTests
             true,
             "test-command");
 
-        int exitCode = await command.RunAsync(entry, ["--help"]);
+        int exitCode = await command.RunAsync(entry, ["--help"], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
         output.ToString().Should().Contain("\u001B[");
@@ -210,7 +223,7 @@ public sealed class PhaseThreePresentationTests
         StringWriter error = new(CultureInfo.InvariantCulture);
         ConfigureServices(command, output, error);
 
-        int exitCode = await command.RunAsync(entry, ["--plain", "--help"]);
+        int exitCode = await command.RunAsync(entry, ["--plain", "--help"], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
         output.ToString().Should().Be(
@@ -291,7 +304,7 @@ public sealed class PhaseThreePresentationTests
         ConfigureServices(command, output, error);
         string[] arguments = Enumerable.Range(0, 21).Select(index => $"--unknown{index}").ToArray();
 
-        int exitCode = await command.RunAsync(entry, arguments);
+        int exitCode = await command.RunAsync(entry, arguments, TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(2);
         command.LastBindingResult!.Diagnostics.Should().HaveCount(21);
@@ -310,7 +323,7 @@ public sealed class PhaseThreePresentationTests
         StringWriter error = new(CultureInfo.InvariantCulture);
         ConfigureServices(command, output, error);
 
-        int exitCode = await command.RunAsync(entry, ["--help", "--plain"]);
+        int exitCode = await command.RunAsync(entry, ["--help", "--plain"], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
         output.ToString().Should().NotContain("e");
@@ -329,14 +342,14 @@ public sealed class PhaseThreePresentationTests
             false,
             "test-command");
 
-        int failedExit = await command.RunAsync(entry, ["--help"]);
+        int failedExit = await command.RunAsync(entry, ["--help"], TestContext.Current.CancellationToken);
 
         failedExit.Should().Be(1);
         command.LastInvocationStatus.Should().Be(Command.InvocationStatus.InfrastructureFailure);
 
         StringWriter output = new(CultureInfo.InvariantCulture);
         ConfigureServices(command, output, new StringWriter(CultureInfo.InvariantCulture));
-        int successfulExit = await command.RunAsync(entry, ["--help"]);
+        int successfulExit = await command.RunAsync(entry, ["--help"], TestContext.Current.CancellationToken);
 
         successfulExit.Should().Be(0);
     }

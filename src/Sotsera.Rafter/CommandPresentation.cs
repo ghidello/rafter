@@ -2,6 +2,8 @@ using System.Collections.Immutable;
 using Spectre.Console;
 using static Sotsera.Rafter.BindingEngine;
 using static Sotsera.Rafter.CommandModel;
+using static Sotsera.Rafter.ExecutionRuntime;
+using static Sotsera.Rafter.GraphPlanner;
 
 namespace Sotsera.Rafter;
 
@@ -58,7 +60,8 @@ internal static class CommandPresentation
     internal static Report CreateBindingFailure(BindingResult result)
     {
         BindingFailure failure = result.Failure!;
-        string message = $"Command failed during {failure.Stage} for '--{failure.OptionName}' ({failure.ExceptionType.Name}).";
+        string message = $"Command failed during {failure.Stage} for '--{failure.OptionName}' "
+            + $"({failure.ExceptionType.Name}).";
         return new Report([
             new ReportLine("Command failed", LineRole.ErrorHeading),
             new ReportLine($"error: {message}", LineRole.Error),
@@ -69,6 +72,66 @@ internal static class CommandPresentation
         => new([
             new ReportLine("Command paths are invalid", LineRole.ErrorHeading),
             new ReportLine($"error: {ValueFormatter.FormatInlineText(message)}", LineRole.Error),
+        ]);
+
+    internal static Report CreateGraphFailure(ImmutableArray<GraphDiagnostic> diagnostics)
+    {
+        ImmutableArray<ReportLine>.Builder lines = ImmutableArray.CreateBuilder<ReportLine>();
+        lines.Add(new ReportLine("Target graph is invalid", LineRole.ErrorHeading));
+        foreach (GraphDiagnostic diagnostic in diagnostics)
+        {
+            lines.Add(new ReportLine($"error: {diagnostic.Message}", LineRole.Error));
+        }
+
+        return new Report(lines.ToImmutable());
+    }
+
+    internal static Report CreateCancellation(ExecutionOutcome? outcome = null)
+    {
+        ImmutableArray<ReportLine>.Builder lines = ImmutableArray.CreateBuilder<ReportLine>();
+        lines.Add(new ReportLine("Command cancelled", LineRole.ErrorHeading));
+        AddSecondaryCleanupFailures(lines, outcome, includeCleanupOnlyFailures: true);
+        return new Report(lines.ToImmutable());
+    }
+
+    internal static Report CreateExecutionFailure(ExecutionOutcome outcome)
+    {
+        ImmutableArray<ReportLine>.Builder lines = ImmutableArray.CreateBuilder<ReportLine>();
+        lines.Add(new ReportLine("Command failed", LineRole.ErrorHeading));
+        if (outcome.InfrastructureException is not null)
+        {
+            lines.Add(new ReportLine(
+                "error: Command execution failed because scheduler state was inconsistent.",
+                LineRole.Error));
+        }
+
+        foreach (TargetResult target in outcome.Targets.Where(static target => target.Outcome == TargetOutcome.Failed))
+        {
+            string phase = target.FailurePhase?.ToString().ToLowerInvariant() ?? "execution";
+            string exception = target.PrimaryException?.GetType().Name ?? "unknown failure";
+            lines.Add(new ReportLine(
+                $"error: Target '{target.Target.Name}' failed during {phase} ({exception}).",
+                LineRole.Error));
+        }
+
+        bool hasPrimaryTargetFailure = outcome.Targets.Any(static target => target.Outcome == TargetOutcome.Failed);
+        if (outcome.CommandCleanupException is not null
+            && !hasPrimaryTargetFailure
+            && outcome.InfrastructureException is null)
+        {
+            lines.Add(new ReportLine(
+                $"error: Command cleanup failed ({outcome.CommandCleanupException.GetType().Name}).",
+                LineRole.Error));
+        }
+
+        AddSecondaryCleanupFailures(lines, outcome, includeCleanupOnlyFailures: false);
+        return new Report(lines.ToImmutable());
+    }
+
+    internal static Report CreateInfrastructureFailure(string message)
+        => new([
+            new ReportLine("Command failed", LineRole.ErrorHeading),
+            new ReportLine($"error: {message}", LineRole.Error),
         ]);
 
     internal static async Task<bool> WriteAsync(
@@ -101,6 +164,47 @@ internal static class CommandPresentation
         lines.Add(ReportLine.Blank);
         lines.Add(new ReportLine("Usage", LineRole.Heading));
         lines.Add(new ReportLine($"  {ValueFormatter.FormatInlineText(invocationName)} [options]", LineRole.Text));
+    }
+
+    private static void AddSecondaryCleanupFailures(
+        ImmutableArray<ReportLine>.Builder lines,
+        ExecutionOutcome? outcome,
+        bool includeCleanupOnlyFailures)
+    {
+        if (outcome is null)
+        {
+            return;
+        }
+
+        ImmutableArray<TargetResult> secondaryTargetFailures = outcome.Targets
+            .Where(target =>
+                target.CleanupException is not null
+                && (includeCleanupOnlyFailures || target.FailurePhase != FailurePhase.Cleanup))
+            .ToImmutableArray();
+        bool commandCleanupIsSecondary = outcome.CommandCleanupException is not null
+            && (outcome.InvocationCancellationRequested
+                || outcome.InfrastructureException is not null
+                || outcome.Targets.Any(static target => target.Outcome == TargetOutcome.Failed));
+        if (secondaryTargetFailures.IsEmpty && !commandCleanupIsSecondary)
+        {
+            return;
+        }
+
+        lines.Add(ReportLine.Blank);
+        lines.Add(new ReportLine("Cleanup also failed", LineRole.ErrorHeading));
+        foreach (TargetResult target in secondaryTargetFailures)
+        {
+            lines.Add(new ReportLine(
+                $"error: Target '{target.Target.Name}' cleanup failed ({target.CleanupException!.GetType().Name}).",
+                LineRole.Error));
+        }
+
+        if (commandCleanupIsSecondary)
+        {
+            lines.Add(new ReportLine(
+                $"error: Command cleanup failed ({outcome.CommandCleanupException!.GetType().Name}).",
+                LineRole.Error));
+        }
     }
 
     private static void AddOptions(ImmutableArray<ReportLine>.Builder lines, CommandDefinition model)
@@ -143,7 +247,9 @@ internal static class CommandPresentation
     {
         lines.Add(ReportLine.Blank);
         lines.Add(new ReportLine("Targets", LineRole.Heading));
-        lines.Add(new ReportLine("  Targets describe the contained execution graph; they are not command-line selections.", LineRole.Muted));
+        lines.Add(new ReportLine(
+            "  Targets describe the contained execution graph; they are not command-line selections.",
+            LineRole.Muted));
         foreach (TargetDefinition target in model.Targets)
         {
             List<string> markers = [];
@@ -164,7 +270,8 @@ internal static class CommandPresentation
             lines.Add(new ReportLine($"      {target.Description}", LineRole.Text));
             if (!target.Dependencies.IsEmpty)
             {
-                IEnumerable<string> names = target.Dependencies.Select(id => model.Targets.Single(target => target.Id == id).Name);
+                IEnumerable<string> names = target.Dependencies.Select(id =>
+                    model.Targets.Single(candidate => candidate.Id == id).Name);
                 lines.Add(new ReportLine($"      depends on: {string.Join(", ", names)}", LineRole.Muted));
             }
         }

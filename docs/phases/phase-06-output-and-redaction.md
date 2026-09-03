@@ -5,6 +5,10 @@
 Provide a semantic output pipeline with Spectre.Console presentation, concurrent target attribution, and one
 redaction boundary covering every supported output and failure channel.
 
+Phase 6 consumes the immutable Phase 5 plan order, lifecycle transitions, terminal outcomes, blockers, original
+exceptions, and cleanup failures. It may render those facts but does not redefine scheduling, cancellation, or cleanup
+semantics.
+
 ## Questions resolved before implementation
 
 - [x] **Is captured output application-owned or automatically redacted?** `ProcessCapture` contains exact raw program
@@ -73,6 +77,8 @@ objects directly through the initial API.
       emit no synthetic transient-state lines in plain mode.
 - [ ] Emit the final summary to stdout when the command succeeds and to stderr with detailed failures when it fails
       or is cancelled; omit durations from v1 output.
+- [ ] Render secondary target- and command-cleanup failures from the Phase 5 structured outcome beneath a distinct
+      `Cleanup also failed` heading without changing the selected primary failure or exit code.
 - [ ] Use the rich symbol/color map: `○` waiting/dim grey, `●` running/cyan, `◐` cleanup/cyan, `✓`
       succeeded/green, `◇` aggregate/green, `–` no-work/grey, `↷` skipped/grey, `■` cancelled/yellow,
       `⊘` blocked/yellow, and `✗` failed/red. Keep symbols under `NO_COLOR`, reserve red for actual failures, and

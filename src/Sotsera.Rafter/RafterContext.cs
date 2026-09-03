@@ -9,6 +9,7 @@ public sealed class RafterContext
     private readonly string? _root;
     private readonly string? _workingDirectory;
     private readonly IFileSystemPrimitives? _fileSystem;
+    private readonly CancellationToken _cancellationToken;
 
     internal RafterContext()
     {
@@ -23,13 +24,18 @@ public sealed class RafterContext
         BindingEngine.InvocationSnapshot snapshot,
         string root,
         string workingDirectory,
-        IFileSystemPrimitives fileSystem)
+        IFileSystemPrimitives fileSystem,
+        CancellationToken cancellationToken)
     {
         _snapshot = snapshot;
         _root = root;
         _workingDirectory = workingDirectory;
         _fileSystem = fileSystem;
+        _cancellationToken = cancellationToken;
     }
+
+    /// <summary>Gets the token that signals cancellation of the current invocation callback.</summary>
+    public CancellationToken CancellationToken => _cancellationToken;
 
     /// <summary>Gets the normalized absolute command root.</summary>
     public string Root => _root

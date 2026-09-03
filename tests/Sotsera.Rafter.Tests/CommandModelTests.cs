@@ -100,12 +100,12 @@ public sealed class CommandModelTests
         dependencies[0] = replacement;
         string[] arguments = ["--value", "first"];
 
-        Task<int> invocation = command.RunAsync(entry, arguments);
+        Task<int> invocation = command.RunAsync(entry, arguments, TestContext.Current.CancellationToken);
         arguments[1] = "changed";
 
         command.FreezeResult.Model!.Targets.Single(target => target.Id == entry.Authored.Id).Dependencies.Should().Equal(first.Authored.Id);
         command.LastArguments.Should().Equal("--value", "first");
-        await FluentActions.Awaiting(() => invocation).Should().ThrowAsync<NotSupportedException>();
+        (await invocation).Should().Be(0);
     }
 
     [Fact]
@@ -117,14 +117,14 @@ public sealed class CommandModelTests
         TaskCompletionSource barrier = new(TaskCreationOptions.RunContinuationsAsynchronously);
         command.InvocationBarrier = barrier.Task;
 
-        Task<int> first = command.RunAsync(entry, []);
+        Task<int> first = command.RunAsync(entry, [], TestContext.Current.CancellationToken);
         Action overlap = () => command.RunAsync(entry, []);
 
         overlap.Should().Throw<InvalidOperationException>();
         barrier.SetResult();
-        await FluentActions.Awaiting(() => first).Should().ThrowAsync<NotSupportedException>();
+        (await first).Should().Be(0);
         command.InvocationBarrier = null;
-        await FluentActions.Awaiting(() => command.RunAsync(entry, ["--second=value"])).Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(entry, ["--second=value"], TestContext.Current.CancellationToken)).Should().Be(0);
         command.LastArguments.Should().Equal("--second=value");
     }
 
@@ -136,13 +136,13 @@ public sealed class CommandModelTests
         Command other = NewCommand();
         Target foreign = other.Target("foreign").Description("Foreign.");
 
-        int exitCode = await command.RunAsync(foreign, []);
+        int exitCode = await command.RunAsync(foreign, [], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(2);
         command.FreezeResult.IsSuccess.Should().BeTrue();
         command.FreezeResult.Diagnostics.Should().BeEmpty();
         command.LastInvocationDiagnostics.Select(static diagnostic => diagnostic.Code).Should().Equal("RAFTER1301");
-        await FluentActions.Awaiting(() => command.RunAsync(owned, [])).Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(owned, [], TestContext.Current.CancellationToken)).Should().Be(0);
         command.LastInvocationDiagnostics.Should().BeEmpty();
     }
 

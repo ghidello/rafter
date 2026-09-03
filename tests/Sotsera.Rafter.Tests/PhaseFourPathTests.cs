@@ -24,7 +24,10 @@ public sealed class PhaseFourPathTests
             return Path.Combine(temporary.Path, "script.cs");
         });
 
-        int helpExit = await helpCommand.RunAsync(helpEntry, ["--help", "--plain"]);
+        int helpExit = await helpCommand.RunAsync(
+            helpEntry,
+            ["--help", "--plain"],
+            TestContext.Current.CancellationToken);
 
         helpExit.Should().Be(0);
         invocationReads.Should().Be(0);
@@ -37,8 +40,7 @@ public sealed class PhaseFourPathTests
             invocationReads++;
             return temporary.Path;
         });
-        await FluentActions.Awaiting(() => invocation.RunAsync(invocationEntry, []))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await invocation.RunAsync(invocationEntry, [], TestContext.Current.CancellationToken)).Should().Be(0);
         invocation.LastInvocationPaths!.Root.Should().Be(PathPolicy.NormalizeAbsolute(temporary.Path));
         invocationReads.Should().Be(1);
 
@@ -49,8 +51,7 @@ public sealed class PhaseFourPathTests
             sourceReads++;
             return Path.Combine(temporary.Path, "script.cs");
         });
-        await FluentActions.Awaiting(() => source.RunAsync(sourceEntry, []))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await source.RunAsync(sourceEntry, [], TestContext.Current.CancellationToken)).Should().Be(0);
         source.LastInvocationPaths!.Root.Should().Be(PathPolicy.NormalizeAbsolute(temporary.Path));
         sourceReads.Should().Be(1);
 
@@ -58,8 +59,7 @@ public sealed class PhaseFourPathTests
         Command explicitCommand = NewCommand(Root.At("explicit"));
         Target explicitEntry = explicitCommand.Target("entry").Description("Entry.");
         ConfigureServices(explicitCommand, temporary.Path, () => temporary.Path);
-        await FluentActions.Awaiting(() => explicitCommand.RunAsync(explicitEntry, []))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await explicitCommand.RunAsync(explicitEntry, [], TestContext.Current.CancellationToken)).Should().Be(0);
         explicitCommand.LastInvocationPaths!.Root.Should().Be(
             PathPolicy.NormalizeAbsolute("explicit", temporary.Path));
     }
@@ -76,22 +76,24 @@ public sealed class PhaseFourPathTests
             .Default("nested");
         Target first = command.Target("first").Description("First.").WorkingDirectory(directory);
         Target second = command.Target("second").Description("Second.").WorkingDirectory("other");
+        first.DependsOn(second);
         ConfigureServices(command, temporary.Path, () => temporary.Path);
 
-        await FluentActions.Awaiting(() => command.RunAsync(first, []))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(first, [], TestContext.Current.CancellationToken)).Should().Be(0);
 
         PathRuntime.InvocationPaths paths = command.LastInvocationPaths!;
         RafterContext firstContext = PathRuntime.CreateTargetContext(
             command.LastBindingResult!.Snapshot!,
             paths,
             first.Authored.Id,
-            PhysicalFileSystemPrimitives.Instance);
+            PhysicalFileSystemPrimitives.Instance,
+            TestContext.Current.CancellationToken);
         RafterContext secondContext = PathRuntime.CreateTargetContext(
             command.LastBindingResult.Snapshot!,
             paths,
             second.Authored.Id,
-            PhysicalFileSystemPrimitives.Instance);
+            PhysicalFileSystemPrimitives.Instance,
+            TestContext.Current.CancellationToken);
         firstContext.Root.Should().Be(PathPolicy.NormalizeAbsolute(temporary.Path));
         firstContext.WorkingDirectory.Should().Be(PathPolicy.NormalizeAbsolute("nested", temporary.Path));
         secondContext.WorkingDirectory.Should().Be(PathPolicy.NormalizeAbsolute("other", temporary.Path));
@@ -112,7 +114,7 @@ public sealed class PhaseFourPathTests
             PhysicalFileSystemPrimitives.Instance,
             missingError);
 
-        int missingExit = await missing.RunAsync(missingEntry, []);
+        int missingExit = await missing.RunAsync(missingEntry, [], TestContext.Current.CancellationToken);
 
         missingExit.Should().Be(2);
         missing.LastInvocationStatus.Should().Be(Command.InvocationStatus.PathFailure);
@@ -127,7 +129,7 @@ public sealed class PhaseFourPathTests
             PhysicalFileSystemPrimitives.Instance,
             new StringWriter(CultureInfo.InvariantCulture));
 
-        int failingExit = await failing.RunAsync(failingEntry, []);
+        int failingExit = await failing.RunAsync(failingEntry, [], TestContext.Current.CancellationToken);
 
         failingExit.Should().Be(1);
         failing.LastInvocationStatus.Should().Be(Command.InvocationStatus.InfrastructureFailure);
@@ -183,13 +185,13 @@ public sealed class PhaseFourPathTests
             .Default("generated");
         Target entry = command.Target("entry").Description("Entry.");
         ConfigureServices(command, temporary.Path, () => temporary.Path);
-        await FluentActions.Awaiting(() => command.RunAsync(entry, []))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(entry, [], TestContext.Current.CancellationToken)).Should().Be(0);
         RafterContext context = PathRuntime.CreateTargetContext(
             command.LastBindingResult!.Snapshot!,
             command.LastInvocationPaths!,
             entry.Authored.Id,
-            PhysicalFileSystemPrimitives.Instance);
+            PhysicalFileSystemPrimitives.Instance,
+            TestContext.Current.CancellationToken);
 
         context.FileSystem.EnsureDirectory("artifacts/deep");
         context.FileSystem.EnsureDirectory("artifacts/deep");
@@ -240,13 +242,13 @@ public sealed class PhaseFourPathTests
         Command command = NewCommand(Root.At(temporary.Path));
         Target entry = command.Target("entry").Description("Entry.");
         ConfigureServices(command, temporary.Path, () => temporary.Path);
-        await FluentActions.Awaiting(() => command.RunAsync(entry, []))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(entry, [], TestContext.Current.CancellationToken)).Should().Be(0);
         RafterContext context = PathRuntime.CreateTargetContext(
             command.LastBindingResult!.Snapshot!,
             command.LastInvocationPaths!,
             entry.Authored.Id,
-            PhysicalFileSystemPrimitives.Instance);
+            PhysicalFileSystemPrimitives.Instance,
+            TestContext.Current.CancellationToken);
 
         Action traverse = () => context.FileSystem.EnsureDirectory("target/redirect/new");
         Action emptyRoot = () => context.FileSystem.EnsureEmptyDirectory(".");
@@ -268,13 +270,13 @@ public sealed class PhaseFourPathTests
         Command command = NewCommand(Root.At(temporary.Path));
         Target entry = command.Target("entry").Description("Entry.");
         ConfigureServices(command, temporary.Path, () => temporary.Path, fileSystem: fileSystem);
-        await FluentActions.Awaiting(() => command.RunAsync(entry, []))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(entry, [], TestContext.Current.CancellationToken)).Should().Be(0);
         RafterContext context = PathRuntime.CreateTargetContext(
             command.LastBindingResult!.Snapshot!,
             command.LastInvocationPaths!,
             entry.Authored.Id,
-            fileSystem);
+            fileSystem,
+            TestContext.Current.CancellationToken);
 
         Action empty = () => context.FileSystem.EnsureEmptyDirectory("target");
 

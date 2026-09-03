@@ -38,11 +38,12 @@ public sealed class PhaseThreeBindingTests
             return "from-environment";
         });
 
-        var assertion = await FluentActions.Awaiting(() => command.RunAsync(
+        int exitCode = await command.RunAsync(
             entry,
-            ["--optional=", "--item", "first", "--item=second"])).Should().ThrowAsync<NotSupportedException>();
+            ["--optional=", "--item", "first", "--item=second"],
+            TestContext.Current.CancellationToken);
 
-        assertion.Which.Message.Should().Contain("later Rafter phase");
+        exitCode.Should().Be(0);
         environmentReads.Should().Be(1);
         InstrumentedValue.TryParseCalls.Should().Be(1);
         InstrumentedValue.ParseCalls.Should().Be(0);
@@ -76,7 +77,7 @@ public sealed class PhaseThreeBindingTests
             return "later-secret";
         }, error: error);
 
-        int exitCode = await command.RunAsync(entry, ["--first", "throw"]);
+        int exitCode = await command.RunAsync(entry, ["--first", "throw"], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(1);
         environmentReads.Should().Be(1);
@@ -96,7 +97,7 @@ public sealed class PhaseThreeBindingTests
         StringWriter error = new();
         ConfigureServices(command, _ => throw expected, error: error);
 
-        int exitCode = await command.RunAsync(entry, ["--token=error"]);
+        int exitCode = await command.RunAsync(entry, ["--token=error"], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(1);
         command.LastBindingResult!.Status.Should().Be(BindingStatus.InfrastructureFailure);
@@ -115,8 +116,7 @@ public sealed class PhaseThreeBindingTests
         Command other = NewCommand();
         RequiredOption<string> foreign = other.RequiredOption<string>("foreign").Description("Foreign.");
         other.Target("entry").Description("Entry.");
-        await FluentActions.Awaiting(() => command.RunAsync(entry, ["--owned", "value"]))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(entry, ["--owned", "value"], TestContext.Current.CancellationToken)).Should().Be(0);
         RafterContext context = new(command.LastBindingResult!.Snapshot!);
 
         Action readForeign = () => context.Value(foreign);
@@ -137,7 +137,8 @@ public sealed class PhaseThreeBindingTests
 
         int rejectedExit = await rejected.RunAsync(
             rejectedEntry,
-            ["--first", "value", "--later", "converted"]);
+            ["--first", "value", "--later", "converted"],
+            TestContext.Current.CancellationToken);
 
         rejectedExit.Should().Be(2);
         InstrumentedValue.TryParseCalls.Should().Be(1);
@@ -156,7 +157,8 @@ public sealed class PhaseThreeBindingTests
 
         int throwingExit = await throwing.RunAsync(
             throwingEntry,
-            ["--first", "secret", "--later", "not-converted"]);
+            ["--first", "secret", "--later", "not-converted"],
+            TestContext.Current.CancellationToken);
 
         throwingExit.Should().Be(1);
         InstrumentedValue.TryParseCalls.Should().Be(0);
@@ -173,7 +175,7 @@ public sealed class PhaseThreeBindingTests
         Target entry = command.Target("entry").Description("Entry.");
         ConfigureServices(command);
 
-        int exitCode = await command.RunAsync(entry, ["--value", "anything"]);
+        int exitCode = await command.RunAsync(entry, ["--value", "anything"], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(1);
         command.LastBindingResult!.Status.Should().Be(BindingStatus.AuthorFailure);
@@ -231,8 +233,7 @@ public sealed class PhaseThreeBindingTests
             return string.Equals(name, "ENVIRONMENT", StringComparison.Ordinal) ? string.Empty : "must-not-win";
         });
 
-        await FluentActions.Awaiting(() => command.RunAsync(entry, ["--command-line="]))
-            .Should().ThrowAsync<NotSupportedException>();
+        (await command.RunAsync(entry, ["--command-line="], TestContext.Current.CancellationToken)).Should().Be(0);
 
         RafterContext context = new(command.LastBindingResult!.Snapshot!);
         context.Value(commandLine).Should().BeEmpty();

@@ -18,7 +18,7 @@ public sealed class FoundationIntegrationTests
         result.ExitCode.Should().Be(0);
         result.StandardError.Should().BeEmpty();
         result.StandardOutput.Should().ContainAll(
-            "Phase 3 integration fixture.",
+            "Rafter integration fixture.",
             "Usage",
             "Sotsera.Rafter.RunFixture [options]",
             "Command options",
@@ -36,6 +36,14 @@ public sealed class FoundationIntegrationTests
             "Input errors",
             "Invalid value \"bad\" for '--count'.",
             "Usage");
+    }
+
+    [Fact]
+    public async Task FileFixtureHandlesARealProcessIsolatedConsoleSignal()
+    {
+        ProcessResult result = await RunFixture("--count=1", "--self-cancel");
+
+        result.ExitCode.Should().Be(130);
     }
 
     private static async Task<ProcessResult> RunFixture(params string[] arguments)
@@ -63,7 +71,19 @@ public sealed class FoundationIntegrationTests
         using Process process = Process.Start(startInfo)!;
         Task<string> output = process.StandardOutput.ReadToEndAsync();
         Task<string> error = process.StandardError.ReadToEndAsync();
-        await process.WaitForExitAsync().ConfigureAwait(false);
+        try
+        {
+            await process.WaitForExitAsync()
+                .WaitAsync(TimeSpan.FromSeconds(15), TestContext.Current.CancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch
+        {
+            process.Kill(entireProcessTree: true);
+            await process.WaitForExitAsync(TestContext.Current.CancellationToken).ConfigureAwait(false);
+            throw;
+        }
+
         return new ProcessResult(
             process.ExitCode,
             await output.ConfigureAwait(false),
