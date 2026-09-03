@@ -34,6 +34,8 @@ Rafter's public API.
 
 ### Public and internal model
 
+- [ ] Consume the Phase 4 path resolver for target-relative process overrides; do not duplicate containment,
+      namespace, casing, or command-root policy inside the process runtime.
 - [ ] Implement the generic process fluent surface demonstrated by `processes.cs`, `environment.cs`,
       `working-directory.cs`, `redaction.cs`, and `process-cancellation.cs`.
 - [ ] Normalize executable, argument tokens, valid exits, environment edits, working directory, stream mode,
@@ -61,6 +63,8 @@ Rafter's public API.
 - [ ] Validate environment edit keys before launch with the fallback-name rules: reject empty or whitespace-only
       text, NUL, and `=`, preserve authored spelling, and rely on the host operating system's case semantics.
 - [ ] Validate empty executable names, capture limits, and working directories before attempting launch.
+- [ ] Execute relative and permitted absolute process-working-directory tests from distinct target contexts and prove
+      the parent `Environment.CurrentDirectory` never changes.
 - [ ] Implement `.CaptureLimitBytes(long)` as a positive per-stream retained-byte limit measured before decoding.
 - [ ] Default capture retention to 1 MiB independently for stdout and stderr; do not apply that retention policy to
       streaming `Run()`.

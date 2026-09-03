@@ -1,9 +1,14 @@
 namespace Sotsera.Rafter;
 
+using static PathRuntime;
+
 /// <summary>Represents the context supplied to target callbacks.</summary>
 public sealed class RafterContext
 {
     private readonly BindingEngine.InvocationSnapshot? _snapshot;
+    private readonly string? _root;
+    private readonly string? _workingDirectory;
+    private readonly IFileSystemPrimitives? _fileSystem;
 
     internal RafterContext()
     {
@@ -13,6 +18,34 @@ public sealed class RafterContext
     {
         _snapshot = snapshot;
     }
+
+    internal RafterContext(
+        BindingEngine.InvocationSnapshot snapshot,
+        string root,
+        string workingDirectory,
+        IFileSystemPrimitives fileSystem)
+    {
+        _snapshot = snapshot;
+        _root = root;
+        _workingDirectory = workingDirectory;
+        _fileSystem = fileSystem;
+    }
+
+    /// <summary>Gets the normalized absolute command root.</summary>
+    public string Root => _root
+        ?? throw new InvalidOperationException("The context is not associated with resolved invocation paths.");
+
+    /// <summary>Gets the normalized absolute logical working directory.</summary>
+    public string WorkingDirectory => _workingDirectory
+        ?? throw new InvalidOperationException("The context is not associated with resolved invocation paths.");
+
+    /// <summary>Gets filesystem operations scoped to this context.</summary>
+    public RafterFileSystem FileSystem => new(
+        GetSnapshot().CommandId,
+        GetSnapshot(),
+        Root,
+        WorkingDirectory,
+        _fileSystem ?? throw new InvalidOperationException("The context has no filesystem services."));
 
     /// <summary>Gets the bound value of an optional option.</summary>
     public T? Value<T>(Option<T> option)
@@ -48,8 +81,7 @@ public sealed class RafterContext
 
     private BindingEngine.InvocationSnapshot GetOwnedSnapshot(CommandModel.AuthoredOption option)
     {
-        BindingEngine.InvocationSnapshot snapshot = _snapshot
-            ?? throw new InvalidOperationException("The context is not associated with a bound invocation.");
+        BindingEngine.InvocationSnapshot snapshot = GetSnapshot();
         if (snapshot.CommandId != option.Command.Id)
         {
             throw new InvalidOperationException("The option belongs to a different command.");
@@ -57,4 +89,7 @@ public sealed class RafterContext
 
         return snapshot;
     }
+
+    private BindingEngine.InvocationSnapshot GetSnapshot()
+        => _snapshot ?? throw new InvalidOperationException("The context is not associated with a bound invocation.");
 }

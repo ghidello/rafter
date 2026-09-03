@@ -52,6 +52,8 @@ internal static class BindingEngine
 
         internal IReadOnlyList<T> GetRepeated<T>(Guid optionId) => (IReadOnlyList<T>)Get(optionId)!;
 
+        internal object? GetUntyped(Guid optionId) => Get(optionId);
+
         private object? Get(Guid optionId)
             => values.TryGetValue(optionId, out object? value)
                 ? value

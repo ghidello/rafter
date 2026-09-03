@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static Sotsera.Rafter.BindingEngine;
 using static Sotsera.Rafter.CommandModel;
+using static Sotsera.Rafter.PathRuntime;
 
 namespace Sotsera.Rafter;
 
@@ -26,6 +27,8 @@ public sealed class Command
     internal ImmutableArray<ModelDiagnostic> LastInvocationDiagnostics => _lastInvocationDiagnostics;
 
     internal BindingResult? LastBindingResult { get; private set; }
+
+    internal PathRuntime.InvocationPaths? LastInvocationPaths { get; private set; }
 
     internal InvocationStatus? LastInvocationStatus { get; private set; }
 
@@ -136,6 +139,7 @@ public sealed class Command
         {
             _lastArguments = [.. args];
             LastBindingResult = null;
+            LastInvocationPaths = null;
             LastInvocationStatus = null;
             _lastInvocationDiagnostics = entryTarget.Authored.Command.Id == _authored.Id
                 ? []
@@ -251,12 +255,48 @@ public sealed class Command
                     return 1;
                 }
             case BindingStatus.Success:
-                LastInvocationStatus = InvocationStatus.SuccessfulBindingStub;
-                await Task.Yield();
-                throw new NotSupportedException("Command execution is implemented in a later Rafter phase.");
+                return await CompletePathInitializationAsync(model, services, result).ConfigureAwait(false);
             default:
                 throw new UnreachableException();
         }
+    }
+
+    private async Task<int> CompletePathInitializationAsync(
+        CommandDefinition model,
+        InvocationServices services,
+        BindingResult result)
+    {
+        try
+        {
+            LastInvocationPaths = PathRuntime.Resolve(model, result.Snapshot!, services);
+        }
+        catch (PathPolicyException exception)
+        {
+            CommandPresentation.Report report = CommandPresentation.CreatePathFailure(exception.Message);
+            bool written = await TryWriteAsync(
+                report,
+                services.StandardError,
+                !result.Plain && services.StandardErrorSupportsAnsi,
+                result.Redactor).ConfigureAwait(false);
+            LastInvocationStatus = written ? InvocationStatus.PathFailure : InvocationStatus.InfrastructureFailure;
+            return written ? 2 : 1;
+        }
+        catch
+        {
+            CommandPresentation.Report report = CommandPresentation.CreatePathFailure(
+                "Command path initialization failed because filesystem metadata was unavailable.");
+            _ = await TryWriteAsync(
+                report,
+                services.StandardError,
+                !result.Plain && services.StandardErrorSupportsAnsi,
+                result.Redactor).ConfigureAwait(false);
+            LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+            return 1;
+        }
+
+        LastInvocationStatus = InvocationStatus.SuccessfulPathStub;
+        await Task.Yield();
+        throw new NotSupportedException("Command execution is implemented in a later Rafter phase.");
     }
 
     private static async Task<bool> TryWriteAsync(
@@ -313,6 +353,7 @@ public sealed class Command
         InputFailure,
         AuthorFailure,
         InfrastructureFailure,
-        SuccessfulBindingStub,
+        PathFailure,
+        SuccessfulPathStub,
     }
 }

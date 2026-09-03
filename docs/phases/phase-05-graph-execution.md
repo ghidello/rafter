@@ -25,6 +25,10 @@ documented and testable.
 
 ### Scheduling
 
+- [ ] Consume the Phase 4 context factory so conditions, execution, and target cleanup receive the target's resolved
+      logical working directory while command cleanup receives the resolved command root.
+- [ ] Execute concurrent targets with distinct logical directories and prove their complete callback lifetimes leave
+      `Environment.CurrentDirectory` unchanged.
 - [ ] Enforce the phase-2 default concurrency of `1` when no override is authored.
 - [ ] Enforce command concurrency with one scheduler-owned permit mechanism.
 - [ ] Do not acquire a permit while a target waits for dependencies.
@@ -112,6 +116,8 @@ documented and testable.
 - [ ] Test cancellation before scheduling, while queued, and while running; verify cancellation-triggered cleanup
       observes a fresh non-cancelled token and that cooperative cleanup settles normally.
 - [ ] Assert every callback, condition, and cleanup invocation count.
+- [ ] Execute the Phase 4 working-directory fixture and prove target and command cleanup scopes through real graph
+      execution rather than internal context construction alone.
 
 ## Completion gates
 
