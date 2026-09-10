@@ -53,6 +53,8 @@ internal sealed class InvocationOutput
 
     internal static bool IsPublishing => PublicationDepth.Value != 0;
 
+    internal TextRedactor Redactor => _redactor;
+
     internal Admission Admit()
     {
         lock (_sync)
@@ -109,20 +111,25 @@ internal sealed class InvocationOutput
 
         using (admission)
         {
-            List<OutputEvent> events;
-            lock (_consoleSync)
-            {
-                ConsoleBuffer buffer = standardError ? _consoleError : _consoleOutput;
-                events = buffer.Append(scope?.GetName() ?? "command", text);
-            }
-
-            foreach (OutputEvent outputEvent in events)
-            {
-                PublishCore(outputEvent);
-            }
+            PublishConsoleAdmitted(standardError, scope, text);
         }
 
         return true;
+    }
+
+    internal void PublishConsoleAdmitted(bool standardError, OutputScope? scope, string text)
+    {
+        List<OutputEvent> events;
+        lock (_consoleSync)
+        {
+            ConsoleBuffer buffer = standardError ? _consoleError : _consoleOutput;
+            events = buffer.Append(scope?.GetName() ?? "command", text);
+        }
+
+        foreach (OutputEvent outputEvent in events)
+        {
+            PublishCore(outputEvent);
+        }
     }
 
     internal void Fail(Exception exception)

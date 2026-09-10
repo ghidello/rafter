@@ -342,8 +342,8 @@ Completion requires deterministic presentation snapshots plus concurrent console
 
 ## [Phase 7: .NET 10 process runtime](phases/phase-07-process-runtime.md)
 
-Implement all generic and typed processes through one Rafter-owned runtime. Do not depend on the .NET 11 process
-helpers until .NET 11 is final and separately evaluated.
+Implement the complete generic Rafter-owned process runtime that every Phase 8 typed process must reuse. Do not
+depend on the .NET 11 process helpers until .NET 11 is final and separately evaluated.
 
 ### Construction
 
@@ -389,19 +389,19 @@ on success, failure, cancellation, timeout, startup failure, and output-policy f
 
 - Make cancellation-before-start, cancellation-during-start, natural exit, and cancellation-after-exit races
   deterministic.
-- Attempt the documented graceful termination when the platform and child protocol support it.
 - Resolve descendant ownership and retained-pipe behavior before implementation; do not treat direct-process exit as
   proof that descendants terminated.
-- After a bounded grace period, apply the approved forced-termination strategy and verify only the survivor guarantee
-  that strategy can actually provide.
+- After cancellation or timeout wins the coordinated exit race, apply the approved forced-termination strategy
+  directly and verify only the survivor guarantee that strategy can actually provide. Do not imply a portable
+  graceful-termination protocol on .NET 10.
 - A retained pipe handle or uncooperative descendant must not prevent bounded cancellation.
 - Preserve the difference between an ordinary nonzero exit, an explicitly valid nonzero exit, cancellation, timeout, startup
   failure, capture-limit failure, and infrastructure failure in Rafter-owned results and diagnostics.
 - Keep the public thrown hierarchy small: `RafterException`, `ProcessException`, and dedicated
   `ProcessStartException`, `ProcessExitException`, `ProcessTimeoutException`, and `ProcessOutputException` types.
   Use `ProcessException` itself for otherwise unclassified process-infrastructure failures.
-- Give `ProcessOutputException` a reason enum for capture-limit and strict-UTF-8 decoding failures plus only safe
-  structured metadata; preserve underlying platform exceptions as `InnerException` where one exists.
+- Give `ProcessOutputException` a reason enum for capture-limit, strict-UTF-8 decoding, and retained-pipe failures plus
+  only safe structured metadata; preserve underlying platform exceptions as `InnerException` where one exists.
 - Represent cancellation with standard `OperationCanceledException`, and preserve application callback exception
   type and identity rather than wrapping it.
 - Return `ProcessExit`, an allocation-free Rafter-owned value containing the actual valid exit code, from streaming
@@ -428,21 +428,23 @@ Use deterministic fixture executables rather than platform shell commands. Cover
 - zero, nonzero, and explicitly valid nonzero exit codes;
 - working-directory and environment inheritance and overrides;
 - cancellation before start, during execution, during heavy output, and immediately after natural exit;
-- a child that acknowledges cancellation and one that ignores it;
+- a direct child that waits indefinitely and a process tree that requires forced termination;
 - child and grandchild process trees;
 - a descendant that retains stdout or stderr after the direct child exits;
 - multiple concurrent process launches with redirected output;
 - sensitive values in arguments, stdout, stderr, and failures;
-- disposal and absence of surviving fixture processes after every test.
+- direct-child disposal plus absence of surviving fixture processes after the harness independently cleans any
+  best-effort descendants.
 
 Completion requires this matrix to pass reliably on every supported operating system, with platform-specific
 expectations stated explicitly rather than hidden by retries.
 
-## [Phase 8: capture and typed tools](phases/phase-08-capture-and-tools.md)
+## [Phase 8: typed tools and process extensibility](phases/phase-08-capture-and-tools.md)
 
-Build convenience APIs on the generic process runtime.
+Build convenience APIs on the completed generic process runtime.
 
-- Implement `Run` and bounded `Capture` as the complete core process completion modes.
+- Treat Phase 7's `Run` and bounded `Capture` as the complete core process completion modes; verify extensions and
+  typed tools preserve their contracts rather than reimplementing them.
 - Keep JSON deserialization application-owned and prove the public process surface is extensible with the portfolio's
   `CaptureJson` extension example.
 - Use the ordinary public `ProcessBuilder` returned by `context.Process(...)` as the extension receiver; do not add a
@@ -453,7 +455,8 @@ Build convenience APIs on the generic process runtime.
 - Apply no implicit execution timeout when `.Timeout(...)` is absent; internal drain and teardown deadlines remain
   separate runtime safety policies.
 - Keep timeout on process builders only; targets expose cooperative invocation cancellation but no target timeout.
-- Do not duplicate execution, cancellation, output, redaction, or failure policy in a typed integration.
+- Reuse Phase 7's internal safety policy and runtime unchanged; do not duplicate execution, cancellation, output,
+  redaction, teardown, or failure policy in a typed integration.
 
 Completion requires every process and typed-tool example to compile and exercise the shared runtime in tests.
 

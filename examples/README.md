@@ -396,10 +396,19 @@ repeatable.
 
 `ProcessBuilder` is an immutable, reusable process specification. Every fluent call derives a new builder without
 changing its source, and every terminal `Run()` or `Capture()` starts a new independent process; terminal results are
-never cached. The same builder may be launched concurrently within its owning target. It remains bound to the
-invocation context that created it, and a terminal call after that invocation has settled fails clearly.
+never cached. The same builder may be launched concurrently while its creating target or cleanup callback remains
+active. It remains bound to that callback context, and a terminal call after the creating callback closes fails
+synchronously even if another target in the invocation is still running.
 `processes.cs` makes that behavior visible by deriving its streaming and captured executions from one base builder;
 it also passes a defaulted `Option<TimeSpan>` directly to `.Timeout(...)`.
+Every started process task must be awaited, returned, or included in an awaited composition before its target or
+cleanup callback returns. Rafter cancels and settles an operation still active at that boundary and fails the callback
+instead of allowing a detached child process.
+
+A bare executable name uses the host runtime's ordinary lookup. A relative path-like executable resolves against the
+effective process working directory, while an absolute executable path is accepted even outside the command root;
+the root protects Rafter filesystem mutations and is not an executable allowlist. Builder construction does not probe
+whether an executable exists.
 
 Processes treat exit code `0` as successful by default. `.ValidExitCodes(...)` replaces that complete set, so authors include `0` explicitly
 when it should remain successful alongside another tool-specific code. The method requires at least one code and normalizes duplicates.
@@ -409,28 +418,38 @@ property is `ExitCode`.
 
 `.CaptureLimitBytes(long)` applies the same retained-data limit independently to stdout and stderr; it is not a combined budget. For example, a
 2 MiB setting permits up to 2 MiB from each stream, or 4 MiB of retained child-process bytes in total. The byte count is measured before text
-decoding. `Capture()` defaults to 1 MiB per stream; streaming `Run()` does not retain complete output. Exceeding a limit stops retaining that
-stream but never stops draining it, so a full pipe cannot deadlock the child process. After the process settles, `Capture()` reports a distinct
-capture-limit failure rather than returning normally with incomplete data; diagnostics identify the affected stream and limit without embedding
-raw partial output.
+decoding. This is a retained-input policy, not an exact managed-memory ceiling: successful capture also materializes UTF-16 result strings and
+uses small fixed-buffer/segment overhead. `Capture()` defaults to 1 MiB per stream; streaming `Run()` does not retain
+complete output, and using `.CaptureLimitBytes(...)` with `Run()` is a specification error rather than an ignored
+setting. Exceeding a limit stops retaining that stream but never stops draining it, so a full pipe cannot deadlock the
+child process. After the process settles, `Capture()` reports a distinct capture-limit failure rather than returning
+normally with incomplete data; diagnostics identify the affected stream and limit without embedding raw partial
+output.
 
 Successful `Capture()` returns an immutable `ProcessCapture` with `ExitCode`, `StandardOutput`, and `StandardError`. It does not expose an
 observed-order line transcript in the initial API: exact per-stream data is the programmatic capture contract, while streaming `Run()` already
 presents lines in Rafter's observation order.
 If capture completes within its bounds and decodes successfully but the exit code is invalid, the Rafter-owned exit
-failure exposes that complete `ProcessCapture`. Startup, cancellation, timeout, capture-limit, and decoding failures
-do not expose partial public capture, and streaming `Run()` never retains output merely to enrich an exception.
+failure exposes that complete `ProcessCapture`. Startup, cancellation, timeout, capture-limit, decoding, and
+retained-pipe failures do not expose partial public capture, and streaming `Run()` never retains output merely to
+enrich an exception.
 Exposed capture is exact raw application-owned program data so structured formats are not corrupted. Rafter never
 presents it automatically; if the application sends it through `context.Output`, intercepted console output, or
 another Rafter-managed channel, registered sensitive values are redacted there. Direct use outside those channels is
 the application's responsibility.
+Process `SetSensitive(...)` literals and other sensitivity-tagged launch values are additionally redacted from that
+process's streamed output and safe metadata. This is process-local protection, not retroactive taint tracking: a
+literal introduced only through `SetSensitive(...)` is not automatically recognized if raw capture is later printed
+elsewhere. Command options marked `.Sensitive()` remain registered across the invocation and are protected on such
+re-entry.
 
 Public process failures use a compact hierarchy rooted at `RafterException` and `ProcessException`, with dedicated
-start, invalid-exit, timeout, and output exception types. Output failures distinguish capture-limit and strict-UTF-8
-decoding reasons through an enum rather than additional exception classes. Unexpected process infrastructure uses
-the process base type, underlying platform failures remain available as `InnerException`, and cancellation remains
-standard `OperationCanceledException`. Rafter records application callback exceptions without changing their type
-or identity; model, parsing, binding, and graph problems remain command diagnostics handled by `RunAsync`.
+start, invalid-exit, timeout, and output exception types. Output failures distinguish capture-limit, strict-UTF-8
+decoding, and descendant-retained-pipe reasons through an enum rather than additional exception classes. Unexpected
+process infrastructure uses the process base type, underlying platform failures remain available as
+`InnerException`, and cancellation remains standard `OperationCanceledException`. Rafter records application
+callback exceptions without changing their type or identity; model, parsing, binding, and graph problems remain
+command diagnostics handled by `RunAsync`.
 
 Redirected streams use strict UTF-8 decoding in the initial API. Invalid byte sequences produce a distinct decoding failure rather than silent
 replacement, and no public encoding override is exposed until a concrete legacy-tool scenario justifies it.

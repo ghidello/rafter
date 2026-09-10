@@ -407,3 +407,12 @@ dotnet_diagnostic.CA1716.severity = none
 
 [src/Sotsera.Rafter/Rafter.cs]
 dotnet_diagnostic.MA0049.severity = none
+
+# Approved public contract name identifies the affected redirected process channel; it is not a stream type.
+[src/Sotsera.Rafter/ProcessOutputStream.cs]
+dotnet_diagnostic.CA1711.severity = none
+
+# File-based examples synthesize Program and intentionally show ordinary application awaits.
+[examples/*.cs]
+dotnet_diagnostic.MA0004.severity = none
+dotnet_diagnostic.MA0048.severity = none

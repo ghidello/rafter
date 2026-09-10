@@ -521,7 +521,7 @@ dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --n
 
 The Phase 6 evidence document must record these results, the Windows/Ubuntu/macOS CI matrix, package-integrity result,
 public API diff, approved presentation snapshots, routing/redaction matrices, and the exact examples compiled against
-the Phase 6 API. It must explicitly list examples deferred to process and capture phases.
+the Phase 6 API. It must explicitly list examples deferred to process-runtime and typed-tool phases.
 
 ## Completion gates
 
@@ -548,10 +548,11 @@ Phase 7 feeds decoded streaming child stdout and stderr into the same coordinato
 and failure APIs; it does not create a second console or redaction pipeline. Process runtime tests reuse Phase 6 chunk,
 stream, attribution, ownership, and sink-failure fixtures with real child processes.
 
-Phase 8 implements bounded raw `ProcessCapture` and invalid-exit capture. Those values remain exact and
+Phase 7 implements bounded raw `ProcessCapture` and invalid-exit capture. Those values remain exact and
 application-owned until explicitly sent back through `RafterOutput`, intercepted console, or another managed channel,
-where the Phase 6 boundary redacts them. Phase 6 proves this re-entry behavior with an internal synthetic raw payload
-without prematurely adding public process or capture types.
+where the Phase 6 boundary redacts invocation-wide registered values. Phase 6 proves this re-entry behavior with an
+internal synthetic raw payload without prematurely adding public process or capture types. Phase 8 verifies that
+application extensions and typed builders preserve the completed generic capture contract.
 
 ## Non-goals
 

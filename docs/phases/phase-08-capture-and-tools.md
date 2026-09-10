@@ -1,9 +1,9 @@
-# Phase 8: capture and typed tools
+# Phase 8: typed tools and process extensibility
 
 ## Objective
 
-Finish the process-facing user experience with bounded capture and typed DotNet, Git, npm, and pnpm builders that
-remain thin specification layers over phase 7, while proving applications can add their own fluent conveniences.
+Build typed DotNet, Git, npm, and pnpm builders as thin specification layers over Phase 7's completed generic
+`Run()` and bounded `Capture()` modes, while proving applications can add their own fluent conveniences.
 
 ## Architectural rule
 
@@ -12,26 +12,24 @@ may improve syntax and validation; it may not own another launch, output, cancel
 
 ## Implementation checklist
 
-### Generic completion modes
+### Generic completion-mode conformance
 
-- [ ] Return exact raw application-owned data from `Capture()` without presenting it automatically, and redact that
-      data if the application sends it through any Rafter-managed output channel.
-- [ ] Implement `Run()` for live target-aware output, returning `ProcessExit`, an allocation-free value with the
-      actual valid exit code and no retained stdout or stderr.
-- [ ] Implement `Capture()` returning immutable `ProcessCapture` with `ExitCode`, exact `StandardOutput`, and exact
-      `StandardError`.
-- [ ] Do not expose an observed-order line transcript in v1; streaming presentation retains its internal observed
-      ordering without expanding the capture result contract.
-- [ ] Apply the phase-7 default per-stream capture limit and `.CaptureLimitBytes(long)` override.
-- [ ] Preserve each decoded stream's original newline sequences and unterminated final content; do not normalize
-      captured program data for presentation.
-- [ ] On an invalid exit after complete bounded capture and successful decoding, expose the full `ProcessCapture`
-      through the Rafter-owned exit failure; the terminal outcome remains a failure.
+- [ ] Verify exact raw application-owned data from `Capture()` is not presented automatically and invocation-wide
+      registered sensitive values are redacted when an extension or typed tool sends it through a Rafter-managed
+      output channel; process-local literal sensitivity is not retroactive taint tracking.
+- [ ] Verify typed tools and extensions preserve `Run()` live output and its allocation-free `ProcessExit` without
+      retaining stdout or stderr.
+- [ ] Verify typed tools and extensions preserve immutable `ProcessCapture`, exact stream data, the absence of an
+      observed-order transcript, and the Phase 7 default or overridden per-stream capture limit.
+- [ ] Verify typed tools and extensions preserve original decoded newlines and unterminated final content rather
+      than normalizing captured program data for presentation.
+- [ ] Verify an invalid exit after complete bounded capture exposes the full `ProcessCapture` through the shared
+      Rafter-owned exit failure.
 - [ ] Keep typed builders and application extensions on the same public process exception hierarchy; do not wrap a
       generic runtime failure in a tool-specific exception.
-- [ ] Do not expose public partial capture for startup failure, cancellation, timeout, capture-limit overflow, or
-      decoding failure; continue draining and processing internally where safe teardown requires it.
-- [ ] Do not make streaming `Run()` retain stdout or stderr solely to enrich a failure.
+- [ ] Verify no typed tool or extension exposes partial capture for startup failure, cancellation, timeout,
+      capture-limit overflow, retained-pipe termination, or decoding failure.
+- [ ] Verify no typed tool or extension makes streaming `Run()` retain stdout or stderr solely to enrich a failure.
 - [ ] Keep the complete capture attached to an invalid-exit failure raw and application-owned, while ensuring normal
       exception rendering exposes only safe metadata and no captured text.
 - [ ] Keep valid-exit-code evaluation identical between run and capture modes.
@@ -87,7 +85,8 @@ may improve syntax and validation; it may not own another launch, output, cancel
 
 - [ ] Run/Capture shared-policy tests cover exit classification, environment, working directory, timeout, and
       cancellation. Separate trust-boundary tests prove streaming output is redacted, capture remains raw, and raw
-      capture is redacted if it re-enters a Rafter-managed output channel.
+      capture containing an invocation-wide sensitive option is redacted if it re-enters a Rafter-managed output
+      channel.
 - [ ] Test capture at boundary sizes and with independently overflowing stdout and stderr.
 - [ ] Test that the extensibility example consumes the ordinary public capture result and requires no privileged API.
 - [ ] Snapshot every typed example's executable and exact argument vector.
@@ -99,7 +98,8 @@ may improve syntax and validation; it may not own another launch, output, cancel
 
 - [ ] **T1 — Mode contract:** Run and Capture share exit, cancellation, timeout, environment, and working-directory
       semantics while enforcing their distinct streaming-redaction and raw-capture responsibilities.
-- [ ] **T2 — Capture bound:** both streams obey limits with documented partial-result behavior.
+- [ ] **T2 — Capture bound:** both streams obey limits, continue draining after overflow, and expose no partial public
+      result on output-policy failure.
 - [ ] **T3 — Public extensibility:** the application-owned `CaptureJson` example compiles and runs using only supported
       public process APIs.
 - [ ] **T4 — Exact vectors:** approved executable/argument snapshots cover every typed example.

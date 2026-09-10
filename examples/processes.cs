@@ -36,7 +36,7 @@ var run = command.Target("run")
 
         var capture = await process
             .Option("--stdout", message)
-            .Option("--exit-code", 2)
+            .Option("--exit-code", "2")
             .ValidExitCodes(0, 2)
             // The limit applies independently to stdout and stderr.
             .CaptureLimitBytes(2 * 1024 * 1024)

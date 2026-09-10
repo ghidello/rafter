@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Runtime.ExceptionServices;
 using static Sotsera.Rafter.CommandModel;
 using static Sotsera.Rafter.GraphPlanner;
 using static Sotsera.Rafter.PathRuntime;
@@ -376,7 +377,9 @@ internal static class ExecutionRuntime
 
             try
             {
-                bool accepted = await condition.Evaluate(context).ConfigureAwait(false);
+                bool accepted = await InvokeWithProcessScopeAsync(
+                    context,
+                    () => condition.Evaluate(context)).ConfigureAwait(false);
                 if (!accepted)
                 {
                     return TargetCompletion.Skipped();
@@ -402,7 +405,13 @@ internal static class ExecutionRuntime
     {
         try
         {
-            await execution.Invoke(context).ConfigureAwait(false);
+            _ = await InvokeWithProcessScopeAsync(
+                context,
+                async () =>
+                {
+                    await execution.Invoke(context).ConfigureAwait(false);
+                    return true;
+                }).ConfigureAwait(false);
             return TargetCompletion.Succeeded(SuccessfulShape.Executed);
         }
         catch (Exception exception)
@@ -511,7 +520,13 @@ internal static class ExecutionRuntime
     {
         try
         {
-            await cleanup.Invoke(context).ConfigureAwait(false);
+            _ = await InvokeWithProcessScopeAsync(
+                context,
+                async () =>
+                {
+                    await cleanup.Invoke(context).ConfigureAwait(false);
+                    return true;
+                }).ConfigureAwait(false);
             return null;
         }
         catch (Exception exception)
@@ -522,6 +537,33 @@ internal static class ExecutionRuntime
         {
             ConsoleOutputCoordinator.VerifyActiveOwnership();
         }
+    }
+
+    private static async ValueTask<T> InvokeWithProcessScopeAsync<T>(
+        RafterContext context,
+        Func<ValueTask<T>> callback)
+    {
+        ProcessOperationScope processScope = context.OpenProcessScope();
+        T result = default!;
+        ExceptionDispatchInfo? callbackFailure = null;
+        try
+        {
+            result = await callback().ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            callbackFailure = ExceptionDispatchInfo.Capture(exception);
+        }
+
+        bool abandoned = await context.CloseProcessScopeAsync(processScope).ConfigureAwait(false);
+        callbackFailure?.Throw();
+        if (abandoned)
+        {
+            throw new InvalidOperationException(
+                "An invocation callback returned before one or more child-process operations completed.");
+        }
+
+        return result;
     }
 
     private static int SettleUnstartedAfterCancellation(

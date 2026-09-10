@@ -1,4 +1,8 @@
 #nullable enable
+override Sotsera.Rafter.ProcessCapture.Equals(object? obj) -> bool
+override Sotsera.Rafter.ProcessCapture.GetHashCode() -> int
+override Sotsera.Rafter.ProcessCapture.ToString() -> string!
+override Sotsera.Rafter.ProcessExit.GetHashCode() -> int
 Sotsera.Rafter.Command
 Sotsera.Rafter.Command.Concurrency(int concurrency) -> Sotsera.Rafter.Command!
 Sotsera.Rafter.Command.Description(string! description) -> Sotsera.Rafter.Command!
@@ -24,7 +28,85 @@ Sotsera.Rafter.Option<T>.Description(string! description) -> Sotsera.Rafter.Opti
 Sotsera.Rafter.Option<T>.FromEnvironment(string! name) -> Sotsera.Rafter.Option<T>!
 Sotsera.Rafter.Option<T>.Sensitive() -> Sotsera.Rafter.Option<T>!
 Sotsera.Rafter.Option<T>.Validate(System.Func<T, bool>! predicate, string! message) -> Sotsera.Rafter.Option<T>!
+Sotsera.Rafter.ProcessBuilder
+Sotsera.Rafter.ProcessBuilder.Argument(Sotsera.Rafter.DefaultedOption<string!>! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Argument(Sotsera.Rafter.Option<string!>! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Argument(Sotsera.Rafter.RequiredOption<string!>! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Argument(string! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Capture() -> System.Threading.Tasks.Task<Sotsera.Rafter.ProcessCapture!>!
+Sotsera.Rafter.ProcessBuilder.CaptureLimitBytes(long limit) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.CaptureLimitBytes(Sotsera.Rafter.DefaultedOption<long>! limit) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.CaptureLimitBytes(Sotsera.Rafter.Option<long>! limit) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.CaptureLimitBytes(Sotsera.Rafter.RequiredOption<long>! limit) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Environment(System.Action<Sotsera.Rafter.ProcessEnvironmentBuilder!>! configure) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Flag(string! name) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Flag(string! name, bool condition) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Flag(string! name, Sotsera.Rafter.DefaultedOption<bool>! condition) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Flag(string! name, Sotsera.Rafter.Option<bool>! condition) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Flag(string! name, Sotsera.Rafter.RequiredOption<bool>! condition) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Option(string! name, Sotsera.Rafter.DefaultedOption<string!>! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Option(string! name, Sotsera.Rafter.Option<string!>! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Option(string! name, Sotsera.Rafter.RequiredOption<string!>! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Option(string! name, string! value) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Run() -> System.Threading.Tasks.Task<Sotsera.Rafter.ProcessExit>!
+Sotsera.Rafter.ProcessBuilder.Timeout(Sotsera.Rafter.DefaultedOption<System.TimeSpan>! timeout) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Timeout(Sotsera.Rafter.Option<System.TimeSpan>! timeout) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Timeout(Sotsera.Rafter.RequiredOption<System.TimeSpan>! timeout) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.Timeout(System.TimeSpan timeout) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.ValidExitCodes(params int[]! codes) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.WorkingDirectory(Sotsera.Rafter.DefaultedOption<string!>! path) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.WorkingDirectory(Sotsera.Rafter.Option<string!>! path) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.WorkingDirectory(Sotsera.Rafter.RequiredOption<string!>! path) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessBuilder.WorkingDirectory(string! path) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.ProcessCapture
+Sotsera.Rafter.ProcessCapture.<Clone>$() -> Sotsera.Rafter.ProcessCapture!
+Sotsera.Rafter.ProcessCapture.Equals(Sotsera.Rafter.ProcessCapture? other) -> bool
+Sotsera.Rafter.ProcessCapture.ExitCode.get -> int
+Sotsera.Rafter.ProcessCapture.ProcessCapture(int exitCode, string! standardOutput, string! standardError) -> void
+Sotsera.Rafter.ProcessCapture.StandardError.get -> string!
+Sotsera.Rafter.ProcessCapture.StandardOutput.get -> string!
+Sotsera.Rafter.ProcessEnvironmentBuilder
+Sotsera.Rafter.ProcessEnvironmentBuilder.Clear() -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.Set(string! name, Sotsera.Rafter.DefaultedOption<string!>! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.Set(string! name, Sotsera.Rafter.Option<string!>! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.Set(string! name, Sotsera.Rafter.RequiredOption<string!>! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.Set(string! name, string! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.SetSensitive(string! name, Sotsera.Rafter.DefaultedOption<string!>! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.SetSensitive(string! name, Sotsera.Rafter.Option<string!>! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.SetSensitive(string! name, Sotsera.Rafter.RequiredOption<string!>! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.SetSensitive(string! name, string! value) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessEnvironmentBuilder.Unset(string! name) -> Sotsera.Rafter.ProcessEnvironmentBuilder!
+Sotsera.Rafter.ProcessException
+Sotsera.Rafter.ProcessExit
+Sotsera.Rafter.ProcessExit.Deconstruct(out int ExitCode) -> void
+Sotsera.Rafter.ProcessExit.Equals(Sotsera.Rafter.ProcessExit other) -> bool
+Sotsera.Rafter.ProcessExit.ExitCode.get -> int
+Sotsera.Rafter.ProcessExit.ExitCode.init -> void
+Sotsera.Rafter.ProcessExit.ProcessExit() -> void
+Sotsera.Rafter.ProcessExit.ProcessExit(int ExitCode) -> void
+Sotsera.Rafter.ProcessExitException
+Sotsera.Rafter.ProcessExitException.Capture.get -> Sotsera.Rafter.ProcessCapture?
+Sotsera.Rafter.ProcessExitException.ExitCode.get -> int
+Sotsera.Rafter.ProcessOutputException
+Sotsera.Rafter.ProcessOutputException.LimitBytes.get -> long?
+Sotsera.Rafter.ProcessOutputException.Reason.get -> Sotsera.Rafter.ProcessOutputReason
+Sotsera.Rafter.ProcessOutputException.Stream.get -> Sotsera.Rafter.ProcessOutputStream
+Sotsera.Rafter.ProcessOutputReason
+Sotsera.Rafter.ProcessOutputReason.CaptureLimitExceeded = 0 -> Sotsera.Rafter.ProcessOutputReason
+Sotsera.Rafter.ProcessOutputReason.InvalidUtf8 = 1 -> Sotsera.Rafter.ProcessOutputReason
+Sotsera.Rafter.ProcessOutputReason.RetainedPipe = 2 -> Sotsera.Rafter.ProcessOutputReason
+Sotsera.Rafter.ProcessOutputStream
+Sotsera.Rafter.ProcessOutputStream.Both = 2 -> Sotsera.Rafter.ProcessOutputStream
+Sotsera.Rafter.ProcessOutputStream.StandardError = 1 -> Sotsera.Rafter.ProcessOutputStream
+Sotsera.Rafter.ProcessOutputStream.StandardOutput = 0 -> Sotsera.Rafter.ProcessOutputStream
+Sotsera.Rafter.ProcessStartException
+Sotsera.Rafter.ProcessTimeoutException
+Sotsera.Rafter.ProcessTimeoutException.Timeout.get -> System.TimeSpan
 Sotsera.Rafter.Rafter
+Sotsera.Rafter.RafterContext.Process(Sotsera.Rafter.DefaultedOption<string!>! executable) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.RafterContext.Process(Sotsera.Rafter.RequiredOption<string!>! executable) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.RafterContext.Process(string! executable) -> Sotsera.Rafter.ProcessBuilder!
+Sotsera.Rafter.RafterException
 Sotsera.Rafter.RepeatedOption<T>
 Sotsera.Rafter.RepeatedOption<T>.Alias(char alias) -> Sotsera.Rafter.RepeatedOption<T>!
 Sotsera.Rafter.RepeatedOption<T>.Description(string! description) -> Sotsera.Rafter.RepeatedOption<T>!
@@ -78,7 +160,13 @@ Sotsera.Rafter.RafterOutput.Line(string! text) -> void
 Sotsera.Rafter.RafterOutput.Property(string! name, object? value) -> void
 Sotsera.Rafter.RafterOutput.Success(string! text) -> void
 Sotsera.Rafter.RafterOutput.Warning(string! text) -> void
+static Sotsera.Rafter.ProcessCapture.operator !=(Sotsera.Rafter.ProcessCapture? left, Sotsera.Rafter.ProcessCapture? right) -> bool
+static Sotsera.Rafter.ProcessCapture.operator ==(Sotsera.Rafter.ProcessCapture? left, Sotsera.Rafter.ProcessCapture? right) -> bool
+static Sotsera.Rafter.ProcessExit.operator !=(Sotsera.Rafter.ProcessExit left, Sotsera.Rafter.ProcessExit right) -> bool
+static Sotsera.Rafter.ProcessExit.operator ==(Sotsera.Rafter.ProcessExit left, Sotsera.Rafter.ProcessExit right) -> bool
 static Sotsera.Rafter.Rafter.Command(Sotsera.Rafter.Root! root) -> Sotsera.Rafter.Command!
 static Sotsera.Rafter.Root.At(string! path) -> Sotsera.Rafter.Root!
 static Sotsera.Rafter.Root.Invocation.get -> Sotsera.Rafter.Root!
 static Sotsera.Rafter.Root.Source.get -> Sotsera.Rafter.Root!
+~override Sotsera.Rafter.ProcessExit.Equals(object obj) -> bool
+~override Sotsera.Rafter.ProcessExit.ToString() -> string

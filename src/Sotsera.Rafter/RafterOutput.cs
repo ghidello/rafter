@@ -12,6 +12,8 @@ public sealed class RafterOutput
         _scope = scope;
     }
 
+    internal InvocationOutput Invocation => _output;
+
     /// <summary>Writes an informational line.</summary>
     public void Line(string text)
     {
