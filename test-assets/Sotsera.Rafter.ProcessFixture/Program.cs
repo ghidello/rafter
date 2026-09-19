@@ -170,6 +170,11 @@ internal static partial class Program
         ProcessStartInfo startInfo = new(executable)
         {
             UseShellExecute = false,
+            // On Unix, isolate the unused pipe before the managed child runtime can duplicate its descriptor.
+            RedirectStandardOutput = !OperatingSystem.IsWindows()
+                && string.Equals(retainedStream, "stderr", StringComparison.Ordinal),
+            RedirectStandardError = !OperatingSystem.IsWindows()
+                && string.Equals(retainedStream, "stdout", StringComparison.Ordinal),
         };
         startInfo.ArgumentList.Add(depth > 0 ? verb : "wait");
         if (controlDirectory is not null)
@@ -187,7 +192,7 @@ internal static partial class Program
             startInfo.ArgumentList.Add(depth.ToString(CultureInfo.InvariantCulture));
         }
 
-        if (retainedStream is "stdout" or "stderr")
+        if (OperatingSystem.IsWindows() && retainedStream is "stdout" or "stderr")
         {
             startInfo.ArgumentList.Add("--close-stream");
             startInfo.ArgumentList.Add(

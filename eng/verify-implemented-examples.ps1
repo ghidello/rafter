@@ -103,7 +103,17 @@ if ($firstFailure -lt 0 -or $secondFailure -lt 0 -or $firstFailure -ge $secondFa
 }
 $processes = Invoke-Example "processes" @("--fixture", $fixture)
 if (-not $processes.Output.Contains('captured="fixture output"')) { throw "Missing exact captured data." }
-$environment = Invoke-Example "environment" @("--fixture", $fixture)
+$environmentFixture = $fixture
+if (-not $IsWindows) {
+    # The example clears DOTNET_ROOT. Use an explicit host for SDKs installed outside the global search path.
+    $environmentFixture = Join-Path $reportRoot "environment-fixture.sh"
+    $dotnetToken = "'" + (Get-Command dotnet).Source.Replace("'", "'\''") + "'"
+    $assemblyToken = "'" + (Join-Path (Split-Path $fixture) "Sotsera.Rafter.ProcessFixture.dll").Replace("'", "'\''") + "'"
+    [System.IO.File]::WriteAllText($environmentFixture, "#!/bin/sh`nexec $dotnetToken $assemblyToken" + ' "$@"' + "`n")
+    [System.IO.File]::SetUnixFileMode($environmentFixture,
+        [System.IO.UnixFileMode]::UserRead -bor [System.IO.UnixFileMode]::UserWrite -bor [System.IO.UnixFileMode]::UserExecute)
+}
+$environment = Invoke-Example "environment" @("--fixture", $environmentFixture)
 if (-not $environment.Output.Contains('"CI":"true"')) { throw "Child environment was not applied." }
 $redaction = Invoke-Example "redaction" @("--fixture", $fixture, "--synthetic-secret", "example-disposable-secret")
 if (($redaction.Output + $redaction.Error).Contains("example-disposable-secret")) {

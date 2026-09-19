@@ -452,7 +452,7 @@ phase is not implemented rather than relying on a moving definition of “curren
 - [ ] **G7 — Cooperative cancellation:** finite test callbacks settle within test deadlines, cleanup receives its
       distinct non-cancellable token, and Rafter-owned operations leave no orphaned work; arbitrary managed cleanup
       has no false hard-termination guarantee, and repeated Ctrl+C remains a host escape hatch.
-- [ ] **G8 — Evidence recorded:** state-transition table, cleanup matrix, and exit-code table are committed.
+- [x] **G8 — Evidence recorded:** state-transition table, cleanup matrix, and exit-code table are committed.
 - [ ] **G9 — Repository quality:** the recorded baseline commands, analyzer-clean Release build, public API baseline
       checks, CI matrix, package integrity, and explicitly enumerated Phase 5 example or syntax-fixture checks pass;
       every later-phase example deferral is named.

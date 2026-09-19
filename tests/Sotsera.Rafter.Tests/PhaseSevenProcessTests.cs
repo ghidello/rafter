@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -388,10 +389,14 @@ public sealed class PhaseSevenProcessTests
     {
         ProcessCapture? capture = null;
         string? parentValue = Environment.GetEnvironmentVariable("RAFTER_PROCESS_TEST");
+        string dotnet = Path.GetFullPath(Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), "..", "..", "..",
+            OperatingSystem.IsWindows() ? "dotnet.exe" : "dotnet"));
         Command command = PhaseFiveTestSupport.CreateCommand();
         Target target = command.Target("environment")
             .Description("Inspect child environment.")
-            .Run(async context => capture = await context.Process(GetFixturePath())
+            // An explicit host still works after Clear removes a custom installation's DOTNET_ROOT.
+            .Run(async context => capture = await context.Process(dotnet)
+                .Argument(Path.Combine(Path.GetDirectoryName(GetFixturePath())!, "Sotsera.Rafter.ProcessFixture.dll"))
                 .Argument("environment")
                 .Environment(environment => environment
                     .Set("DISCARDED", "before-clear")
