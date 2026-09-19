@@ -2,7 +2,7 @@
 
 ## Status
 
-Partial implementation, verified locally on 2026-09-19. The [closeout audit](phase-05-07-closeout.md) records the
+Partial implementation, verified locally and in three-OS CI on 2026-09-19. The [closeout audit](phase-05-07-closeout.md) records the
 repository baseline and explicitly identifies unfinished presentation and verification work. This is not a phase
 completion certificate.
 

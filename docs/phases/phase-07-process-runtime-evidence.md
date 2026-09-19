@@ -2,8 +2,8 @@
 
 ## Status
 
-Generic process execution is implemented and locally tested. The phase remains open for the complete synthetic
-failure/race matrix, memory measurement, stress/resource evidence and supported-OS verification. See the
+Generic process execution passes the current Windows, Ubuntu and macOS suite. The phase remains open for the complete
+synthetic failure/race matrix, memory measurement, stress/resource evidence and the earlier macOS stall. See the
 [closeout audit](phase-05-07-closeout.md) for repairs and the repository baseline.
 
 ## Completion and failure matrix
@@ -58,6 +58,7 @@ phase plan retain authority. No public API additions or removals were made by th
 
 The implementation retains capture in 16 KiB segments and creates UTF-16 strings only for successful complete
 capture. The current tests verify data limits, not the specified measured managed-memory envelope. R3 therefore
-remains open. R2, R5–R9 and R11 must not be closed from one local Windows run. Source/observer initialization failure
+remains open. The current three-OS CI establishes R11, while the broader R2 and R5–R9 matrices remain open.
+Source/observer initialization failure
 after successful launch, simultaneous failure ordering, disposal exceptions, repeated races and many-process stress
 still require focused verification. The Phase 8 extension and typed-tool examples remain explicitly deferred.

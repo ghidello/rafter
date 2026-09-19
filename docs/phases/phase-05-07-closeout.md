@@ -64,9 +64,9 @@ The full list and its limits are in the development guide. Artifacts are generat
 
 | Phase | Established evidence | Still required before phase completion |
 | --- | --- | --- |
-| 5 | Reachable graph planning, dependency ordering, failure isolation, conditions, cleanup, cancellation and callback-scope ownership tests; state/cleanup/exit tables in the evidence report | Remaining exhaustive overlap/transition/concurrency cases and a recorded current Windows/Ubuntu/macOS matrix and package job |
+| 5 | Reachable graph planning, dependency ordering, failure isolation, conditions, cleanup, cancellation and callback-scope ownership tests; state/cleanup/exit tables; passing current OS matrix and package job | Remaining exhaustive overlap/transition/concurrency cases |
 | 6 | Semantic routing, console attribution, binding quarantine, restoration, incremental redaction, capture re-entry and sink-failure regressions | Independent capability profiles and `NO_COLOR`; lifecycle observer and live states; full final summary and rich property layout; process-wide ordering/serialization audit; complete boundary, replacement, observer, and renderer-failure matrices |
-| 7 | Exact hostile argument vectors, simultaneous pipe drainage, raw capture, per-stream overflow, UTF-8, exit classification, environment, timeout/cancellation, retained pipes and tracked late teardown | Synthetic start/observer/exit/kill/dispose race matrix; measured memory envelope and concurrent-launch stress; exhaustive diagnostic/handle/path/policy tables; full per-test process/resource cleanup evidence and current OS matrix |
+| 7 | Exact hostile argument vectors, simultaneous pipe drainage, raw capture, per-stream overflow, UTF-8, exit classification, environment, timeout/cancellation, retained pipes and tracked late teardown; passing current OS matrix | Synthetic start/observer/exit/kill/dispose race matrix; measured memory envelope and concurrent-launch stress; exhaustive diagnostic/handle/path/policy tables; full per-test process/resource cleanup evidence; unexplained earlier macOS stall |
 
 The Phase 6 renderer still uses two ANSI Booleans and retains the Phase 5 failure report. `ExecutionRuntime` records
 transitions internally but has no live execution observer. Rich properties currently reuse the canonical plain value
@@ -80,14 +80,35 @@ measured. Do not mark these gates complete based on ordinary successful child pr
 
 ## Cross-platform evidence
 
-The live remote Phase 7 branch still pointed at the audited starting commit. The GitHub connector returned no workflow
-runs for that commit or the Phase 6 commit. No current cross-platform success is claimed. The older Phase 4 CI link
-remains historical evidence only. After this change is pushed, record the exact commit, run URL, all three OS jobs,
-and package-integrity result here; fix failures before marking the repository-quality gates.
+The first closeout run, [CI 10](https://github.com/ghidello/rafter/actions/runs/35470555329), tested
+`70aae16ab251fa9e989b0491395f4d5240294abf`. Windows passed, while Ubuntu and macOS exposed fixture portability
+failures; the dependent package job was skipped. The retained-pipe fixture now gives the unused Unix stream its own
+pipe before managed-child startup. Windows retains explicit closure of the inherited standard handle. The
+environment-clear test invokes an explicit .NET host; the unchanged environment example uses a generated Unix
+fixture launcher for the same reason, so clearing `DOTNET_ROOT` cannot hide a custom SDK installation.
+
+[CI 11](https://github.com/ghidello/rafter/actions/runs/35470905050) passed Windows and Ubuntu, but its macOS test
+step stalled. The cause is not established. Fixture cleanup now has a five-second exit wait, and CI adds a two-minute
+suite deadline, a five-minute outer step deadline, and long-running-test diagnostics. A later passing run does not
+close the intermittent-hang investigation or the Phase 7 stress/race gates.
+
+[CI 12](https://github.com/ghidello/rafter/actions/runs/35471171229) passed for implementation commit
+`1bdd196b1c04fe6a4cb24f31c5ba25579f0087bb` on 2026-09-19:
+
+| Job | Result |
+| --- | --- |
+| [Windows](https://github.com/ghidello/rafter/actions/runs/35471171229/job/105972283416) | Restore, analyzer-clean build, formatting, 173 tests, fixture smoke checks, 24 examples and 14 scenarios passed |
+| [Ubuntu](https://github.com/ghidello/rafter/actions/runs/35471171229/job/105972283299) | Same checks passed; zero failed or skipped tests |
+| [macOS](https://github.com/ghidello/rafter/actions/runs/35471171229/job/105972283521) | Same checks passed; zero failed or skipped tests; retained-pipe cases settled in 2.1–2.4 seconds |
+| [Package integrity](https://github.com/ghidello/rafter/actions/runs/35471171229/job/105972804165) | Matching packaged DLL/PDB, Source Link for 58 documents, both fresh-cache external consumers, 29 canonical references and unchanged example sources passed |
+
+This establishes the repository-quality baseline for the implementation commit above. It does not establish the
+unimplemented contracts or exhaustive phase matrices. CI 11 was still stalled when this evidence was recorded;
+its cause remains open. Historical Phase 4 results are not used as evidence for this implementation.
 
 ## Next implementation order
 
 1. Complete the Phase 6 capability, lifecycle, presentation and shared-ordering contracts with their specified tests.
 2. Complete the Phase 7 startup/teardown failure matrix, memory measurements and stress/resource checks.
-3. Reconcile the remaining Phase 5 exhaustive verification cases, then record the current cross-platform CI results.
+3. Reconcile the remaining Phase 5 exhaustive verification cases and investigate the intermittent macOS stall.
 4. Close all affected gates with evidence before beginning the Phase 8 typed builders.

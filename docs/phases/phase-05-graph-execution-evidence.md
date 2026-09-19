@@ -4,7 +4,8 @@
 
 Phase 5 implements reachable graph planning, deterministic bounded scheduling, conditions, failure isolation,
 cooperative cancellation, target cleanup, command cleanup, and the minimal deterministic execution-failure report.
-The local completion baseline passes. Cross-platform CI evidence remains to be recorded after the branch is pushed.
+The local and cross-platform repository baselines pass. Exact CI jobs and the earlier macOS stall are recorded in the
+[closeout audit](phase-05-07-closeout.md#cross-platform-evidence).
 
 The [2026-09-19 closeout audit](phase-05-07-closeout.md) records the current baseline and remaining exhaustive
 verification. The original 118-test record below is historical; the current suite contains 173 passing tests.
@@ -76,8 +77,8 @@ Observed locally on Windows x64 with .NET SDK `10.0.400`:
 - all 29 canonical examples retained their project-mode references;
 - `git diff --check` passed.
 
-The remaining phase-close work is to reconcile the required-verification and completion-gate checklists during code
-review, then record the Windows, Ubuntu, and macOS CI matrix and package-integrity job.
+The remaining phase-close work is to reconcile the exhaustive required-verification and completion-gate checklists.
+The current Windows, Ubuntu, macOS and package-integrity results are recorded in the closeout audit.
 
 ## State, cleanup, and exit tables
 

@@ -2,7 +2,7 @@
 
 Status: generic runtime implemented; exhaustive verification remains open. See the
 [evidence](phase-07-process-runtime-evidence.md) and [2026-09-19 gate audit](phase-05-07-closeout.md), including the
-remaining startup/teardown matrix, memory measurements and cross-platform evidence.
+remaining startup/teardown matrix, memory measurements and an earlier unexplained macOS test stall.
 
 ## Objective
 
@@ -850,7 +850,7 @@ examples as Phase 8 work rather than weakening Phase 7's generic runtime gate.
       committed with the phase completion record.
 - [ ] **R10 — Retained-handle decision:** retained pipes fail within the documented deadline with no partial capture;
       direct-child termination is verified and best-effort descendant results are recorded per platform.
-- [ ] **R11 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
+- [x] **R11 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
       public API checks, the five Phase 7 generic process examples, and the supported-OS CI matrix pass with committed
       evidence.
 

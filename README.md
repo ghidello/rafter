@@ -14,7 +14,7 @@ The agreed implementation sequence and acceptance criteria are recorded in the
 
 ## Current status
 
-Phases 1–4 have completed evidence. Phases 5–7 have implementation and local regression coverage, but their remaining
+Phases 1–4 have completed evidence. Phases 5–7 have implementation and passing cross-platform CI, but their remaining
 completion gates are open. In particular, Phase 6 still needs its terminal capability profiles, lifecycle observer,
 and complete state presentation; Phase 7 still needs the full synthetic race and measured-memory verification.
 See the [closeout audit](docs/phases/phase-05-07-closeout.md) for verified behavior and outstanding work.

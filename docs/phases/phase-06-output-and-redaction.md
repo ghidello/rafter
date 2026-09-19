@@ -543,7 +543,7 @@ the Phase 6 API. It must explicitly list examples deferred to process-runtime an
 - [ ] **O8 — Future raw-data ingress:** an internal synthetic raw payload can re-enter every Phase 6 managed channel
       and is redacted there; public `ProcessCapture`, invalid-exit capture, and child-process wiring remain explicit
       Phase 7/8 completion work.
-- [ ] **O9 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
+- [x] **O9 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
       public API checks, Phase 6 examples, and the supported-OS CI matrix pass with committed evidence.
 
 ## Phase 7 and Phase 8 handoff
