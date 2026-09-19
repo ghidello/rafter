@@ -35,10 +35,12 @@ jobs:
         run: dotnet format Rafter.slnx --verify-no-changes --no-restore --verbosity minimal
 
       - name: Test
+        timeout-minutes: 5
         run: >-
           dotnet test Rafter.slnx --configuration Release --no-build
           --diagnostic-output-directory artifacts/test-results/${{ matrix.os }}/diagnostics
           --diagnostic --diagnostic-verbosity Information --report-xunit-trx
+          --timeout 2m --long-running 30 --output Detailed
 
       - name: Run execution fixture
         run: >-

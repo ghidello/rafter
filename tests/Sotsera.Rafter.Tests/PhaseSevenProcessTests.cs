@@ -659,7 +659,10 @@ public sealed class PhaseSevenProcessTests
             {
                 using Process process = Process.GetProcessById(processId);
                 process.Kill(entireProcessTree: true);
-                await process.WaitForExitAsync(TestContext.Current.CancellationToken).ConfigureAwait(false);
+                using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(
+                    TestContext.Current.CancellationToken);
+                deadline.CancelAfter(TimeSpan.FromSeconds(5));
+                await process.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
             }
             catch (ArgumentException)
             {
