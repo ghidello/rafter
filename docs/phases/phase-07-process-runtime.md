@@ -1,5 +1,9 @@
 # Phase 7: .NET 10 process runtime
 
+Status: generic runtime implemented; exhaustive verification remains open. See the
+[evidence](phase-07-process-runtime-evidence.md) and [2026-09-19 gate audit](phase-05-07-closeout.md), including the
+remaining startup/teardown matrix, memory measurements and cross-platform evidence.
+
 ## Objective
 
 Implement the complete generic, argument-safe, deadlock-safe, cancellation-safe child-process API and runtime on
@@ -602,12 +606,12 @@ or use it to create a second runtime path.
 
 ### Launch and ownership
 
-- [ ] Set `UseShellExecute = false` and populate `ArgumentList` token by token.
+- [x] Set `UseShellExecute = false` and populate `ArgumentList` token by token.
 - [ ] Apply the normalized absolute working directory and environment changes without mutating parent state.
 - [ ] Let each terminal call take a fresh inherited environment snapshot when constructing its start information,
       then apply ordered edits; test independent launches and document that ambient parent mutation is caller-owned.
 - [ ] Configure redirection consistently for stream and capture modes before start.
-- [ ] Redirect both stdout and stderr for both modes, never redirect stdin, route streaming output through the Phase 6
+- [x] Redirect both stdout and stderr for both modes, never redirect stdin, route streaming output through the Phase 6
       invocation coordinator, and keep raw capture outside presentation normalization.
 - [ ] Hold one output admission for each streaming drain until it can publish no more data so invocation sealing
       cannot overtake accepted child output or its final unterminated content.
@@ -635,8 +639,8 @@ or use it to create a second runtime path.
 
 ### Concurrent stream draining
 
-- [ ] Start independent stdout and stderr drains immediately after successful launch.
-- [ ] Ensure both drain operations are created before any exit wait is awaited.
+- [x] Start independent stdout and stderr drains immediately after successful launch.
+- [x] Ensure both drain operations are created before any exit wait is awaited.
 - [ ] Drain both raw `BaseStream` instances with independent async loops and fixed 16 KiB byte buffers; do not use
       `ReadToEnd`, sequential stream consumption, `BeginOutputReadLine`, or replacement-fallback decoding.
 - [ ] Decode incrementally as strict UTF-8 without splitting multibyte characters incorrectly.
@@ -826,7 +830,7 @@ examples as Phase 8 work rather than weakening Phase 7's generic runtime gate.
 
 ## Completion gates
 
-- [ ] **R1 — Argument safety:** hostile-token fixtures receive the exact authored argument vector without shell
+- [x] **R1 — Argument safety:** hostile-token fixtures receive the exact authored argument vector without shell
       interpretation.
 - [ ] **R2 — Deadlock resistance:** simultaneous output beyond both pipe capacities completes on all supported OSes.
 - [ ] **R3 — Bounded capture:** retained input bytes follow per-stream limits, managed-memory overhead matches the

@@ -3,15 +3,18 @@
 Each phase document is an executable checklist and completion contract. Work proceeds in order unless an earlier
 phase explicitly leaves an integration seam for a later one.
 
+The [2026-09-19 closeout audit](phase-05-07-closeout.md) distinguishes implemented behavior from unfinished
+requirements. Phases 1–4 are closed; Phases 5–7 remain open; Phases 8–9 are planned.
+
 | Phase | Plan | Outcome |
 | --- | --- | --- |
 | 1 | [Foundation](phase-01-foundation.md) | Reproducible product solution and package skeleton |
 | 2 | [Command model](phase-02-command-model.md) ([evidence](phase-02-command-model-evidence.md)) | Immutable authored definitions matching the examples |
 | 3 | [Parsing and binding](phase-03-parsing-and-binding.md) | Bounded grammar and exactly-once values |
 | 4 | [Roots and filesystem](phase-04-roots-and-filesystem.md) | Scoped working directories and guarded mutations |
-| 5 | [Graph execution](phase-05-graph-execution.md) | Deterministic concurrent target lifecycle |
-| 6 | [Output and redaction](phase-06-output-and-redaction.md) | Safe target-aware presentation |
-| 7 | [Process runtime](phase-07-process-runtime.md) | Deadlock-safe .NET 10 child-process execution |
+| 5 | [Graph execution](phase-05-graph-execution.md) ([evidence](phase-05-graph-execution-evidence.md)) | Deterministic concurrent target lifecycle |
+| 6 | [Output and redaction](phase-06-output-and-redaction.md) ([evidence](phase-06-output-and-redaction-evidence.md)) | Safe target-aware presentation |
+| 7 | [Process runtime](phase-07-process-runtime.md) ([evidence](phase-07-process-runtime-evidence.md)) | Deadlock-safe .NET 10 child-process execution |
 | 8 | [Typed tools and process extensibility](phase-08-capture-and-tools.md) | Process extensibility and tool-specific builders |
 | 9 | [Conformance](phase-09-conformance.md) | Analyzers, package consumption, and portfolio lock |
 

@@ -29,6 +29,8 @@ Target entry = command.Target("entry")
         }
 
         Console.WriteLine(context.Value(count));
+        context.Output.Property("message", "first\nsecond");
+        context.Output.Property("jsonReflection", System.Text.Json.JsonSerializer.IsReflectionEnabledByDefault);
     });
 
 return await command.RunAsync(entry, args).ConfigureAwait(false);

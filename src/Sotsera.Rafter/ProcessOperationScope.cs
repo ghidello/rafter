@@ -64,9 +64,9 @@ internal sealed class ProcessOperationScope
 
     internal sealed class Operation : IDisposable
     {
+        private readonly TaskCompletionSource<Task> _attached = new(TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly CancellationTokenSource _ownershipCancellation = new();
         private readonly ProcessOperationScope _owner;
-        private Task? _task;
         private int _completed;
 
         internal Operation(ProcessOperationScope owner)
@@ -76,14 +76,16 @@ internal sealed class ProcessOperationScope
 
         internal CancellationToken OwnershipToken => _ownershipCancellation.Token;
 
+        public void Dispose() => _ownershipCancellation.Dispose();
+
         internal void Attach(Task task)
         {
-            _task = task;
             _ = task.ContinueWith(
                 static completed => _ = completed.Exception,
                 CancellationToken.None,
                 TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);
+            _attached.SetResult(task);
             if (Volatile.Read(ref _completed) != 0)
             {
                 _owner.Complete(this);
@@ -113,11 +115,8 @@ internal sealed class ProcessOperationScope
 
         internal async Task ObserveAsync()
         {
-            Task? task = _task;
-            if (task is null)
-            {
-                return;
-            }
+            // Registration precedes synchronous startup; closing must wait for the terminal task to be attached.
+            Task task = await _attached.Task.ConfigureAwait(false);
 
             try
             {
@@ -128,7 +127,5 @@ internal sealed class ProcessOperationScope
                 // Scope settlement observes discarded task failures; callback classification is handled by its caller.
             }
         }
-
-        public void Dispose() => _ownershipCancellation.Dispose();
     }
 }

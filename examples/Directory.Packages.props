@@ -2,6 +2,7 @@
   <Import Project="../Directory.Packages.props" />
 
   <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.0" />
     <PackageVersion Include="Sotsera.Rafter" Version="0.1.0-dev.1" />
   </ItemGroup>
 </Project>

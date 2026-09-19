@@ -46,6 +46,17 @@ public sealed class FoundationIntegrationTests
         result.ExitCode.Should().Be(130);
     }
 
+    [Fact]
+    public async Task PropertyOutputWorksWhenJsonReflectionIsDisabled()
+    {
+        ProcessResult result = await RunFixture("--count=1", "--plain");
+
+        result.ExitCode.Should().Be(0);
+        result.StandardError.Should().BeEmpty();
+        result.StandardOutput.Should().Contain("[entry] message=\"first\\nsecond\"\n")
+            .And.Contain("[entry] jsonReflection=false\n");
+    }
+
     private static async Task<ProcessResult> RunFixture(params string[] arguments)
     {
         string configuration = new DirectoryInfo(AppContext.BaseDirectory).Name;

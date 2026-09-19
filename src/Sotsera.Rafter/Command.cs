@@ -299,14 +299,60 @@ public sealed class Command
                     start.Redactor).ConfigureAwait(false);
             }
 
+            InvocationOutput output = InvocationOutput.ForBinding(start.Services, start.Plain);
             InvocationExecution execution = new(
                 start.Model,
                 planningResult.Plan!,
                 start.Services,
+                output,
                 invocationToken);
-            LastBindingResult = BindingEngine.Bind(start.Model, _lastArguments, start.Services);
-            return await CompleteBindingAsync(execution, LastBindingResult).ConfigureAwait(false);
+            return await BindWithOutputAsync(execution, start.Plain).ConfigureAwait(false);
         }
+    }
+
+    private async Task<int> BindWithOutputAsync(InvocationExecution execution, bool plain)
+    {
+        InvocationOutput output = execution.Output;
+        ConsoleOutputCoordinator.Lease lease;
+        try
+        {
+            lease = ConsoleOutputCoordinator.Register(output);
+        }
+        catch (Exception exception)
+        {
+            LastOutputFailure = exception;
+            LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+            return 1;
+        }
+
+        int exitCode;
+        using (lease)
+        {
+            try
+            {
+                LastBindingResult = BindingEngine.Bind(execution.Model, _lastArguments, execution.Services);
+                output.CompleteBinding(LastBindingResult.Status == BindingStatus.Success ? LastBindingResult.Redactor : null);
+                exitCode = output.Failure is null
+                    ? await CompleteBindingAsync(execution, LastBindingResult).ConfigureAwait(false)
+                    : await CompleteInfrastructureFailureAsync(
+                        execution.Services, plain, LastBindingResult.Redactor, "Command output failed.").ConfigureAwait(false);
+            }
+            finally
+            {
+                output.CompleteBinding(redactor: null);
+                await output.SealAsync().ConfigureAwait(false);
+                ConsoleOutputCoordinator.VerifyActiveOwnership();
+            }
+        }
+
+        LastOutputFailure = output.Failure;
+        if (LastOutputFailure is not null)
+        {
+            LastInvocationStatus = InvocationStatus.InfrastructureFailure;
+            return 1;
+        }
+
+        return exitCode;
     }
 
     private bool TryPlanGraph(
@@ -422,45 +468,7 @@ public sealed class Command
         BindingResult result,
         InvocationPaths paths)
     {
-        InvocationOutput output = new(
-            execution.Services.StandardOutput,
-            execution.Services.StandardError,
-            !result.Plain && execution.Services.StandardOutputSupportsAnsi,
-            !result.Plain && execution.Services.StandardErrorSupportsAnsi,
-            result.Redactor);
-        ConsoleOutputCoordinator.Lease consoleLease;
-        try
-        {
-            consoleLease = ConsoleOutputCoordinator.Register(output);
-        }
-        catch (Exception exception)
-        {
-            LastOutputFailure = exception;
-            return await CompleteInfrastructureFailureAsync(
-                execution.Services,
-                result.Plain,
-                result.Redactor,
-                "Console output coordination could not be initialized.").ConfigureAwait(false);
-        }
-
-        int exitCode;
-        using (consoleLease)
-        {
-            exitCode = await ExecuteWithRegisteredOutputAsync(
-                execution,
-                result,
-                paths,
-                output).ConfigureAwait(false);
-        }
-
-        LastOutputFailure = output.Failure;
-        if (LastOutputFailure is not null)
-        {
-            LastInvocationStatus = InvocationStatus.InfrastructureFailure;
-            return 1;
-        }
-
-        return exitCode;
+        return await ExecuteWithRegisteredOutputAsync(execution, result, paths, execution.Output).ConfigureAwait(false);
     }
 
     private async Task<int> ExecuteWithRegisteredOutputAsync(
@@ -674,6 +682,7 @@ public sealed class Command
         CommandDefinition Model,
         GraphPlan Plan,
         InvocationServices Services,
+        InvocationOutput Output,
         CancellationToken CancellationToken);
 
     internal enum InvocationStatus

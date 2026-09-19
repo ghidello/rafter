@@ -6,6 +6,9 @@ Phase 5 implements reachable graph planning, deterministic bounded scheduling, c
 cooperative cancellation, target cleanup, command cleanup, and the minimal deterministic execution-failure report.
 The local completion baseline passes. Cross-platform CI evidence remains to be recorded after the branch is pushed.
 
+The [2026-09-19 closeout audit](phase-05-07-closeout.md) records the current baseline and remaining exhaustive
+verification. The original 118-test record below is historical; the current suite contains 173 passing tests.
+
 ## Invocation and planning
 
 Exact help remains independent of graph planning and cancellation. A normal invocation checks pre-cancellation,
@@ -75,3 +78,34 @@ Observed locally on Windows x64 with .NET SDK `10.0.400`:
 
 The remaining phase-close work is to reconcile the required-verification and completion-gate checklists during code
 review, then record the Windows, Ubuntu, and macOS CI matrix and package-integrity job.
+
+## State, cleanup, and exit tables
+
+| Lifecycle path | Meaning | Representative test |
+| --- | --- | --- |
+| Pending → Ready → Running → Settled | Executed callback or evaluated condition | `RunsDependenciesBeforeConditionsAndStopsAtTheFirstFalseCondition` |
+| Running → CleaningUp → Settled | Qualified target cleanup is part of settlement | `CleanupOnlyFailureBlocksDependentsAndCommandCleanupRunsLast` |
+| Pending/Ready → Settled without callback | Blocked/cancelled work or callback-free success | `CallbackFreeTargetsKeepTheirDistinctSuccessfulShapes`, `FailureAndCancellationBlockDependentsButCancelUnrelatedQueuedWork` |
+
+| Trigger | Target cleanup | Command cleanup |
+| --- | --- | --- |
+| Condition false or throws | Not qualified | Runs after paths initialized and all targets settled |
+| Execution succeeds, fails, or observes invocation cancellation | Exactly once, non-cancellable cleanup context | Runs after target cleanup |
+| Target cleanup fails | Failure blocks dependents; preserve prior primary failure | Still runs |
+| Pre-cancellation, graph/binding/path failure | Not qualified | Not qualified |
+| Cancellation after successful path initialization | Only for targets whose execution began | Qualified |
+
+`CleanupReceivesEquivalentScopesAndANonCancellableToken`, `AThrowingConditionFailsWithoutQualifyingTargetCleanup`,
+`CancellationDuringSuccessfulPathInitializationQualifiesOnlyCommandCleanup`, and the failure presentation tests
+cover these distinctions. The complete overlap and every-transition matrix remains open.
+
+| Outcome | Command exit |
+| --- | --- |
+| Help, success, skipped/no-work/aggregate success | 0 |
+| Model, graph, input or path diagnostics | 2 |
+| Execution, cleanup or infrastructure failure | 1 |
+| Invocation cancellation without ordinary failure | 130 |
+
+An explicitly accepted nonzero child exit remains successful; authored process timeout is a failure, not invocation
+cancellation. Phase 7 tests now exercise both handoff cases. Cleanup-only failure during cancellation remains a
+secondary outcome under the established Phase 5 precedence; output infrastructure failure forces exit 1.

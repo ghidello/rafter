@@ -8,21 +8,25 @@ internal sealed class InvocationOutput
 {
     private const int MaximumPropertyCharacters = 1_048_576;
     private const int MaximumPropertyItems = 1_024;
+    private const int MaximumBindingCharacters = 1_048_576;
     private static readonly AsyncLocal<int> PublicationDepth = new();
     private static readonly Lock TerminalSync = new();
-    private readonly ConsoleBuffer _consoleError;
-    private readonly ConsoleBuffer _consoleOutput;
+    private readonly StringBuilder _bindingError = new();
+    private readonly StringBuilder _bindingOutput = new();
     private readonly Lock _consoleSync = new();
     private readonly Lock _sync = new();
     private readonly TextWriter _standardOutput;
     private readonly TextWriter _standardError;
     private readonly bool _richOutput;
     private readonly bool _richError;
-    private readonly TextRedactor _redactor;
+    private ConsoleBuffer _consoleError;
+    private ConsoleBuffer _consoleOutput;
+    private TextRedactor _redactor;
     private TaskCompletionSource? _drained;
     private Exception? _failure;
     private int _admittedCalls;
     private bool _sealed;
+    private bool _bindingPending;
 
     internal InvocationOutput(
         TextWriter standardOutput,
@@ -40,6 +44,17 @@ internal sealed class InvocationOutput
         _consoleError = new ConsoleBuffer(standardError: true, redactor);
     }
 
+    internal static InvocationOutput ForBinding(InvocationServices services, bool plain)
+        => new(
+            services.StandardOutput,
+            services.StandardError,
+            !plain && services.StandardOutputSupportsAnsi,
+            !plain && services.StandardErrorSupportsAnsi,
+            TextRedactor.Empty)
+        {
+            _bindingPending = true,
+        };
+
     internal Exception? Failure
     {
         get
@@ -54,6 +69,36 @@ internal sealed class InvocationOutput
     internal static bool IsPublishing => PublicationDepth.Value != 0;
 
     internal TextRedactor Redactor => _redactor;
+
+    internal void CompleteBinding(TextRedactor? redactor)
+    {
+        List<OutputEvent> events = [];
+        lock (_consoleSync)
+        {
+            if (!_bindingPending)
+            {
+                return;
+            }
+
+            _bindingPending = false;
+            if (redactor is not null && Failure is null)
+            {
+                _redactor = redactor;
+                _consoleOutput = new ConsoleBuffer(standardError: false, redactor);
+                _consoleError = new ConsoleBuffer(standardError: true, redactor);
+                events.AddRange(_consoleOutput.Append("command", _bindingOutput.ToString()));
+                events.AddRange(_consoleError.Append("command", _bindingError.ToString()));
+            }
+
+            _bindingOutput.Clear();
+            _bindingError.Clear();
+        }
+
+        foreach (OutputEvent outputEvent in events)
+        {
+            PublishCore(outputEvent);
+        }
+    }
 
     internal Admission Admit()
     {
@@ -122,6 +167,26 @@ internal sealed class InvocationOutput
         List<OutputEvent> events;
         lock (_consoleSync)
         {
+            if (_bindingPending)
+            {
+                StringBuilder quarantine = standardError ? _bindingError : _bindingOutput;
+                if (Failure is not null)
+                {
+                    return;
+                }
+
+                if (text.Length > MaximumBindingCharacters - quarantine.Length)
+                {
+                    _bindingOutput.Clear();
+                    _bindingError.Clear();
+                    Fail(new InvalidOperationException("Binding console output exceeded its quarantine limit."));
+                    return;
+                }
+
+                quarantine.Append(text);
+                return;
+            }
+
             ConsoleBuffer buffer = standardError ? _consoleError : _consoleOutput;
             events = buffer.Append(scope?.GetName() ?? "command", text);
         }
@@ -138,6 +203,47 @@ internal sealed class InvocationOutput
         {
             _failure ??= exception;
         }
+    }
+
+    internal void FlushConsoleForOrdering(bool standardError)
+    {
+        foreach (OutputEvent outputEvent in TakeConsole(standardError))
+        {
+            PublishCore(outputEvent);
+        }
+    }
+
+    internal static OutputProperty SnapshotProperty(string name, object? value)
+    {
+        string canonical;
+        if (value is null)
+        {
+            canonical = "null";
+        }
+        else if (value is string text)
+        {
+            canonical = Quote(text);
+        }
+        else if (value is System.Collections.IDictionary
+            || ImplementsOpenGeneric(value.GetType(), typeof(IAsyncEnumerable<>)))
+        {
+            throw new ArgumentException("Dictionaries and asynchronous collections are not supported.", nameof(value));
+        }
+        else if (value is Array { Rank: > 1 })
+        {
+            throw new ArgumentException("Multidimensional arrays are not supported.", nameof(value));
+        }
+        else if (value is System.Collections.IEnumerable values)
+        {
+            canonical = SnapshotCollection(name, values, nameof(value));
+        }
+        else
+        {
+            canonical = FormatScalar(value);
+        }
+
+        EnsurePropertySize(name, canonical, nameof(value));
+        return new OutputProperty(name, canonical);
     }
 
     private void PublishCore(OutputEvent outputEvent)
@@ -205,14 +311,6 @@ internal sealed class InvocationOutput
     private static bool IsStandardError(OutputKind kind)
         => kind is OutputKind.Warning or OutputKind.Error or OutputKind.ConsoleError;
 
-    internal void FlushConsoleForOrdering(bool standardError)
-    {
-        foreach (OutputEvent outputEvent in TakeConsole(standardError))
-        {
-            PublishCore(outputEvent);
-        }
-    }
-
     private List<OutputEvent> TakeConsole(bool standardError)
     {
         lock (_consoleSync)
@@ -234,39 +332,6 @@ internal sealed class InvocationOutput
         {
             PublishCore(outputEvent);
         }
-    }
-
-    internal static OutputProperty SnapshotProperty(string name, object? value)
-    {
-        string canonical;
-        if (value is null)
-        {
-            canonical = "null";
-        }
-        else if (value is string text)
-        {
-            canonical = JsonSerializer.Serialize(text);
-        }
-        else if (value is System.Collections.IDictionary
-            || ImplementsOpenGeneric(value.GetType(), typeof(IAsyncEnumerable<>)))
-        {
-            throw new ArgumentException("Dictionaries and asynchronous collections are not supported.", nameof(value));
-        }
-        else if (value is Array { Rank: > 1 })
-        {
-            throw new ArgumentException("Multidimensional arrays are not supported.", nameof(value));
-        }
-        else if (value is System.Collections.IEnumerable values)
-        {
-            canonical = SnapshotCollection(name, values, nameof(value));
-        }
-        else
-        {
-            canonical = FormatScalar(value);
-        }
-
-        EnsurePropertySize(name, canonical, nameof(value));
-        return new OutputProperty(name, canonical);
     }
 
     private static string SnapshotCollection(
@@ -335,7 +400,7 @@ internal sealed class InvocationOutput
 
         if (value is string text)
         {
-            return JsonSerializer.Serialize(text);
+            return Quote(text);
         }
 
         if (value is bool boolean)
@@ -345,12 +410,14 @@ internal sealed class InvocationOutput
 
         if (value is char or Enum or Guid or DateOnly or TimeOnly or DateTime or DateTimeOffset or TimeSpan)
         {
-            return JsonSerializer.Serialize(FormatInvariant(value));
+            return Quote(FormatInvariant(value));
         }
 
         string formatted = FormatInvariant(value);
-        return IsJsonNumber(value.GetType()) ? formatted : JsonSerializer.Serialize(formatted);
+        return IsJsonNumber(value.GetType()) ? formatted : Quote(formatted);
     }
+
+    private static string Quote(string value) => $"\"{JsonEncodedText.Encode(value)}\"";
 
     private static string FormatInvariant(object value)
         => value is IFormattable formattable

@@ -1,5 +1,9 @@
 # Phase 6: output, console attribution, and redaction
 
+Status: partial implementation. The [evidence](phase-06-output-and-redaction-evidence.md) and
+[2026-09-19 gate audit](phase-05-07-closeout.md) identify verified repairs and missing presentation/ordering work.
+Unchecked gates remain requirements; the current passing suite does not establish the full phase contract.
+
 ## Objective
 
 Provide a semantic output pipeline with Spectre.Console presentation, concurrent target attribution, and one
@@ -283,7 +287,7 @@ not make unreviewed user-experience choices.
 - [ ] Guard the thread-safe facade with invocation-local call admission; atomically seal it after command cleanup and
       asynchronously drain admitted calls without holding the coordinator or blocking on a task.
 - [ ] Implement line, success, warning, error with optional recovery, and named property events.
-- [ ] Implement `Output.Property(string name, object? value)` without generic-overload ambiguity for `null`.
+- [x] Implement `Output.Property(string name, object? value)` without generic-overload ambiguity for `null`.
 - [ ] Snapshot property input synchronously into immutable null, empty-string, scalar, multiline-string, or
       one-dimensional ordered-collection semantic data; special-case `string` as a scalar and enumerate every other
       supplied collection exactly once.
@@ -329,7 +333,7 @@ not make unreviewed user-experience choices.
       to stdout.
 - [ ] Route warning, error with recovery, command diagnostics, failure/cancellation summaries, usage caused by
       invalid input, managed stderr, and child stderr to stderr.
-- [ ] Keep `Output.Error(...)` as presentation only; require actual callback failure or cancellation to make a target
+- [x] Keep `Output.Error(...)` as presentation only; require actual callback failure or cancellation to make a target
       unsuccessful.
 - [ ] Preserve event order within each physical stream and document that independently redirected stdout/stderr
       cannot provide a cross-stream ordering guarantee.
@@ -363,13 +367,13 @@ not make unreviewed user-experience choices.
 
 ### Managed console attribution
 
-- [ ] Implement one shared reference-counted console coordinator and install only its single reversible `Console.Out`
+- [x] Implement one shared reference-counted console coordinator and install only its single reversible `Console.Out`
       and `Console.Error` writer pair.
 - [ ] Preserve the true host writers, expose them to later `InvocationServices.Capture` calls while interception is
       active, and restore them exactly once after the final participating invocation.
 - [ ] Register each normal invocation after graph planning and before binding; quarantine binding output and leave only
       after final output, reporting, ownership verification, and cleanup settle.
-- [ ] Associate writes with the active target through execution context that flows across ordinary `await`,
+- [x] Associate writes with the active target through execution context that flows across ordinary `await`,
       `Task.Run`, and `ConfigureAwait(false)`.
 - [ ] Attribute writes during a target's conditions, execution, and cleanup to that target; attribute command cleanup
       and invocation work without an active target, including binding and validation, to the command.
@@ -530,7 +534,7 @@ the Phase 6 API. It must explicitly list examples deferred to process-runtime an
       profiles, public API, failure classification, and Phase 7/8 ownership are reconciled throughout the plan.
 - [ ] **O1 — Semantic contract:** event and renderer snapshots are approved and deterministic.
 - [ ] **O2 — Concurrent integrity:** stress tests show no mixed target lines or corrupted terminal sequences.
-- [ ] **O3 — Async attribution:** all patterns in `console.cs` retain the correct target identity.
+- [x] **O3 — Async attribution:** all patterns in `console.cs` retain the correct target identity.
 - [ ] **O4 — Cross-channel redaction:** the disposable secret is absent from all Phase 6 managed renderer/diagnostic
       bytes and failure artifacts; future deliberately raw application-owned `ProcessCapture` data remains deferred.
 - [ ] **O5 — Chunk safety:** boundary and partial-write tests cannot bypass redaction.

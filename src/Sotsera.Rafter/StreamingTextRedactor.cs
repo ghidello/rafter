@@ -8,6 +8,7 @@ internal sealed class StreamingTextRedactor
     private readonly string[] _patterns;
     private readonly LinkedList<PendingCharacter> _pending = [];
     private bool _insideRedaction;
+    private bool _previousCarriageReturn;
 
     internal StreamingTextRedactor(TextRedactor redactor)
     {
@@ -26,7 +27,15 @@ internal sealed class StreamingTextRedactor
     {
         foreach (char character in text)
         {
-            _pending.AddLast(new PendingCharacter(scope, character));
+            // Process drains enter before console normalization; normalize input and patterns identically.
+            bool skipLineFeed = _previousCarriageReturn && character == '\n';
+            _previousCarriageReturn = character == '\r';
+            if (skipLineFeed)
+            {
+                continue;
+            }
+
+            _pending.AddLast(new PendingCharacter(scope, character == '\r' ? '\n' : character));
             MarkMatches();
             while (_pending.Count > _unresolvedCharacters)
             {
@@ -43,6 +52,7 @@ internal sealed class StreamingTextRedactor
         }
 
         _insideRedaction = false;
+        _previousCarriageReturn = false;
     }
 
     private void MarkMatches()

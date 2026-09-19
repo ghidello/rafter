@@ -30,6 +30,8 @@
   <!-- Repository artifacts and development version -->
   <PropertyGroup>
     <UseArtifactsOutput>true</UseArtifactsOutput>
+    <!-- File apps share this artifacts root and must not share incremental compiler state. -->
+    <IncludeProjectNameInArtifactsPaths>true</IncludeProjectNameInArtifactsPaths>
     <ArtifactsPath>$(MSBuildThisFileDirectory)artifacts</ArtifactsPath>
     <PackageOutputPath>$(ArtifactsPath)\package\$(Configuration)</PackageOutputPath>
     <PackageVersion Condition="'$(PackageVersion)' == ''">0.1.0-dev.1</PackageVersion>
@@ -41,6 +43,8 @@
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Keep machine-specific Git URL rewrites out of package and Source Link metadata. -->
+    <GitRepositoryConfigurationScope>local</GitRepositoryConfigurationScope>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Authors>Alessandro Ghidini</Authors>
@@ -48,8 +52,5 @@
     <Copyright>Copyright (c) Alessandro Ghidini</Copyright>
   </PropertyGroup>
 
-  <!-- Package-only build dependency -->
-  <ItemGroup Condition="'$(IsPackable)' == 'true'">
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
-  </ItemGroup>
+  <!-- Source Link is supplied and serviced by the pinned .NET SDK. -->
 </Project>

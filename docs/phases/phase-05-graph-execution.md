@@ -1,5 +1,9 @@
 # Phase 5: graph planning and execution
 
+Status: implementation present; closeout remains open. See the [evidence](phase-05-graph-execution-evidence.md) and
+[2026-09-19 gate audit](phase-05-07-closeout.md). Checked items below are supported by the current tests; unchecked
+compound cases still require their complete matrix, even where part of the behavior is already covered.
+
 ## Objective
 
 Validate the selected target graph before execution and run it with bounded concurrency, deterministic state
@@ -375,7 +379,7 @@ produces a target-level result.
 - [ ] Prove graph diagnostics occur before binding, path initialization, command-cleanup qualification, and every
       Phase 5 condition, execution, or cleanup callback. Record “no child-process launch after graph diagnostics” as a
       Phase 7 handoff assertion rather than claiming process execution coverage in this phase.
-- [ ] Plan a very deep chain without recursive traversal or an arbitrary product depth limit.
+- [x] Plan a very deep chain without recursive traversal or an arbitrary product depth limit.
 - [ ] Instrument maximum simultaneous synchronous and asynchronous callbacks and verify limits of one, two, and
       larger than graph width.
 - [ ] Repeat race-sensitive schedules enough to prove stable result and diagnostic ordering.
@@ -383,7 +387,7 @@ produces a target-level result.
 - [ ] Test a condition-bearing target with dependencies and shared dependencies reached through both skipped and
       executing targets; prove ready-state conditions never claim branch suppression.
 - [ ] Test one failure, concurrent failures, failure plus cancellation, and failure plus cleanup failure.
-- [ ] Race dependency failure with cancellation and prove that direct and transitive dependents settle as `Blocked`
+- [x] Race dependency failure with cancellation and prove that direct and transitive dependents settle as `Blocked`
       while unrelated unstarted targets settle as `Cancelled`, independent of event-processing order.
 - [ ] Test every Phase 5 exit-code row: help, success, all-skipped/no-op graphs, callback and cleanup failure, planning
       diagnostics, matching-token cancellation, and unrelated or tokenless `OperationCanceledException` both with and
@@ -394,9 +398,9 @@ produces a target-level result.
       combination.
 - [ ] Test cancellation before planning, between every pre-execution stage, while queued, and while running; verify
       current-stage failure precedence, ordinary-failure precedence, and prompt admission shutdown.
-- [ ] Test cancellation after true conditions settle but before execution callback entry; verify that execution and
+- [x] Test cancellation after true conditions settle but before execution callback entry; verify that execution and
       target cleanup remain unqualified and the target settles as cancelled.
-- [ ] Race cancellation with the final true condition of a callback-free target and prove the target settles in its
+- [x] Race cancellation with the final true condition of a callback-free target and prove the target settles in its
       authored aggregate or no-work success shape while the cancelled invocation and other work follow their rules.
 - [ ] Inject cancellation before path initialization, during a successful initialization, and immediately afterward;
       prove command cleanup is unqualified in the first case and runs exactly once in the latter two. Separately prove
@@ -438,11 +442,11 @@ phase is not implemented rather than relying on a moving definition of “curren
 - [ ] **G1 — Preflight validation:** invalid graphs perform no binding or path work, do not qualify command cleanup,
       and execute no Phase 5 condition, target, or cleanup callback; the future no-process-launch assertion is recorded
       for Phase 7.
-- [ ] **G2 — Exactly-once graph:** all reachable nodes and shared dependencies have correct invocation counts.
+- [x] **G2 — Exactly-once graph:** all reachable nodes and shared dependencies have correct invocation counts.
 - [ ] **G3 — Concurrency bound:** measured synchronous and asynchronous callback lifecycles never exceed the
       configured limit and admitted synchronous callbacks can overlap.
 - [ ] **G4 — Deterministic outcomes:** repeated concurrent runs produce identical states and failure ordering.
-- [ ] **G5 — Failure isolation:** dependents block while independent queued and already-running work follows the
+- [x] **G5 — Failure isolation:** dependents block while independent queued and already-running work follows the
       contract, and target-cleanup failure participates in dependency settlement.
 - [ ] **G6 — Cleanup contract:** target and command cleanup order/count/context tests pass for every terminal path.
 - [ ] **G7 — Cooperative cancellation:** finite test callbacks settle within test deadlines, cleanup receives its

@@ -108,14 +108,26 @@ $expectedSymbolPackageEntries = @(
 $entries = @(Assert-ArchiveLayout $packagePath $expectedPackageEntries)
 $symbolEntries = @(Assert-ArchiveLayout $symbolPackagePath $expectedSymbolPackageEntries)
 
+$revision = & git -C $repositoryRoot rev-parse HEAD
+if ($LASTEXITCODE -ne 0) {
+    throw "Cannot determine the package's source revision."
+}
+& dotnet run (Join-Path $PSScriptRoot "verify-package-symbols.cs") --configuration $Configuration -- $packagePath $symbolPackagePath $revision
+if ($LASTEXITCODE -ne 0) {
+    throw "Packaged symbol and Source Link verification failed with exit code $LASTEXITCODE."
+}
+
 $reportPath = Join-Path $packageRoot "Sotsera.Rafter.$PackageVersion.contents.txt"
 [System.IO.File]::WriteAllLines($reportPath, $entries)
 $symbolReportPath = Join-Path $packageRoot "Sotsera.Rafter.$PackageVersion.symbols.contents.txt"
 [System.IO.File]::WriteAllLines($symbolReportPath, $symbolEntries)
 
-$temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("rafter-package-consumer-" + [Guid]::NewGuid().ToString("N"))
+$temporaryParent = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
+$temporaryRoot = Join-Path $temporaryParent ("rafter package consumer " + [Guid]::NewGuid().ToString("N"))
 try {
     [System.IO.Directory]::CreateDirectory($temporaryRoot) | Out-Null
+    Copy-Item -LiteralPath (Join-Path $repositoryRoot "global.json") -Destination $temporaryRoot
+    $isolatedPackages = Join-Path $temporaryRoot "packages"
     $consumerProjectSource = Join-Path $repositoryRoot "test-assets/Sotsera.Rafter.PackageConsumer/Sotsera.Rafter.PackageConsumer.csproj"
     $consumerProject = [System.IO.File]::ReadAllText($consumerProjectSource).Replace("0.1.0-dev.1", $PackageVersion)
     [System.IO.File]::WriteAllText((Join-Path $temporaryRoot "Sotsera.Rafter.PackageConsumer.csproj"), $consumerProject)
@@ -124,7 +136,7 @@ try {
     $consumerProjectPath = Join-Path $temporaryRoot "Sotsera.Rafter.PackageConsumer.csproj"
     $consumerConfigPath = Join-Path $temporaryRoot "NuGet.Config"
     Write-NuGetConfig $consumerConfigPath $packageRoot
-    & dotnet restore $consumerProjectPath --configfile $consumerConfigPath
+    & dotnet restore $consumerProjectPath --configfile $consumerConfigPath --packages $isolatedPackages
     if ($LASTEXITCODE -ne 0) {
         throw "Package consumer restore failed with exit code $LASTEXITCODE."
     }
@@ -139,7 +151,7 @@ try {
     $consumerScriptPath = Join-Path $temporaryRoot "consumer.cs"
     [System.IO.File]::WriteAllText($consumerScriptPath, $consumerScript)
 
-    & dotnet restore $consumerScriptPath --configfile $consumerConfigPath
+    & dotnet restore $consumerScriptPath --configfile $consumerConfigPath --packages $isolatedPackages
     if ($LASTEXITCODE -ne 0) {
         throw "File-based package consumer restore failed with exit code $LASTEXITCODE."
     }
@@ -151,8 +163,13 @@ try {
 }
 finally {
     if (Test-Path -LiteralPath $temporaryRoot) {
-        Remove-Item -LiteralPath $temporaryRoot -Recurse -Force
+        $resolvedRoot = [System.IO.Path]::GetFullPath($temporaryRoot)
+        $expectedParent = [System.IO.Path]::TrimEndingDirectorySeparator($temporaryParent)
+        if ([System.IO.Path]::GetDirectoryName($resolvedRoot) -ne $expectedParent) {
+            throw "Refusing to clean a consumer directory outside the temporary parent."
+        }
+        Remove-Item -LiteralPath $resolvedRoot -Recurse -Force
     }
 }
 
-Write-Host "Verified package and symbol-package contents, external project restore, and file-based app restore."
+Write-Host "Verified package contents, matching Source Link symbols, and isolated project and file-app execution."

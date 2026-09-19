@@ -416,3 +416,15 @@ dotnet_diagnostic.CA1711.severity = none
 [examples/*.cs]
 dotnet_diagnostic.MA0004.severity = none
 dotnet_diagnostic.MA0048.severity = none
+
+# The canonical file-app keeps its application-owned enum beside its top-level command.
+[examples/{option-types,options}.cs]
+dotnet_diagnostic.MA0047.severity = none
+
+# The portfolio demonstrates an application-owned collection at the public Property call site.
+[examples/presentation.cs]
+dotnet_diagnostic.CA1861.severity = none
+
+# This engineering file-app also synthesizes Program from top-level statements.
+[eng/verify-package-symbols.cs]
+dotnet_diagnostic.MA0048.severity = none

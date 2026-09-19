@@ -1,4 +1,9 @@
 <Project>
+  <!-- Preserve the standalone file-app directive while centralizing its repository build version. -->
+  <ItemGroup Condition="'$(FileBasedProgram)' == 'true'">
+    <PackageReference Update="Microsoft.Extensions.Configuration.UserSecrets" Version="" />
+  </ItemGroup>
+
   <Target Name="ValidateRafterDependency" BeforeTargets="Restore;PrepareForBuild">
     <Error
       Condition="'$(RafterDependency)' != 'Project' and '$(RafterDependency)' != 'Package'"
