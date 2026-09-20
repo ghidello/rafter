@@ -110,3 +110,12 @@ cover these distinctions. The complete overlap and every-transition matrix remai
 An explicitly accepted nonzero child exit remains successful; authored process timeout is a failure, not invocation
 cancellation. Phase 7 tests now exercise both handoff cases. Cleanup-only failure during cancellation remains a
 secondary outcome under the established Phase 5 precedence; output infrastructure failure forces exit 1.
+
+## Completion pass: concurrency and condition matrices
+
+`GraphContractMatrixTests` adds 14 cases. Both synchronous and asynchronous callbacks exercise concurrency 1, 2,
+and 8 against graph width 4, measuring the complete callback lifetime and verifying exactly four executions and
+cleanups. Every condition overload is tested with false; every deferred family is also tested with an exception,
+while a shared dependency and independent branch execute once and guarded execution/cleanup remain unqualified.
+A command is reused for 25 concurrent-failure runs, checking plan-ordered primary failures, cleanup failures and
+blocker identities on each run. These cases passed locally on Windows; the other open gate rows remain requirements.
