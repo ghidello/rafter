@@ -67,6 +67,9 @@ verification work without relaxing those contracts.
   synchronous completion, null values and pre-cancelled writes; 36 initial cases reproduced split host writes.
 - Restored `TextWriter` exception types and parameter names for invalid character-array slices. Four validation
   cases cover synchronous/asynchronous writes and lines on both streams without output or infrastructure failure.
+- Added 14 output-admission cases covering sealing during scalar/collection-element formatting, preserved caller
+  failures after recorded output failure, rejection before validation, and 64 concurrent facade calls racing the seal.
+  The existing admission implementation passed these checks without a runtime change.
 
 ## Local verification
 
@@ -76,7 +79,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 451 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure, 148 console-overload and 4 console-validation cases |
+| Solution tests | 465 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure, 148 console-overload, 4 console-validation and 14 output-admission cases |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
@@ -154,8 +157,8 @@ with 213 tests, including the initial 26 capability cases, all examples and pack
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
 The package rows above refer to this verified revision. The three additional environment-name review cases and
-15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure and 148 console-overload cases have passed locally;
-pushing and CI are deferred to the planned final verification run.
+15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure, 148 console-overload, 4 console-validation and
+14 output-admission cases have passed locally; pushing and CI are deferred to the planned final verification run.
 
 ## Next implementation order
 

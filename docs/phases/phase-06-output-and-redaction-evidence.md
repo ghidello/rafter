@@ -66,7 +66,7 @@ successful values and cached failures. Unix keeps differently cased variables di
 `OutputCapabilityTests` supplies 29 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
 failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
-host-terminal detection. The Release build and 447-test solution suite pass locally with formatting unchanged.
+host-terminal detection. The Release build and 465-test solution suite pass locally with formatting unchanged.
 CI for the three added review cases is deferred until the planned final verification run.
 Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
 
@@ -83,7 +83,7 @@ guard. The seam is internal and introduces no public API or transient presentati
 
 `ExecutionObserverTests` supplies 15 cases covering live execution/cleanup timing, initial ordering, immutable
 terminal data, failure at each lifecycle, concurrent delivery, cancellation, original callback/cleanup failures,
-per-invocation isolation, and the absence of transient plain/static output. All 447 solution tests pass locally; the Release build,
+per-invocation isolation, and the absence of transient plain/static output. All 465 solution tests pass locally; the Release build,
 formatting and diff checks pass. CI is deferred to the planned final verification run. Live rendering, the
 `Pending`/`Ready` to `Waiting` presentation mapping remain unfinished.
 
@@ -127,7 +127,7 @@ independently injected sinks separate. The same-sink ordering regression failed 
 the final tests cover stdout and stderr, both shared and distinct sinks.
 
 The first ten `TerminalPublicationTests` cases cover synchronous report delivery, overlapping reports/semantic writes,
-reentrant sinks, guard restoration, failure suppression and pending-fragment ordering. All 447 solution tests pass.
+reentrant sinks, guard restoration, failure suppression and pending-fragment ordering. All 465 solution tests pass.
 This does not close the full ordering gate: process-monotonic event sequencing, atomic buffered-event publication,
 host pass-through coordination, all writer overloads and live-display suspension still require their broader audit.
 The user has deferred reconsidering the visual design; this work retains the existing rendering fixtures.
@@ -163,7 +163,7 @@ overloads use the same synchronous path. `StringBuilder` writes snapshot all chu
 eight multi-chunk builder cases and eight pre-cancelled memory/builder cases. Changed newline strings and null
 values match ordinary `StringWriter` behavior. Host lines arrive in one sink call, managed lines retain attribution,
 async calls are complete before returning, and cancellation produces no output or invocation failure. Writers are
-restored after each case. All 447 solution tests pass locally.
+restored after each case. All 465 solution tests pass locally.
 
 This repairs splitting within an individual line call. It does not establish serialization between independent
 host and managed calls, atomic publication of multiple buffered events, or process-monotonic event sequencing.
@@ -173,12 +173,27 @@ the canonical examples remain unchanged.
 Review added four `ConsoleWriterValidationTests` cases, each comparing six invalid slices through synchronous and
 asynchronous write/line calls against `StringWriter`. All four initially exposed constructor parameter names leaking
 through the console API. Array slices now preserve `TextWriter` exception types and parameter names for null,
-negative and out-of-range arguments without publishing or changing invocation health. The full suite has 451 passing
-tests; the Release build and formatting checks pass. The wider formatting and flush matrix remains open.
+negative and out-of-range arguments without publishing or changing invocation health. The validation repair passed
+the 451-test suite, Release build and formatting checks. The wider formatting and flush matrix remains open.
+
+## Output admission and sealing
+
+Fourteen `OutputAdmissionTests` cases establish the existing facade's admission behavior without a runtime change.
+Eight start sealing from inside scalar or collection-element formatting and verify that sealing remains incomplete
+until publication or caller failure releases the admission. They repeat with a prior recorded output failure and
+confirm that formatting still runs, its original exception escapes, and the earlier infrastructure failure is retained.
+
+Five cases reject each facade method after sealing, before argument validation or property formatting. A concurrent
+case starts 64 competing property calls while a known admitted formatter initiates sealing. Accepted calls match
+formatting and publication counts; rejected calls do not format, and the sink stays unchanged after sealing completes.
+The test uses asynchronous completion signals without blocking a task or holding a coordinator across an await.
+
+All 465 solution tests, the Release build and formatting checks pass locally. These are focused facade/admission
+checks; full command-cleanup/console/final-summary interleavings and the wider Phase 6 ordering matrix remain open.
 
 ## Remaining work
 
 O1–O9 remain open except individually substantiated gates in the plan. The current suite is not the full phase matrix.
-Missing cases include the remaining writer overloads, sealing races with caller-owned formatting, repeated cross-command
+Missing cases include the remaining writer overloads, full console/semantic sealing interleavings, repeated cross-command
 replacement, all renderer/observer failures, and process-wide ordering across semantic, console, and host writes.
 The implementation gaps and repository/CI limits are enumerated in the closeout audit.
