@@ -2,10 +2,10 @@
 
 ## Status
 
-Partial implementation, with capability profiles and lifecycle notifications added on 2026-09-20.
-The [closeout audit](phase-05-07-closeout.md) records the
-repository baseline and explicitly identifies unfinished presentation and verification work. This is not a phase
-completion certificate.
+The accepted presentation and fail-closed boundary behavior are implemented and locally verified as of 2026-09-20.
+All 99 accepted stdout/stderr pairs and all four live-profile frame sequences have executable comparisons.
+The [closeout audit](phase-05-07-closeout.md) distinguishes the 709-test local baseline from historical CI.
+The new supported-OS CI and package job remain required before formal phase closure.
 
 ## Routing and redaction coverage
 
@@ -37,7 +37,7 @@ completion certificate.
 Warnings, errors, and recovery lines are asserted separately on stderr. The redaction tests assert `<redacted>` and
 the absence of the disposable input. `console.cs` is checked for each authored target prefix on its expected stream.
 These snapshots cover existing semantic output. Successful output now ends with the final target summary shown in
-the accepted presentation fixtures. Rich properties and live transitions still require implementation.
+the accepted presentation fixtures. Rich properties and live transitions are covered by the completion pass below.
 
 The [accepted presentation fixtures](phase-06-presentation-fixtures/README.md) add 99 authored stdout/stderr pairs
 across nine profiles and a separate live lifecycle frame matrix. They cover canonical presentation, all terminal
@@ -68,7 +68,7 @@ failed cosmetic probes, early model/graph/cancellation/input reports, malformed 
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
 host-terminal detection. The Release build and 465-test solution suite pass locally with formatting unchanged.
 CI for the three added review cases is deferred until the planned final verification run.
-Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
+Live cursor coordination, status glyphs and rich property/final-summary layouts were completed in subsequent sections.
 
 ## Execution lifecycle notifications
 
@@ -84,8 +84,8 @@ guard. The seam is internal and introduces no public API or transient presentati
 `ExecutionObserverTests` supplies 15 cases covering live execution/cleanup timing, initial ordering, immutable
 terminal data, failure at each lifecycle, concurrent delivery, cancellation, original callback/cleanup failures,
 per-invocation isolation, and the absence of transient plain/static output. All 465 solution tests pass locally; the Release build,
-formatting and diff checks pass. CI is deferred to the planned final verification run. Live rendering, the
-`Pending`/`Ready` to `Waiting` presentation mapping remain unfinished.
+formatting and diff checks pass. CI is deferred to the planned final verification run. The later live-rendering pass
+implements the `Pending`/`Ready` to `Waiting` presentation mapping.
 
 ## Final target summaries
 
@@ -191,26 +191,19 @@ The test uses asynchronous completion signals without blocking a task or holding
 All 465 solution tests, the Release build and formatting checks pass locally. These are focused facade/admission
 checks; full command-cleanup/console/final-summary interleavings and the wider Phase 6 ordering matrix remain open.
 
-## Remaining work
-
-### Accepted property and semantic presentation
+## Historical checkpoint: accepted property and semantic presentation
 
 The completion pass implements the accepted rich property grammar: colon separators, explicit null/empty values,
 attributed multiline values and vertical collections at narrow widths. Thirty-six fixture rows cover canonical
 success/failure, semantic scopes and narrow properties across all nine profiles. Static output uses the specified
-SGR colors and LF independently of the host platform. Eight additional regressions cover decoded property secrets
+SGR colors and, at this checkpoint, LF independently of the host platform. Eight additional regressions cover decoded property secrets
 containing quotes/newlines/tabs and attributed multiline semantic text with escaped terminal controls. Properties
 are redacted before JSON encoding, closing the previous encoded-secret bypass. Non-finite numbers use quoted literals.
 
 All 523 tests pass locally with an analyzer-clean Release build and formatting verification. Live-profile rows in
 these tests still establish permanent output only; live surfaces and continuation markers remain unfinished.
 
-## Remaining work
-
-O1–O9 remain open except individually substantiated gates in the plan. The current suite is not the full phase matrix.
-Missing cases include the remaining writer overloads, full console/semantic sealing interleavings, repeated cross-command
-replacement, all renderer/observer failures, and process-wide ordering across semantic, console, and host writes.
-The implementation gaps and repository/CI limits are enumerated in the closeout audit.
+The subsequent passes below complete live presentation and the local boundary, replacement and ordering matrices.
 
 ## Completion pass: live surfaces, ordering and uncertain boundaries
 
@@ -233,3 +226,28 @@ boundaries. `OutputOrderingBoundaryTests` verifies console prefixes across both 
 prefixes, and final sealing. Ordinary final sealing may publish an unmatched prefix because managed input is closed.
 A boundary failure suppresses later managed output without changing callback or cleanup outcomes. This is an explicit
 contract choice, not an assumption that future writes cannot complete a secret.
+
+## Completion pass: snapshot, redaction, replacement and newline matrices
+
+`PropertySnapshotBoundaryTests` covers 1,023/1,024/1,025 items, the 1 MiB formatted limit, bounded infinite enumeration,
+exactly-once disposal and formatting, mutable caller elements and rejected nested/dictionary shapes. Streaming
+redaction now matches the non-streaming interval-union reference for every split in five representative strings and
+500 deterministic generated strings. This exposed adjacent secrets incorrectly merging their markers; overlapping
+intervals still share one marker, while adjacent intervals retain separate markers.
+
+Six `ConsoleReplacementMatrixTests` cases replace stdout, stderr or both during callbacks or final presentation while
+another command is active. Both invocations fail output, retain successful execution outcomes, avoid inspecting or
+writing the replacement, and restore the original writer identities after the final lease. Nine `OutputNewLineTests`
+cases snapshot each physical writer's newline and verify plain/rich semantic, console and summary output with LF,
+CRLF, CR or a custom separator. Cursor display is limited to LF/CRLF profiles; other separators keep static output.
+
+| Gate | Local evidence |
+| --- | --- |
+| O1 | `ExecutionSummaryTests`, `PropertyPresentationTests`: all 99 accepted documents; `LiveTargetDisplayTests`: four profile/frame sequences |
+| O2 | 64 concurrent multiline batches, overlapping commands/live surfaces, report/semantic serialization in `OutputOrderingBoundaryTests`, `TerminalPublicationTests`, `LiveTargetDisplayTests` |
+| O3 | Async target propagation and canonical `console.cs` execution |
+| O4–O5 | Property decoded-value regressions, binding quarantine, all chunk splits/generated reference cases, segment limits and user-approved fail-closed boundary tests |
+| O6 | Console overload/host-failure/restoration tests and the six overlapping replacement cases |
+| O7 | Routing table, accepted fixtures, redaction and completion matrices in this document |
+| O8 | Synthetic and real raw-capture re-entry; exact raw bytes become redacted only at managed output ingress |
+| O9 | 709 local tests, examples and package checks pass; supported-OS CI for the new revision is pending |

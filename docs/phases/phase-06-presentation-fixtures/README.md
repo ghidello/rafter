@@ -3,8 +3,8 @@
 Status: **accepted by the user on 2026-09-20**. These authored expected documents define the rendering contract.
 After trying the example, the user deferred reconsidering the visual design. Keep these as the current regression
 baseline while internal correctness work continues; further appearance changes are postponed for that review.
-Final target summaries, semantic scopes, rich properties and narrow collections now have executable snapshot
-coverage across all nine profiles. The real canonical `presentation.cs` success and failure runs are compared with
+All 99 accepted stdout/stderr pairs, including concurrent attribution, now have executable snapshot coverage across
+all nine profiles. The real canonical `presentation.cs` success and failure runs are compared with
 the plain fixtures by the example harness. Console continuation notation now matches all nine profiles. Live lifecycle
 frames match all four cursor-capable profiles; a terminal-surface test writer verifies erasure and the final transcript.
 
@@ -13,9 +13,11 @@ frames match all four cursor-capable profiles; a terminal-surface test writer ve
 Each JSON document contains nine independently specified output profiles. Every profile has separate exact `stdout`
 and `stderr` strings, including empty streams, LF newlines and ANSI SGR sequences where color is enabled. JSON's
 `\n` and `\u001b` encode actual newline and escape characters; `\\n` is visible backslash-plus-n text in a property.
-All documents end in LF unless empty. Live lifecycle fixtures instead contain exact terminal surface frames: they
+All fixture documents end in LF unless empty; runtime presentation uses each captured destination's newline.
+The example harness normalizes platform newlines before fixture comparison, while dedicated tests assert LF, CRLF,
+CR and custom newline profiles exactly. Live lifecycle fixtures instead contain exact terminal surface frames: they
 are repaintable content, not lines appended to the permanent transcript. Cursor-control transport is verified
-separately when implementing the shared display coordinator.
+separately by the shared display coordinator tests.
 
 | Profile | Width | Layout | Symbols | Color | Live surface |
 | --- | --- | --- | --- | --- | --- |

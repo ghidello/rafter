@@ -1,8 +1,8 @@
 # Phase 5: graph planning and execution
 
-Status: implementation present; closeout remains open. See the [evidence](phase-05-graph-execution-evidence.md) and
-[2026-09-19 gate audit](phase-05-07-closeout.md). Checked items below are supported by the current tests; unchecked
-compound cases still require their complete matrix, even where part of the behavior is already covered.
+Status: local implementation and verification complete; repository-quality gate awaits new supported-OS CI.
+See the [evidence](phase-05-graph-execution-evidence.md) and [gate audit](phase-05-07-closeout.md).
+The completion gates and named evidence are authoritative; detailed work packages retain their original checklist.
 
 ## Objective
 
@@ -439,21 +439,21 @@ phase is not implemented rather than relying on a moving definition of “curren
 
 - [x] **G0 — Initial contracts locked:** every P0 question is answered and reflected in executable work packages and
       deterministic verification cases.
-- [ ] **G1 — Preflight validation:** invalid graphs perform no binding or path work, do not qualify command cleanup,
+- [x] **G1 — Preflight validation:** invalid graphs perform no binding or path work, do not qualify command cleanup,
       and execute no Phase 5 condition, target, or cleanup callback; the future no-process-launch assertion is recorded
       for Phase 7.
 - [x] **G2 — Exactly-once graph:** all reachable nodes and shared dependencies have correct invocation counts.
-- [ ] **G3 — Concurrency bound:** measured synchronous and asynchronous callback lifecycles never exceed the
+- [x] **G3 — Concurrency bound:** measured synchronous and asynchronous callback lifecycles never exceed the
       configured limit and admitted synchronous callbacks can overlap.
-- [ ] **G4 — Deterministic outcomes:** repeated concurrent runs produce identical states and failure ordering.
+- [x] **G4 — Deterministic outcomes:** repeated concurrent runs produce identical states and failure ordering.
 - [x] **G5 — Failure isolation:** dependents block while independent queued and already-running work follows the
       contract, and target-cleanup failure participates in dependency settlement.
-- [ ] **G6 — Cleanup contract:** target and command cleanup order/count/context tests pass for every terminal path.
-- [ ] **G7 — Cooperative cancellation:** finite test callbacks settle within test deadlines, cleanup receives its
+- [x] **G6 — Cleanup contract:** target and command cleanup order/count/context tests pass for every terminal path.
+- [x] **G7 — Cooperative cancellation:** finite test callbacks settle within test deadlines, cleanup receives its
       distinct non-cancellable token, and Rafter-owned operations leave no orphaned work; arbitrary managed cleanup
       has no false hard-termination guarantee, and repeated Ctrl+C remains a host escape hatch.
 - [x] **G8 — Evidence recorded:** state-transition table, cleanup matrix, and exit-code table are committed.
-- [x] **G9 — Repository quality:** the recorded baseline commands, analyzer-clean Release build, public API baseline
+- [ ] **G9 — Repository quality:** the recorded baseline commands, analyzer-clean Release build, public API baseline
       checks, CI matrix, package integrity, and explicitly enumerated Phase 5 example or syntax-fixture checks pass;
       every later-phase example deferral is named.
 

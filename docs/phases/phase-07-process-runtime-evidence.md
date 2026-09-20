@@ -2,9 +2,9 @@
 
 ## Status
 
-Generic process execution passes the current Windows, Ubuntu and macOS suite. The phase remains open for the complete
-synthetic failure/race matrix, memory measurement, stress/resource evidence and the earlier macOS stall. See the
-[closeout audit](phase-05-07-closeout.md) for repairs and the repository baseline.
+Generic process execution, failure/race matrices, capture allocation measurements and concurrent-resource checks
+pass locally in the 709-test solution suite. Supported-OS CI predates these changes. The phase remains open for that
+final validation and the unresolved earlier macOS runner stall. See the [closeout audit](phase-05-07-closeout.md).
 
 ## Completion and failure matrix
 
@@ -69,9 +69,9 @@ chunks, delay and exit code. Descendant scenarios record control metadata outsid
 fixture requires a verb and returns 64 for invalid arguments; the CI smoke command now uses `emit`.
 
 `ReportsSpecificationDiagnosticsInAuthoredOrderWithoutLaunching` checks ordered safe diagnostics, and
-`RejectsCapturePolicyInStreamingModeBeforeLaunch` checks mode-policy rejection. Exhaustive diagnostic ordering,
-inactive omissions, foreign handles, executable forms and timeout boundaries remain open; the frozen tables in the
-phase plan retain authority. No public API additions or removals were made by this closeout change.
+`RejectsCapturePolicyInStreamingModeBeforeLaunch` checks mode-policy rejection. The completion matrices below cover
+all 13 diagnostic codes, pre-cancellation precedence, inactive omissions, foreign handles, executable forms and
+timeout boundaries. The frozen tables remain authoritative; this pass makes no public API additions or removals.
 
 ## Capture memory and segment boundaries
 
@@ -104,11 +104,9 @@ The complete 537-test suite passes locally; supported-OS CI remains deferred.
 ## Cross-platform limitations
 
 The capture component now has measured local allocation evidence; current three-OS evidence predates this change.
-The broader R2–R9 matrices remain open pending the remaining failure combinations and cross-platform verification.
-Post-start observer failures now have focused regression coverage. Simultaneous failure ordering, exit-verification
-failures and repeated races still require focused verification. Disposal and concurrent captures now have the
-focused local checks recorded above. The
-macOS diagnostic split has passed, but the earlier runner disconnect remains unexplained. The Phase 8 extension
+The new failure combinations, repeated races, disposal and concurrent captures have the focused local checks recorded
+here. Their supported-OS results remain pending. The macOS diagnostic split has passed on an older revision, but the
+earlier runner disconnect remains unexplained. The Phase 8 extension
 and typed-tool examples remain explicitly deferred.
 
 ## Completion pass: resource failure classification and retention
@@ -119,3 +117,24 @@ failures retain cancellation or timeout as primary and preserve the secondary fa
 streaming and capture modes. Late-operation failure history now keeps at most 32 exception samples and a total count;
 a 200-resource test observes 400 operation/disposal failures, exactly one disposal per resource, and an empty reaper.
 The full local suite after this pass contains 586 passing tests. Cross-platform validation of these changes is pending.
+
+## Completion pass: specifications, startup, scopes and deadlines
+
+| Matrix | Cases and observed result |
+| --- | --- |
+| `ProcessSpecificationMatrixTests` | 34 malformed-builder/pre-cancellation rows cover RAFTER1501–1513 and duplicate policies without adapter creation; five timeout rows include the supported upper bound |
+| `ProcessHandleAndPathTests` | Sixteen foreign-handle operations rejected, eight bare/relative/parent-relative/absolute path cases with target/process directory selection, and inactive string/flag omissions without consuming a policy |
+| `ProcessStartRaceTests` | 12 combinations repeated ten times: start true/false/throw, cancellation/timeout during synchronous start, capture/streaming; fixed primary classification, exactly-once disposal and no reaper entries |
+| `ProcessCallbackScopeTests` | Independent condition/execution/target-cleanup/command-cleanup authority, expired builder rejection, concurrent independent launches, completed discarded tasks, and four active-discard/false-condition/callback-failure rows |
+| `ProcessDeadlineTests` | Two tracking-clock rows prove authored timeout stops at execution settlement and the unused drain deadline timer is disposed before operation return |
+| Existing resource/observer matrices | Construction, PID/stream/observer initialization, asynchronous exit observation, cancellation plus observation failure, kill/close/dispose combinations, retained pipes and late tracked ownership |
+
+The deadline tests exposed two timer lifetime defects: a fast drain left its losing delay timer alive, and natural
+exit left the authored execution timer armed throughout pipe drainage. Both now release their timer at the owning
+boundary. Synthetic timer tests cover resource lifetime without waiting for wall-clock timeouts.
+
+The complete local suite has 709 passing tests, an analyzer-clean build, 24 compiled examples and 14 deterministic
+example scenarios. Package and symbol checks at `7586f38` pass for 63 source documents and both fresh-cache consumers.
+R3, R6, R7 and R9 have local evidence recorded here. R2, R4, R5, R8, R10 and R11 retain their supported-OS requirements;
+the historical passing matrix does not certify this revision. `dotnet`, `extensibility`, `git`, `node` and `repository`
+remain the explicitly deferred Phase 8/9 examples.

@@ -1,8 +1,8 @@
 # Phase 6: output, console attribution, and redaction
 
-Status: partial implementation. The [evidence](phase-06-output-and-redaction-evidence.md) and
-[2026-09-19 gate audit](phase-05-07-closeout.md) identify verified repairs and missing presentation/ordering work.
-Unchecked gates remain requirements; the current passing suite does not establish the full phase contract.
+Status: accepted presentation and local verification complete; repository-quality gate awaits new supported-OS CI.
+See the [evidence](phase-06-output-and-redaction-evidence.md) and [gate audit](phase-05-07-closeout.md).
+The completion gates and named evidence are authoritative; detailed work packages retain their original checklist.
 
 ## Objective
 
@@ -542,18 +542,18 @@ the Phase 6 API. It must explicitly list examples deferred to process-runtime an
 - [x] **O0 — Initial behavioral contracts reconciled:** process-wide ownership, interception timing, binding
       quarantine, synchronous delivery, sealing, buffering, streaming redaction, lifecycle observation, capability
       profiles, public API, failure classification, and Phase 7/8 ownership are reconciled throughout the plan.
-- [ ] **O1 — Semantic contract:** event and renderer snapshots are approved and deterministic.
-- [ ] **O2 — Concurrent integrity:** stress tests show no mixed target lines or corrupted terminal sequences.
+- [x] **O1 — Semantic contract:** event and renderer snapshots are approved and deterministic.
+- [x] **O2 — Concurrent integrity:** stress tests show no mixed target lines or corrupted terminal sequences.
 - [x] **O3 — Async attribution:** all patterns in `console.cs` retain the correct target identity.
-- [ ] **O4 — Cross-channel redaction:** the disposable secret is absent from all Phase 6 managed renderer/diagnostic
+- [x] **O4 — Cross-channel redaction:** the disposable secret is absent from all Phase 6 managed renderer/diagnostic
       bytes and failure artifacts; future deliberately raw application-owned `ProcessCapture` data remains deferred.
-- [ ] **O5 — Chunk safety:** boundary and partial-write tests cannot bypass redaction.
-- [ ] **O6 — Console restoration:** process-wide writers are identical before and after every tested terminal path.
-- [ ] **O7 — Evidence recorded:** output routing table, snapshots, and redaction coverage matrix are committed.
-- [ ] **O8 — Future raw-data ingress:** an internal synthetic raw payload can re-enter every Phase 6 managed channel
+- [x] **O5 — Chunk safety:** boundary and partial-write tests cannot bypass redaction.
+- [x] **O6 — Console restoration:** process-wide writers are identical before and after every tested terminal path.
+- [x] **O7 — Evidence recorded:** output routing table, snapshots, and redaction coverage matrix are committed.
+- [x] **O8 — Future raw-data ingress:** an internal synthetic raw payload can re-enter every Phase 6 managed channel
       and is redacted there; public `ProcessCapture`, invalid-exit capture, and child-process wiring remain explicit
       Phase 7/8 completion work.
-- [x] **O9 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
+- [ ] **O9 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
       public API checks, Phase 6 examples, and the supported-OS CI matrix pass with committed evidence.
 
 ## Phase 7 and Phase 8 handoff

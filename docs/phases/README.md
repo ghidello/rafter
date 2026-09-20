@@ -3,8 +3,9 @@
 Each phase document is an executable checklist and completion contract. Work proceeds in order unless an earlier
 phase explicitly leaves an integration seam for a later one.
 
-The [2026-09-19 closeout audit](phase-05-07-closeout.md) distinguishes implemented behavior from unfinished
-requirements. Phases 1–4 are closed; Phases 5–7 remain open; Phases 8–9 are planned.
+The [2026-09-20 closeout audit](phase-05-07-closeout.md) distinguishes local evidence from CI requirements.
+Phases 1–4 are closed; Phases 5–7 have completed local implementation and verification, with formal closure pending
+the new supported-OS CI and package job. Phases 8–9 remain planned.
 
 | Phase | Plan | Outcome |
 | --- | --- | --- |

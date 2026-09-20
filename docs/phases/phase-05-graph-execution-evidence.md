@@ -4,11 +4,11 @@
 
 Phase 5 implements reachable graph planning, deterministic bounded scheduling, conditions, failure isolation,
 cooperative cancellation, target cleanup, command cleanup, and the minimal deterministic execution-failure report.
-The local and cross-platform repository baselines pass. Exact CI jobs and the earlier macOS stall are recorded in the
+The local repository baseline passes. Historical CI jobs and the earlier macOS stall are recorded in the
 [closeout audit](phase-05-07-closeout.md#cross-platform-evidence).
 
-The [2026-09-19 closeout audit](phase-05-07-closeout.md) records the current baseline and remaining exhaustive
-verification. The original 118-test record below is historical; the current suite contains 173 passing tests.
+The [closeout audit](phase-05-07-closeout.md) records the current baseline and remaining CI gates.
+The original 118-test record below is historical; the completion pass has 709 passing local solution tests.
 
 ## Invocation and planning
 
@@ -77,8 +77,8 @@ Observed locally on Windows x64 with .NET SDK `10.0.400`:
 - all 29 canonical examples retained their project-mode references;
 - `git diff --check` passed.
 
-The remaining phase-close work is to reconcile the exhaustive required-verification and completion-gate checklists.
-The current Windows, Ubuntu, macOS and package-integrity results are recorded in the closeout audit.
+The remaining repository-quality gate requires the new revision's Windows, Ubuntu and macOS CI results.
+Historical results are recorded separately in the closeout audit and do not certify these changes.
 
 ## State, cleanup, and exit tables
 
@@ -98,7 +98,7 @@ The current Windows, Ubuntu, macOS and package-integrity results are recorded in
 
 `CleanupReceivesEquivalentScopesAndANonCancellableToken`, `AThrowingConditionFailsWithoutQualifyingTargetCleanup`,
 `CancellationDuringSuccessfulPathInitializationQualifiesOnlyCommandCleanup`, and the failure presentation tests
-cover these distinctions. The complete overlap and every-transition matrix remains open.
+cover these distinctions. `InvocationBoundaryTests` additionally covers final presentation and signal unsubscription.
 
 | Outcome | Command exit |
 | --- | --- |
@@ -118,4 +118,21 @@ and 8 against graph width 4, measuring the complete callback lifetime and verify
 cleanups. Every condition overload is tested with false; every deferred family is also tested with an exception,
 while a shared dependency and independent branch execute once and guarded execution/cleanup remain unqualified.
 A command is reused for 25 concurrent-failure runs, checking plan-ordered primary failures, cleanup failures and
-blocker identities on each run. These cases passed locally on Windows; the other open gate rows remain requirements.
+blocker identities on each run. These cases passed locally on Windows.
+
+## Completion pass: invocation boundaries and signals
+
+Six `InvocationBoundaryTests` cases retain same-command overlap rejection through final presentation and signal
+unsubscription for success, target failure, cleanup failure, help, input failure and cancellation, then prove reuse.
+Two `SignalSubscriptionRaceTests` reproduce and fix overlapping subscriptions during final unsubscription and reject
+retired handler snapshots after a new subscription begins. The production adapter preserves a host handler's existing
+handled decision. Existing process-isolated integration tests continue to exercise real control signals.
+
+| Gate | Local evidence |
+| --- | --- |
+| G1 | `ReportsReachableCyclesBeforeBindingOrCleanup`; graph planning precedes callback/process authority |
+| G2–G5 | `PhaseFiveGraphTests`, `PhaseFiveExecutionTests`, measured concurrency/conditions/repeated outcomes in `GraphContractMatrixTests` |
+| G6 | Cleanup qualification/context/order cases in `PhaseFiveExecutionTests`, terminal-path overlap in `InvocationBoundaryTests`, callback ownership in `ProcessCallbackScopeTests` |
+| G7 | Pre-cancellation, queued/running cancellation, condition/path boundaries, distinct cleanup tokens, `ConsoleCancellationCoordinatorTests`, subscription races and production-signal integration fixture |
+| G8 | State, cleanup and exit tables above, with the completion-pass results |
+| G9 | Local baseline passes; new supported-OS CI and package job pending permission to push |

@@ -2,10 +2,15 @@
 
 ## Status as of 2026-09-20
 
-The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. Phases 5–7 contain working implementations,
-but they are not complete under the phase contracts. Passing the current suite does not establish every behavior in
-the plans. This document records repairs, directly observed verification, and the remaining implementation and
-verification work without relaxing those contracts.
+The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. The local completion pass through Phase 7 is
+implemented and verified at `7586f38`. It includes the accepted rich/live presentation, the user-approved fail-closed
+redaction boundaries, graph and process matrices, measured capture memory, and concurrent real-process cleanup.
+The solution has 709 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
+example scenarios pass without changing canonical example sources.
+
+Phases 5–7 remain formally open for the new revision's supported-OS CI and package job. The user has explicitly held
+pushes until final verification; no CI was started for this completion pass. The older intermittent macOS runner
+stall remains unexplained. Older test counts below identify historical checkpoints, not the current baseline.
 
 ## Repairs made during verification
 
@@ -76,6 +81,20 @@ verification work without relaxing those contracts.
   nine-profile fixtures, escaped controls and property secrets redacted before JSON encoding.
 - Fixed UTF-8 decoding across internal capture segments and measured the actual capture buffer allocation envelope
   through 8 MiB per stream. Concurrent real-child stress now covers 8 and 24 processes with independent exit checks.
+- Added live lifecycle surfaces, console continuation markers and synchronous flush forwarding under one terminal
+  publication boundary. All 99 accepted documents and the four live-profile frame sequences now match.
+- Applied the user's fail-closed decision at uncertain redaction barriers. The pending fragment is withheld and
+  output fails without interrupting callback or cleanup settlement. Final sealing can settle an unmatched prefix.
+- Fixed adjacent streaming secrets incorrectly sharing one marker. Exhaustive chunk splits and 500 deterministic
+  generated inputs now agree with the non-streaming interval-union reference.
+- Fixed overlapping signal subscriptions during final unsubscription and retired signal callbacks cancelling new
+  invocations. Six terminal-path tests retain same-command overlap protection through presentation and teardown.
+- Released unused process drain deadline timers and disarmed authored timeouts when execution has already settled.
+  Two tracking-clock regressions verify that pipe drainage retains only its own deadline.
+- Added all 13 process diagnostic codes with pre-cancellation precedence, 120 controlled synchronous-start races,
+  callback-scope authority, foreign-handle/path/policy matrices and combined resource-failure classification.
+- Captured each destination's newline in its immutable output profile. Nine cases cover LF, CRLF, CR, custom
+  newlines, profile fallback and independent stdout/stderr capture; raw process capture remains exact.
 
 ## Local verification
 
@@ -85,10 +104,10 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 537 passed, zero failed or skipped; completion work adds disposal, property, memory and real-process stress coverage |
+| Solution tests | 709 passed, zero failed or skipped |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
-| Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
+| Packaged PDB identity and canonical Source Link map | Passed for `7586f38`; 63 runtime documents mapped |
 | Fresh-cache external project and file-app consumers | Passed; both bind and execute the public command API |
 | Canonical reference check | All 29 examples retain their original project reference |
 | Implemented-example compilation and plain help | All 24 classified examples passed |
@@ -101,19 +120,16 @@ The full list and its limits are in the development guide. Artifacts are generat
 
 | Phase | Established evidence | Still required before phase completion |
 | --- | --- | --- |
-| 5 | Reachable graph planning, dependency ordering, failure isolation, conditions, cleanup, cancellation and callback-scope ownership tests; state/cleanup/exit tables; passing current OS matrix and package job | Remaining exhaustive overlap/transition/concurrency cases |
-| 6 | Semantic routing, final target summaries with Unicode/ASCII states and cleanup details, independent capability profiles and `NO_COLOR`, early `--plain`, actual lifecycle notifications and observer-failure isolation, console attribution, binding quarantine, restoration, incremental redaction, capture re-entry and sink-failure regressions | Live state rendering and rich property layout; process-wide ordering/serialization audit; complete boundary, replacement, observer, and renderer-failure matrices |
-| 7 | Exact hostile argument vectors, simultaneous pipe drainage, raw capture, per-stream overflow, UTF-8, exit classification, environment, timeout/cancellation, retained pipes and tracked late teardown; passing current OS matrix | Synthetic start/observer/exit/kill/dispose race matrix; measured memory envelope and concurrent-launch stress; exhaustive diagnostic/handle/path/policy tables; full per-test process/resource cleanup evidence; unexplained earlier macOS stall |
+| 5 | Reachable graph preflight, exactly-once scheduling, measured sync/async bounds at 1/2/8, 25 repeated outcome runs, all condition families, cleanup/cancellation boundaries, signal and invocation-overlap races | G9: supported-OS CI and package job for the completion revision |
+| 6 | All 99 accepted documents and live frames; independent profiles/newlines; serialized managed, console, host and report publication; bounded property snapshots; fail-closed boundaries; chunk-reference redaction; six overlapping replacement cases; sink/observer/sealing failures | O9: supported-OS CI and package job for the completion revision |
+| 7 | Argument/policy/handle/path matrices; capture and strict UTF-8; 120 start races; observer/kill/close/dispose failure combinations; tracked late teardown with bounded failure history; measured allocation envelope; 8/24 real-child stress and timer ownership | R2/R4/R5/R8/R10/R11: new supported-OS execution and package results; investigate any recurrence of the historical macOS stall |
 
-The Phase 6 renderer uses capability profiles and replaces the Phase 5 failure report with final target summaries.
-`ExecutionRuntime` publishes actual lifecycle transitions, but has no live state renderer. Rich property layouts now
-match their accepted fixtures. Live presentation and ordering remain implementation gaps and must be completed before
-claiming the presentation gates. No new syntax or weakened requirement is proposed here.
-
-The Phase 7 adapter seam now covers post-start observer failures and late kill/drain transfer. The broader matrix
-of start, cancellation, timeout, exit-verification, kill and disposal failures remains open. `DrainAccumulator` is
-segmented, and the capture component's allocator-slack and materialization envelope is now measured locally.
-Cross-platform and remaining combined-failure evidence is still required before marking these gates complete.
+The phase evidence documents map the local gates to named tests. Completion-gate checkboxes reflect that distinction;
+the original detailed implementation lists remain the contract history and are not a substitute for the gate evidence.
+Capture measurements cover managed allocations in the actual segmented buffer, not whole-process RSS. Descendant
+termination remains the approved best-effort policy with independent fixture cleanup, not a new survivor guarantee.
+Arbitrary application-owned sinks must settle their synchronous calls; these tests do not promise to break locks or
+waits introduced by custom sink code. The public API and canonical syntax portfolio are unchanged by this pass.
 
 ## Cross-platform evidence
 
@@ -162,15 +178,13 @@ package verification with 187 tests, including the 14 observer-failure regressio
 with 213 tests, including the initial 26 capability cases, all examples and package verification for 59 source
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
-The package rows above refer to this verified revision. The three additional environment-name review cases and
-15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure, 148 console-overload, 4 console-validation and
-14 output-admission cases have passed locally; pushing and CI are deferred to the planned final verification run.
+That package result refers to `d873080`. The local table above records the later `7586f38` package; its additional
+tests and examples have not yet run on the GitHub-hosted matrix. Pushing remains deferred.
 
-## Next implementation order
+## Remaining closeout steps
 
-1. Continue the Phase 6 internal ordering/serialization audit and remaining boundary verification. The user has
-   deferred reconsidering output appearance; retain the current [rendering fixtures](phase-06-presentation-fixtures/README.md)
-   and postpone further visual design, rich property layout and live presentation changes until that review.
-2. Complete the Phase 7 startup/teardown failure matrix, memory measurements and stress/resource checks.
-3. Reconcile the remaining Phase 5 exhaustive verification cases and investigate the intermittent macOS stall.
-4. Close all affected gates with evidence before beginning the Phase 8 typed builders.
+1. Obtain the user's release of the existing no-push hold, then push the reviewed commits and run the full CI matrix.
+2. Record Windows, Ubuntu, macOS and package results for that revision. If macOS stalls again, retain diagnostics and
+   investigate it; do not describe a successful retry as a root-cause fix.
+3. Close the remaining CI-dependent gates only after that evidence passes. Keep Phase 8 typed builders deferred.
+4. Reconsider appearance separately when the user chooses; the accepted fixtures remain the current contract.
