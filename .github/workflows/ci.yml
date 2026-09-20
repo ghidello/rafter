@@ -41,6 +41,216 @@ jobs:
           --diagnostic-output-directory artifacts/test-results/${{ matrix.os }}/diagnostics
           --diagnostic --diagnostic-verbosity Information --report-xunit-trx
           --timeout 2m --long-running 30 --output Detailed
+          ${{ matrix.os == 'macos-latest' && '--filter-not-class Sotsera.Rafter.Tests.PhaseSevenProcessTests' || '' }}
+
+      # Separate process tests expose the last started method even if the hosted runner loses its logs.
+      - name: macOS process test - CapturesExactArgumentTokensAndWorkingDirectory
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.CapturesExactArgumentTokensAndWorkingDirectory
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - DrainsBothStreamsBeyondPipeCapacityWithoutDeadlock
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.DrainsBothStreamsBeyondPipeCapacityWithoutDeadlock
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ReportsCaptureOverflowAfterTheChildExits
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ReportsCaptureOverflowAfterTheChildExits
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - RejectsMalformedUtf8WithoutReplacementText
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.RejectsMalformedUtf8WithoutReplacementText
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - PreservesALeadingUtf8BomAsProcessData
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.PreservesALeadingUtf8BomAsProcessData
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - CapturesUtf8SplitAcrossEveryPossibleRuneBoundary
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.CapturesUtf8SplitAcrossEveryPossibleRuneBoundary
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - AcceptsCaptureExactlyAtThePerStreamLimit
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AcceptsCaptureExactlyAtThePerStreamLimit
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ReportsSpecificationDiagnosticsInAuthoredOrderWithoutLaunching
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ReportsSpecificationDiagnosticsInAuthoredOrderWithoutLaunching
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - UsesOneMarkerSafeForInvocationAndProcessLocalSecrets
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.UsesOneMarkerSafeForInvocationAndProcessLocalSecrets
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - PreservesCompleteCaptureOnAnExplicitlyInvalidExit
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.PreservesCompleteCaptureOnAnExplicitlyInvalidExit
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ReturnsAnExplicitlyValidNonzeroStreamingExit
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ReturnsAnExplicitlyValidNonzeroStreamingExit
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ReportsAStreamingInvalidExitWithoutRetainingCapture
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ReportsAStreamingInvalidExitWithoutRetainingCapture
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ReportsStartupFailureButHonorsPreCancellationBeforeLaunch
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ReportsStartupFailureButHonorsPreCancellationBeforeLaunch
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ReusesAnImmutableBuilderForConcurrentIndependentLaunches
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ReusesAnImmutableBuilderForConcurrentIndependentLaunches
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - RejectsCapturePolicyInStreamingModeBeforeLaunch
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.RejectsCapturePolicyInStreamingModeBeforeLaunch
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - AppliesOrderedEnvironmentEditsWithoutMutatingTheParent
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AppliesOrderedEnvironmentEditsWithoutMutatingTheParent
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ResolvesTheProcessWorkingDirectoryFromTheTargetDirectory
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ResolvesTheProcessWorkingDirectoryFromTheTargetDirectory
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - AuthoredTimeoutTerminatesTheDirectChild
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AuthoredTimeoutTerminatesTheDirectChild
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - AuthoredTimeoutTerminatesAReportedProcessTree
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AuthoredTimeoutTerminatesAReportedProcessTree
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - InvocationCancellationPreservesStandardCancellationClassification
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.InvocationCancellationPreservesStandardCancellationClassification
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - ADiscardedActiveProcessFailsAndIsSettledBeforeTheCallbackCloses
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.ADiscardedActiveProcessFailsAndIsSettledBeforeTheCallbackCloses
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - FailsWithinTheDrainDeadlineWhenADescendantRetainsPipes
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.FailsWithinTheDrainDeadlineWhenADescendantRetainsPipes
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
+      - name: macOS process test - TransfersNonSettlingTeardownToTheTrackedReaper
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 2
+        run: >-
+          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
+          --configuration Release --no-build
+          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.TransfersNonSettlingTeardownToTheTrackedReaper
+          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+
 
       - name: Run execution fixture
         run: >-
