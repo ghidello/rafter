@@ -34,7 +34,7 @@ public sealed class PhaseSixOutputTests
             "[present] Starting.\n"
             + "[present] missing=null\n"
             + "[present] paths=[\"src\",\"tests\"]\n"
-            + "[present] success: Finished.\n");
+            + "[present] success: Finished.\n\nCommand succeeded\n  [present] Succeeded\n");
         error.ToString().Should().Be(
             "[present] warning: Optional input is missing.\n"
             + "[present] error: A package is missing.\n"
@@ -60,7 +60,7 @@ public sealed class PhaseSixOutputTests
             TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
-        output.ToString().Should().Be("[redact] token=<redacted>\n");
+        output.ToString().Should().Be("[redact] token=<redacted>\n\nCommand succeeded\n  [redact] Succeeded\n");
         output.ToString().Should().NotContain("disposable-secret");
     }
 
@@ -79,7 +79,7 @@ public sealed class PhaseSixOutputTests
         int exitCode = await command.RunAsync(entry, [], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
-        output.ToString().Should().Be("[command] Cleaning command.\n");
+        output.ToString().Should().Be("[command] Cleaning command.\n\nCommand succeeded\n  [work] Succeeded\n");
         Action afterSettlement = () => retained!.Line("Too late.");
         afterSettlement.Should().Throw<InvalidOperationException>();
         output.ToString().Should().NotContain("Too late.");
@@ -144,7 +144,7 @@ public sealed class PhaseSixOutputTests
         int exitCode = await command.RunAsync(entry, [], TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
-        output.ToString().Should().Be("[console] partial\n");
+        output.ToString().Should().Be("[console] partial\n\nCommand succeeded\n  [console] Succeeded\n");
         error.ToString().Should().Be("[console] failure stream\n");
         Console.Out.Should().BeSameAs(hostOutput);
         Console.Error.Should().BeSameAs(hostError);
@@ -173,7 +173,7 @@ public sealed class PhaseSixOutputTests
             TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
-        output.ToString().Should().Be("[console] <redacted>\n");
+        output.ToString().Should().Be("[console] <redacted>\n\nCommand succeeded\n  [console] Succeeded\n");
     }
 
     [Fact]
@@ -254,8 +254,8 @@ public sealed class PhaseSixOutputTests
         int[] exitCodes = await Task.WhenAll(firstRun, secondRun);
 
         exitCodes.Should().Equal(0, 0);
-        firstOutput.ToString().Should().Be("[first] first\n");
-        secondOutput.ToString().Should().Be("[second] second\n");
+        firstOutput.ToString().Should().Be("[first] first\n\nCommand succeeded\n  [first] Succeeded\n");
+        secondOutput.ToString().Should().Be("[second] second\n\nCommand succeeded\n  [second] Succeeded\n");
     }
 
     [Fact]
@@ -304,8 +304,8 @@ public sealed class PhaseSixOutputTests
             int exitCode = await command.RunAsync(entry, [], TestContext.Current.CancellationToken);
 
             exitCode.Should().Be(0);
-            configuredOutput.ToString().Should().Be("[sink] managed output\n");
-            hostOutput.ToString().Should().Be($"sink host output{Environment.NewLine}");
+            configuredOutput.ToString().Should().Be("[sink] managed output\n\nCommand succeeded\n  [sink] Succeeded\n");
+            hostOutput.ToString().Should().Be(string.Concat(Enumerable.Repeat($"sink host output{Environment.NewLine}", 2)));
         }
         finally
         {
@@ -342,9 +342,10 @@ public sealed class PhaseSixOutputTests
             int exitCode = await command.RunAsync(entry, [], TestContext.Current.CancellationToken);
 
             exitCode.Should().Be(0);
-            writes.Should().HaveCount(2);
+            writes.Should().HaveCount(3);
             writes[0].Should().StartWith("managed:[order] partial");
             writes[1].Should().StartWith("host:outside");
+            writes[2].Should().Be("managed:\nCommand succeeded\n  [order] Succeeded\n");
         }
         finally
         {

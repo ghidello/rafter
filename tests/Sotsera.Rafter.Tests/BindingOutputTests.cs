@@ -41,7 +41,7 @@ public sealed class BindingOutputTests
             (output.ToString() + error).Should().NotContain(secret);
             if (accepted)
             {
-                output.ToString().Should().Be("[command] <redacted>\n");
+                output.ToString().Should().Be("[command] <redacted>\n\nCommand succeeded\n  [entry] No work\n");
                 error.ToString().Should().Be("[command] <redacted>\n");
             }
             else

@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Same-stream semantic write flushes a redacted partial console fragment; later fragment completes it. Input secret is already redacted.",
   "documents": [
     {

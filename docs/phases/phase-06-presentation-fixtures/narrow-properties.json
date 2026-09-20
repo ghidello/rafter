@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Width 40. Rich collection wraps vertically as a whole; embedded control characters stay escaped. Plain ignores width.",
   "documents": [
     {

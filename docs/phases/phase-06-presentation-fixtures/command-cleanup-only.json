@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "All targets succeed, but command cleanup fails. Summary goes to stderr.",
   "documents": [
     {

@@ -83,7 +83,7 @@ public sealed class PhaseFivePresentationTests
             ExitCode = 1,
         };
 
-        CommandPresentation.Report report = CommandPresentation.CreateExecutionFailure(mixed);
+        CommandPresentation.Report report = CommandPresentation.CreateExecutionSummary(mixed, OutputCapabilities.Plain);
 
         report.Lines.Should().ContainSingle(line => line.Text.Contains("failed during cleanup", StringComparison.Ordinal));
         report.Lines.Should().NotContain(line => line.Text == "Cleanup also failed");

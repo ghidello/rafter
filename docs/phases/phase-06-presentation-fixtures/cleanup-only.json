@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Target and command cleanup fail; target cleanup is primary and is not repeated in secondary details.",
   "documents": [
     {

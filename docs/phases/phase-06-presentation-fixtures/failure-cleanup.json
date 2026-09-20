@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Work fails during execution and again during cleanup; command cleanup also fails. Exit 1.",
   "documents": [
     {

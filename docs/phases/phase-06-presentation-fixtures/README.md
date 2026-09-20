@@ -1,8 +1,9 @@
-# Proposed Phase 6 presentation contract
+# Accepted Phase 6 presentation contract
 
-Status: **awaiting user approval**. These are authored expected documents, not captures of an implemented renderer.
-No renderer behavior changes in this proposal. Approval freezes these fixtures for implementation and snapshot tests;
-the phase's presentation-contract gate remains open until then.
+Status: **accepted by the user on 2026-09-20**. These authored expected documents define the rendering contract.
+Final target summaries now have executable snapshot coverage, including all nine profiles. The real canonical
+`presentation.cs` success and failure runs are compared with the plain fixtures by the example harness. Rich property
+layout, console continuation notation and live repainting remain to be implemented against these accepted documents.
 
 ## Reading the fixtures
 
@@ -30,7 +31,7 @@ the corresponding stdout and stderr documents. Live mode additionally requires s
 streams. Non-empty `NO_COLOR` selects the corresponding colorless profile without changing layout or symbols.
 `--plain` selects plain for both streams and disables live frames. Static profiles emit no transient frames.
 
-## Proposed visible grammar
+## Visible grammar
 
 Keep `[target]` and `[command]` attribution and existing lowercase semantic severity prefixes. Prefix every physical
 line of an attributed multiline event. Preserve caller text literally rather than treating it as Spectre markup.
@@ -152,5 +153,21 @@ error: Command cleanup failed (UnauthorizedAccessException).
 | [live-lifecycle.json](live-lifecycle.json) | Actual lifecycle frames and no transient output for static/plain profiles |
 
 There are 99 stdout/stderr document pairs and nine lifecycle-profile entries. The four live entries each specify six
-surface frames. These authoring fixtures are a proposed grammar, not evidence that rendering, concurrency, redaction
+surface frames. These authoring fixtures define the accepted grammar, not evidence that all rendering, concurrency, redaction
 or all width boundaries have passed. Existing help and pre-execution diagnostics retain their established grammar.
+
+## Run the actual example
+
+From the repository root in an interactive terminal:
+
+```powershell
+dotnet run examples/presentation.cs --configuration Release
+dotnet run examples/presentation.cs --configuration Release -- --fail
+dotnet run examples/presentation.cs --configuration Release -- --plain
+```
+
+The success summary includes `✓ [present] Succeeded`; the failure summary includes `✗ [present] Failed` when the
+destination supports Unicode and rich output. Redirected streams and `--plain` use ASCII labels. In a Windows
+terminal whose .NET output encoding is not Unicode, set `[Console]::OutputEncoding = [Text.UTF8Encoding]::new()`
+before running the example. `NO_COLOR` disables color while retaining the symbols. Until rich properties land,
+property lines retain their existing `name=value` layout even when the final summary is rich.

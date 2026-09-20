@@ -36,13 +36,13 @@ completion certificate.
 
 Warnings, errors, and recovery lines are asserted separately on stderr. The redaction tests assert `<redacted>` and
 the absence of the disposable input. `console.cs` is checked for each authored target prefix on its expected stream.
-These snapshots cover existing semantic output; final target-state rows, rich properties and live transitions
-still require implementation and their own approved snapshots.
+These snapshots cover existing semantic output. Successful output now ends with the final target summary shown in
+the accepted presentation fixtures. Rich properties and live transitions still require implementation.
 
-The [proposed presentation fixtures](phase-06-presentation-fixtures/README.md) add 99 authored stdout/stderr pairs
+The [accepted presentation fixtures](phase-06-presentation-fixtures/README.md) add 99 authored stdout/stderr pairs
 across nine profiles and a separate live lifecycle frame matrix. They cover canonical presentation, all terminal
-shapes, cleanup failures, concurrent attribution, continuations and narrow collections. They await user approval
-and are not renderer captures or passing conformance tests. No production renderer changes accompany the proposal.
+shapes, cleanup failures, concurrent attribution, continuations and narrow collections. The user approved their
+grammar on 2026-09-20. Approval is separate from executable conformance; implemented coverage is recorded below.
 
 ## Capability profiles
 
@@ -66,7 +66,7 @@ successful values and cached failures. Unix keeps differently cased variables di
 `OutputCapabilityTests` supplies 29 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
 failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
-host-terminal detection. The Release build and 231-test solution suite pass locally with formatting unchanged.
+host-terminal detection. The Release build and 277-test solution suite pass locally with formatting unchanged.
 CI for the three added review cases is deferred until the planned final verification run.
 Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
 
@@ -83,9 +83,32 @@ guard. The seam is internal and introduces no public API or transient presentati
 
 `ExecutionObserverTests` supplies 15 cases covering live execution/cleanup timing, initial ordering, immutable
 terminal data, failure at each lifecycle, concurrent delivery, cancellation, original callback/cleanup failures,
-per-invocation isolation, and unchanged plain/static output. All 231 solution tests pass locally; the Release build,
+per-invocation isolation, and the absence of transient plain/static output. All 277 solution tests pass locally; the Release build,
 formatting and diff checks pass. CI is deferred to the planned final verification run. Live rendering, the
-`Pending`/`Ready` to `Waiting` presentation mapping, and final summaries remain unfinished.
+`Pending`/`Ready` to `Waiting` presentation mapping remain unfinished.
+
+## Final target summaries
+
+Execution completion now replaces the temporary Phase 5 report with one summary after buffered output and both
+cleanup scopes settle. Success uses stdout; failure and cancellation use stderr and that stream's own capabilities.
+Rows follow plan indices, distinguish executed/aggregate/no-work success and skipped/failed/cancelled/blocked states,
+and preserve authored direct-blocker order. Primary failure details and secondary cleanup failures retain their
+original classifications. No exception messages or durations are introduced.
+
+Rich Unicode profiles add the accepted state symbols; ASCII and forced-plain profiles retain complete labels.
+Colorless profiles retain Unicode without styling escapes. Target and blocker names cross the existing redaction
+boundary. Summary rendering, redaction and writer failures record output infrastructure failure without changing
+the retained execution outcome or cleanup counts.
+
+`ExecutionSummaryTests` adds 46 cases: 36 direct invocation/profile snapshots for cleanup and cancellation, a
+terminal-shape test across all nine profiles with deliberately shuffled result storage, capability overrides,
+redacted identities, sink failures, fail-closed styling and settlement ordering. The real `presentation.cs` success/failure plain streams
+are also compared against the accepted documents by `verify-implemented-examples.ps1`. Live-profile snapshot rows
+here prove their final static summary only; they do not establish live cursor repainting.
+
+Interactive Windows UTF-8 terminal runs of the unchanged example also displayed `✓ [present] Succeeded` and
+`✗ [present] Failed` with exit codes 0 and 1 respectively. These smoke checks confirm the production capability
+path, separately from the deterministic injected-profile tests.
 
 ## Remaining work
 

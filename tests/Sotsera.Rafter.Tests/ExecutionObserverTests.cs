@@ -204,7 +204,9 @@ public sealed class ExecutionObserverTests
         (await command.RunAsync(entry, plain ? ["--plain"] : [], TestContext.Current.CancellationToken)).Should().Be(0);
 
         notifications.Should().NotBeEmpty();
-        output.ToString().ReplaceLineEndings("\n").Should().Be("[work] payload\n");
+        output.ToString().ReplaceLineEndings("\n").Should().Be(plain
+            ? "[work] payload\n\nCommand succeeded\n  [work] Succeeded\n"
+            : "[work] payload\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n");
         error.ToString().Should().BeEmpty();
     }
 

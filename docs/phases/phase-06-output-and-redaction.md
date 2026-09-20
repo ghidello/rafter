@@ -265,8 +265,8 @@ recompute the budget.
 
 ## Presentation contract gate
 
-The [proposed golden documents](phase-06-presentation-fixtures/README.md) now specify the grammar and profile matrix.
-They are awaiting user approval; their presence does not close this gate or establish renderer conformance.
+The user accepted the [golden documents](phase-06-presentation-fixtures/README.md) on 2026-09-20. They specify the
+grammar and profile matrix. Approval permits renderer implementation; conformance still requires executable evidence.
 
 Before implementing either renderer, commit and approve golden documents for the representative calls in
 `presentation.cs`; command- and target-scoped line, warning, error, recovery, success, and property events; concurrent
@@ -281,7 +281,7 @@ not make unreviewed user-experience choices.
 
 ### Semantic events and sinks
 
-- [ ] Freeze and approve the presentation-contract fixtures before implementing renderers or event formatting.
+- [x] Freeze and approve the presentation-contract fixtures before implementing renderers or event formatting.
 - [ ] Add the exact `RafterContext.Output` and `RafterOutput` public surface, XML documentation, public API baseline,
       null/whitespace validation, and API-shape tests.
 - [ ] Return one allocation-free facade per context; accept calls until the managed-input seal, fall stale target
@@ -321,7 +321,7 @@ not make unreviewed user-experience choices.
       terminal; reuse rather than replace its help and diagnostic document models.
 - [ ] Extend the Phase 3 deterministic plain renderer without introducing ANSI sequences for redirected or
       explicitly plain output.
-- [ ] Replace, rather than supplement, Phase 5's temporary minimal execution report after an execution outcome exists.
+- [x] Replace, rather than supplement, Phase 5's temporary minimal execution report after an execution outcome exists.
 - [ ] Make the common `--plain` option force both stdout and stderr into deterministic width-independent output with
       no ANSI, cursor/live control, or Unicode-only status glyphs.
 - [x] Observe exact `--plain` before selecting any early report, including invalid-model, graph, and initial
@@ -341,9 +341,9 @@ not make unreviewed user-experience choices.
 - [ ] Preserve event order within each physical stream and document that independently redirected stdout/stderr
       cannot provide a cross-stream ordering guarantee.
 - [ ] Preserve readable target attribution under concurrency without promising impossible cross-process ordering.
-- [ ] Present implicit no-op targets as completed with no work, distinctly from aggregates and condition-skipped
+- [x] Present implicit no-op targets as completed with no work, distinctly from aggregates and condition-skipped
       targets.
-- [ ] Render final target rows in stable plan order with `Succeeded`, `Skipped`, `Failed`, `Cancelled`, and `Blocked`
+- [x] Render final target rows in stable plan order with `Succeeded`, `Skipped`, `Failed`, `Cancelled`, and `Blocked`
       terminal states; render successful callback-free targets as `Aggregate` or `No work` and list direct blockers
       in authored dependency order.
 - [ ] Let rich interactive output show transient `Waiting`, `Running`, and `Cleaning up` states with a live display;
@@ -353,9 +353,9 @@ not make unreviewed user-experience choices.
 - [x] Emit initial `Pending` notifications in plan order and immutable notifications after every state mutation; add
       terminal outcome, successful shape, and direct blockers only to `Settled`, then disable observation after its
       first exception.
-- [ ] Emit the final summary to stdout when the command succeeds and to stderr with detailed failures when it fails
+- [x] Emit the final summary to stdout when the command succeeds and to stderr with detailed failures when it fails
       or is cancelled; omit durations from v1 output.
-- [ ] Render secondary target- and command-cleanup failures from the Phase 5 structured outcome beneath a distinct
+- [x] Render secondary target- and command-cleanup failures from the Phase 5 structured outcome beneath a distinct
       `Cleanup also failed` heading without changing the selected primary failure or exit code.
 - [ ] Use the rich symbol/color map: `○` waiting/dim grey, `●` running/cyan, `◐` cleanup/cyan, `✓`
       succeeded/green, `◇` aggregate/green, `–` no-work/grey, `↷` skipped/grey, `■` cancelled/yellow,

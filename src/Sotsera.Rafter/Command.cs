@@ -498,7 +498,8 @@ public sealed class Command
         int exitCode = await CompleteExecutionAsync(
             execution.Services,
             result,
-            LastExecutionOutcome).ConfigureAwait(false);
+            LastExecutionOutcome,
+            output).ConfigureAwait(false);
         ConsoleOutputCoordinator.VerifyActiveOwnership();
         LastOutputFailure = output.Failure;
         if (LastOutputFailure is null)
@@ -513,31 +514,44 @@ public sealed class Command
     private async Task<int> CompleteExecutionAsync(
         InvocationServices services,
         BindingResult result,
-        ExecutionOutcome outcome)
+        ExecutionOutcome outcome,
+        InvocationOutput output)
     {
-        if (outcome.ExitCode == 0)
+        bool success = outcome.ExitCode == 0;
+        OutputCapabilities capabilities = success
+            ? services.StandardOutputCapabilities
+            : services.StandardErrorCapabilities;
+        CommandPresentation.Report outcomeReport = CommandPresentation.CreateExecutionSummary(outcome, capabilities);
+        bool outcomeWritten;
+        try
         {
-            LastInvocationStatus = InvocationStatus.Success;
-            return 0;
+            outcomeWritten = await CommandPresentation.WriteAsync(
+                outcomeReport,
+                success ? services.StandardOutput : services.StandardError,
+                capabilities,
+                result.Redactor).ConfigureAwait(false);
+            if (!outcomeWritten)
+            {
+                output.Fail(new InvalidOperationException("The execution summary could not be redacted safely."));
+            }
         }
-
-        CommandPresentation.Report outcomeReport = outcome.ExitCode == 130
-            ? CommandPresentation.CreateCancellation(outcome)
-            : CommandPresentation.CreateExecutionFailure(outcome);
-        bool outcomeWritten = await TryWriteAsync(
-            outcomeReport,
-            services.StandardError,
-            services.StandardErrorCapabilities,
-            result.Redactor).ConfigureAwait(false);
+        catch (Exception exception)
+        {
+            output.Fail(exception);
+            outcomeWritten = false;
+        }
         if (!outcomeWritten)
         {
             LastInvocationStatus = InvocationStatus.InfrastructureFailure;
             return 1;
         }
 
-        LastInvocationStatus = outcome.ExitCode == 130
-            ? InvocationStatus.Cancelled
-            : InvocationStatus.ExecutionFailure;
+        LastInvocationStatus = outcome.ExitCode switch
+        {
+            0 => InvocationStatus.Success,
+            130 => InvocationStatus.Cancelled,
+            _ => InvocationStatus.ExecutionFailure,
+        };
         return outcome.ExitCode;
     }
 

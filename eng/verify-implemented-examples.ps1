@@ -90,8 +90,16 @@ foreach ($line in @("[immediate] immediate: stdout", "[first] first: stdout", "[
 foreach ($line in @("[first] first: stderr", "[second] second: configure-await-false")) {
     if (-not $console.Error.Contains($line)) { throw "Missing console attribution: $line" }
 }
-$null = Invoke-Example "presentation"
-$null = Invoke-Example "presentation" @("--fail") 1
+foreach ($failed in @($false, $true)) {
+    $presentationScenario = if ($failed) { "presentation-failure" } else { "presentation-success" }
+    $presentationResult = if ($failed) { Invoke-Example "presentation" @("--fail") 1 } else { Invoke-Example "presentation" }
+    $presentationFixturePath = Join-Path $repositoryRoot "docs/phases/phase-06-presentation-fixtures/$presentationScenario.json"
+    $presentationFixture = Get-Content -LiteralPath $presentationFixturePath -Raw | ConvertFrom-Json
+    $presentationExpected = $presentationFixture.documents | Where-Object { $_.profile.name -eq "plain" }
+    if ($presentationResult.Output -cne $presentationExpected.stdout -or $presentationResult.Error -cne $presentationExpected.stderr) {
+        throw "$presentationScenario does not match its accepted plain stdout/stderr documents."
+    }
+}
 $failures = Invoke-Example "failures" @() 1
 if ($failures.Output.Contains("This target should be blocked.")) { throw "A blocked callback ran." }
 if (-not $failures.Output.Contains("Independent work settled.")) { throw "Independent work did not settle." }

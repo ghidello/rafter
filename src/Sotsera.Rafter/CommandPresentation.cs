@@ -86,45 +86,59 @@ internal static class CommandPresentation
         return new Report(lines.ToImmutable());
     }
 
-    internal static Report CreateCancellation(ExecutionOutcome? outcome = null)
+    internal static Report CreateCancellation()
+        => new([new ReportLine("Command cancelled", LineRole.ErrorHeading)]);
+
+    internal static Report CreateExecutionSummary(ExecutionOutcome outcome, OutputCapabilities capabilities)
     {
         ImmutableArray<ReportLine>.Builder lines = ImmutableArray.CreateBuilder<ReportLine>();
-        lines.Add(new ReportLine("Command cancelled", LineRole.ErrorHeading));
-        AddSecondaryCleanupFailures(lines, outcome, includeCleanupOnlyFailures: true);
-        return new Report(lines.ToImmutable());
-    }
-
-    internal static Report CreateExecutionFailure(ExecutionOutcome outcome)
-    {
-        ImmutableArray<ReportLine>.Builder lines = ImmutableArray.CreateBuilder<ReportLine>();
-        lines.Add(new ReportLine("Command failed", LineRole.ErrorHeading));
-        if (outcome.InfrastructureException is not null)
+        lines.Add(ReportLine.Blank);
+        string status = outcome.ExitCode switch { 0 => "succeeded", 130 => "cancelled", _ => "failed" };
+        lines.Add(new ReportLine($"Command {status}",
+            outcome.ExitCode == 0 ? LineRole.SuccessHeading : LineRole.ErrorHeading));
+        Dictionary<Guid, string> targetNames = outcome.Plan.Targets.ToDictionary(
+            static target => target.Id, static target => target.Name);
+        foreach (TargetResult target in outcome.Targets.OrderBy(static target => target.PlanIndex))
         {
-            lines.Add(new ReportLine(
-                "error: Command execution failed because scheduler state was inconsistent.",
-                LineRole.Error));
+            string state = target.Outcome == TargetOutcome.Succeeded
+                ? target.Shape switch
+                {
+                    SuccessfulShape.Aggregate => "Aggregate",
+                    SuccessfulShape.NoWork => "No work",
+                    _ => "Succeeded",
+                }
+                : target.Outcome.ToString();
+            string symbol = capabilities.IsRich && capabilities.SupportsUnicode
+                ? target.Outcome switch
+                {
+                    TargetOutcome.Succeeded => "✓ ",
+                    TargetOutcome.Skipped => "− ",
+                    TargetOutcome.Failed => "✗ ",
+                    _ => "! ",
+                }
+                : string.Empty;
+            string blockers = target.DirectBlockers.IsEmpty
+                ? string.Empty
+                : $"; blocked by: {string.Join(", ", target.DirectBlockers.Select(id => targetNames[id]))}";
+            LineRole role = target.Outcome switch
+            {
+                TargetOutcome.Succeeded => LineRole.Item,
+                TargetOutcome.Skipped => LineRole.Muted,
+                _ => LineRole.Error,
+            };
+            lines.Add(new ReportLine($"  {symbol}[{target.Target.Name}] {state}{blockers}", role));
         }
 
-        foreach (TargetResult target in outcome.Targets.Where(static target => target.Outcome == TargetOutcome.Failed))
+        if (outcome.ExitCode == 130)
         {
-            string phase = target.FailurePhase?.ToString().ToLowerInvariant() ?? "execution";
-            string exception = target.PrimaryException?.GetType().Name ?? "unknown failure";
-            lines.Add(new ReportLine(
-                $"error: Target '{target.Target.Name}' failed during {phase} ({exception}).",
-                LineRole.Error));
+            AddSecondaryCleanupFailures(lines, outcome, includeCleanupOnlyFailures: true);
+        }
+        else if (outcome.ExitCode != 0)
+        {
+            lines.Add(ReportLine.Blank);
+            AddExecutionFailures(lines, outcome);
         }
 
-        bool hasPrimaryTargetFailure = outcome.Targets.Any(static target => target.Outcome == TargetOutcome.Failed);
-        if (outcome.CommandCleanupException is not null
-            && !hasPrimaryTargetFailure
-            && outcome.InfrastructureException is null)
-        {
-            lines.Add(new ReportLine(
-                $"error: Command cleanup failed ({outcome.CommandCleanupException.GetType().Name}).",
-                LineRole.Error));
-        }
-
-        AddSecondaryCleanupFailures(lines, outcome, includeCleanupOnlyFailures: false);
         return new Report(lines.ToImmutable());
     }
 
@@ -155,6 +169,38 @@ internal static class CommandPresentation
         return true;
     }
 
+    private static void AddExecutionFailures(ImmutableArray<ReportLine>.Builder lines, ExecutionOutcome outcome)
+    {
+        if (outcome.InfrastructureException is not null)
+        {
+            lines.Add(new ReportLine(
+                "error: Command execution failed because scheduler state was inconsistent.",
+                LineRole.Error));
+        }
+
+        foreach (TargetResult target in outcome.Targets.Where(static target => target.Outcome == TargetOutcome.Failed)
+            .OrderBy(static target => target.PlanIndex))
+        {
+            string phase = target.FailurePhase?.ToString().ToLowerInvariant() ?? "execution";
+            string exception = target.PrimaryException?.GetType().Name ?? "unknown failure";
+            lines.Add(new ReportLine(
+                $"error: Target '{target.Target.Name}' failed during {phase} ({exception}).",
+                LineRole.Error));
+        }
+
+        bool hasPrimaryTargetFailure = outcome.Targets.Any(static target => target.Outcome == TargetOutcome.Failed);
+        if (outcome.CommandCleanupException is not null
+            && !hasPrimaryTargetFailure
+            && outcome.InfrastructureException is null)
+        {
+            lines.Add(new ReportLine(
+                $"error: Command cleanup failed ({outcome.CommandCleanupException.GetType().Name}).",
+                LineRole.Error));
+        }
+
+        AddSecondaryCleanupFailures(lines, outcome, includeCleanupOnlyFailures: false);
+    }
+
     private static void AddCommandHeader(
         ImmutableArray<ReportLine>.Builder lines,
         CommandDefinition model,
@@ -180,6 +226,7 @@ internal static class CommandPresentation
             .Where(target =>
                 target.CleanupException is not null
                 && (includeCleanupOnlyFailures || target.FailurePhase != FailurePhase.Cleanup))
+            .OrderBy(static target => target.PlanIndex)
             .ToImmutableArray();
         bool commandCleanupIsSecondary = outcome.CommandCleanupException is not null
             && (outcome.InvocationCancellationRequested
@@ -414,25 +461,34 @@ internal static class CommandPresentation
         IAnsiConsole console = OutputPresentation.CreateConsole(writer, capabilities);
         foreach (ReportLine line in report.Lines)
         {
-            WriteRichLine(console, line);
+            WriteRichLine(console, line, capabilities.SupportsColor);
         }
 
-        return writer.ToString();
+        return writer.ToString().ReplaceLineEndings("\n");
     }
 
-    private static void WriteRichLine(IAnsiConsole console, ReportLine line)
+    private static void WriteRichLine(IAnsiConsole console, ReportLine line, bool color)
     {
+        if (!color)
+        {
+            console.WriteLine(line.Text);
+            return;
+        }
+
         string text = Markup.Escape(line.Text);
         switch (line.Role)
         {
+            case LineRole.SuccessHeading:
+                console.MarkupLine($"[bold green]{text}[/]");
+                break;
             case LineRole.Heading:
-                console.MarkupLine($"[bold blue]{text}[/]");
+                console.MarkupLine($"[bold navy]{text}[/]");
                 break;
             case LineRole.ErrorHeading:
-                console.MarkupLine($"[bold red]{text}[/]");
+                console.MarkupLine($"[bold maroon]{text}[/]");
                 break;
             case LineRole.Error:
-                console.MarkupLine($"[red]{text}[/]");
+                console.MarkupLine($"[maroon]{text}[/]");
                 break;
             case LineRole.Item:
                 console.MarkupLine($"[green]{text}[/]");
@@ -457,6 +513,7 @@ internal static class CommandPresentation
     {
         Text,
         Heading,
+        SuccessHeading,
         ErrorHeading,
         Error,
         Item,

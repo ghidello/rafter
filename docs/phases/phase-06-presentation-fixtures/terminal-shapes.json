@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Plan order is executed, empty, aggregate, skipped, first, second, blocked, entry. Blocked declares second before first.",
   "documents": [
     {

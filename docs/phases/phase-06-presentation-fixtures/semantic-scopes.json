@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Target callback followed by command cleanup emits all event kinds. Output.Error alone does not fail execution.",
   "documents": [
     {

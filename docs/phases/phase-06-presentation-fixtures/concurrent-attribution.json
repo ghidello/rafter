@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Barrier-controlled arrival order beta, alpha, beta; plan order alpha, beta, entry. No general scheduling order promised.",
   "documents": [
     {

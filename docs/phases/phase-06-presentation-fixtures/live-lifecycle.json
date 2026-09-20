@@ -1,5 +1,5 @@
 {
-  "status": "proposed-awaiting-approval",
+  "status": "accepted",
   "description": "Terminal surface snapshots, not append-only output or raw cursor bytes. Fixed plan order work, entry.",
   "documents": [
     {
