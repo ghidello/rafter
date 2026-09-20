@@ -201,6 +201,9 @@ internal sealed class InvocationOutput
         }
     }
 
+    internal bool UsesWriter(TextWriter writer)
+        => ReferenceEquals(writer, _standardOutput) || ReferenceEquals(writer, _standardError);
+
     internal void FlushConsoleForOrdering(bool standardError)
     {
         foreach (OutputEvent outputEvent in TakeConsole(standardError))

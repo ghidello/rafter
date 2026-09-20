@@ -2,10 +2,10 @@ namespace Sotsera.Rafter;
 
 internal static class TerminalPublication
 {
-    private static readonly AsyncLocal<int> PublicationDepth = new();
+    private static readonly AsyncLocal<PublicationScope?> CurrentPublication = new();
     private static readonly Lock Sync = new();
 
-    internal static bool IsPublishing => PublicationDepth.Value != 0;
+    internal static bool IsPublishing => FindActivePublication() is not null;
 
     // Async-facing report APIs complete only after this synchronous terminal boundary has published the document.
     internal static void WriteReport(TextWriter writer, string text)
@@ -35,7 +35,9 @@ internal static class TerminalPublication
             return;
         }
 
-        PublicationDepth.Value++;
+        PublicationScope? previous = CurrentPublication.Value;
+        PublicationScope publication = new(FindActivePublication());
+        CurrentPublication.Value = publication;
         try
         {
             writer.Write(text);
@@ -48,7 +50,33 @@ internal static class TerminalPublication
         }
         finally
         {
-            PublicationDepth.Value--;
+            // Child execution contexts retain this object, so closing it ends their bypass permission too.
+            publication.Close();
+            CurrentPublication.Value = previous;
         }
+    }
+
+    private static PublicationScope? FindActivePublication()
+    {
+        for (PublicationScope? scope = CurrentPublication.Value; scope is not null; scope = scope.Parent)
+        {
+            if (scope.IsActive)
+            {
+                return scope;
+            }
+        }
+
+        return null;
+    }
+
+    private sealed class PublicationScope(PublicationScope? parent)
+    {
+        private int _active = 1;
+
+        internal PublicationScope? Parent { get; } = parent;
+
+        internal bool IsActive => Volatile.Read(ref _active) != 0;
+
+        internal void Close() => Volatile.Write(ref _active, 0);
     }
 }

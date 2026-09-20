@@ -152,10 +152,84 @@ public sealed class TerminalPublicationTests
         output.Failure.Should().BeSameAs(failure);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DeferredSinkConsoleWritesReenterManagedOutputAfterPublicationEnds(bool report)
+    {
+        const string secret = "deferred-sink-secret";
+        TextWriter original = Console.Out;
+        StringWriter host = new();
+        TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        DeferredWriter sink = new(secret, release.Task);
+        StringWriter managed = report ? new StringWriter() : sink;
+        try
+        {
+            Console.SetOut(host);
+            Command command = PhaseFiveTestSupport.CreateCommand();
+            PhaseFiveTestSupport.ConfigureServices(command, managed);
+            _ = command.RequiredOption<string>("secret").Description("Secret.").Sensitive();
+            Target entry = command.Target("work").Description("Schedule a sink write.").Run(async context =>
+            {
+                if (report)
+                {
+                    (await WriteReportAsync(sink).ConfigureAwait(false)).Should().BeTrue();
+                }
+                else
+                {
+                    context.Output.Line("schedule");
+                }
+                release.SetResult();
+                await sink.Pending!.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken)
+                    .ConfigureAwait(false);
+            });
+
+            (await command.RunAsync(entry, ["--secret", secret], TestContext.Current.CancellationToken)).Should().Be(0);
+
+            host.ToString().Should().BeEmpty();
+            managed.ToString().Should().Contain("[work] <redacted>\n").And.NotContain(secret);
+        }
+        finally
+        {
+            release.TrySetResult();
+            try
+            {
+                if (sink.Pending is not null)
+                {
+                    await sink.Pending.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+                }
+            }
+            finally
+            {
+                Console.SetOut(original);
+            }
+        }
+    }
+
     private static Task<bool> WriteReportAsync(TextWriter writer)
         => CommandPresentation.WriteAsync(new CommandPresentation.Report([
             new CommandPresentation.ReportLine("report", CommandPresentation.LineRole.Text),
         ]), writer, OutputCapabilities.Plain, TextRedactor.Empty);
+
+    private sealed class DeferredWriter(string text, Task release) : StringWriter
+    {
+        private int _scheduled;
+
+        internal Task? Pending { get; private set; }
+
+        public override void Write(string? value)
+        {
+            base.Write(value);
+            if (Interlocked.Exchange(ref _scheduled, 1) == 0)
+            {
+                Pending = Task.Run(async () =>
+                {
+                    await release.WaitAsync(TestContext.Current.CancellationToken).ConfigureAwait(false);
+                    Console.WriteLine(text);
+                }, TestContext.Current.CancellationToken);
+            }
+        }
+    }
 
     private sealed class DistinctWriter : StringWriter
     {

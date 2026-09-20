@@ -66,7 +66,7 @@ successful values and cached failures. Unix keeps differently cased variables di
 `OutputCapabilityTests` supplies 29 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
 failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
-host-terminal detection. The Release build and 287-test solution suite pass locally with formatting unchanged.
+host-terminal detection. The Release build and 299-test solution suite pass locally with formatting unchanged.
 CI for the three added review cases is deferred until the planned final verification run.
 Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
 
@@ -83,7 +83,7 @@ guard. The seam is internal and introduces no public API or transient presentati
 
 `ExecutionObserverTests` supplies 15 cases covering live execution/cleanup timing, initial ordering, immutable
 terminal data, failure at each lifecycle, concurrent delivery, cancellation, original callback/cleanup failures,
-per-invocation isolation, and the absence of transient plain/static output. All 287 solution tests pass locally; the Release build,
+per-invocation isolation, and the absence of transient plain/static output. All 299 solution tests pass locally; the Release build,
 formatting and diff checks pass. CI is deferred to the planned final verification run. Live rendering, the
 `Pending`/`Ready` to `Waiting` presentation mapping remain unfinished.
 
@@ -126,11 +126,31 @@ This also covers help from another command that has not registered for intercept
 independently injected sinks separate. The same-sink ordering regression failed before this repair on stdout;
 the final tests cover stdout and stderr, both shared and distinct sinks.
 
-`TerminalPublicationTests` adds ten cases for synchronous report delivery, overlapping reports/semantic writes,
-reentrant sinks, guard restoration, failure suppression and pending-fragment ordering. All 287 solution tests pass.
+The first ten `TerminalPublicationTests` cases cover synchronous report delivery, overlapping reports/semantic writes,
+reentrant sinks, guard restoration, failure suppression and pending-fragment ordering. All 299 solution tests pass.
 This does not close the full ordering gate: process-monotonic event sequencing, atomic buffered-event publication,
 host pass-through coordination, all writer overloads and live-display suspension still require their broader audit.
 The user has deferred reconsidering the visual design; this work retains the existing rendering fixtures.
+
+## Host failures and publication lifetime
+
+Host pass-through write failures now both propagate the original exception to the host caller and mark active
+invocations using that captured writer as output infrastructure failures. Newline getter/setter failures use the
+same writer-identity filter; they no longer fail invocations with independent injected sinks. An earlier output
+failure remains primary. Target outcomes and target/command cleanup counts remain unchanged.
+
+`HostConsoleFailureTests` provides ten cases across stdout and stderr for write/getter/setter failures, independent
+sinks, preserved prior failures and command completion. Eight cases failed before the fix. Writer identity refers
+to the captured `TextWriter` instance; this does not discover arbitrary wrappers around a common underlying sink.
+
+The publication guard now carries an explicitly closed scope rather than a copied depth value. A task started by
+a sink can inherit the scope, but its permission to bypass managed interception ends when that physical write ends.
+Nested active publications retain their own protection. Two more `TerminalPublicationTests` cases reproduced raw
+secret exposure from deferred console writes after semantic/report publication; those writes now regain managed
+attribution and redaction while the invocation remains active. This brings that class to twelve cases.
+
+These repairs leave visible formatting unchanged. Full host/managed write serialization and process-wide event
+sequencing remain open; the host failure tests establish classification and isolation, not those broader ordering gates.
 
 ## Remaining work
 

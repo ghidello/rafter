@@ -103,7 +103,15 @@ internal static class ConsoleOutputCoordinator
             registration.Output.FlushConsoleForOrdering(standardError);
         }
 
-        writer.Write(text);
+        try
+        {
+            writer.Write(text);
+        }
+        catch (Exception exception)
+        {
+            FailWriterUsers(standardError, writer, exception);
+            throw;
+        }
     }
 
     private static string GetNewLine(bool standardError, TextWriter fallback)
@@ -116,7 +124,7 @@ internal static class ConsoleOutputCoordinator
             }
             catch (Exception exception)
             {
-                FailActiveRegistrations(standardError, exception);
+                FailWriterUsers(standardError, fallback, exception);
                 throw;
             }
         }
@@ -132,7 +140,7 @@ internal static class ConsoleOutputCoordinator
             }
             catch (Exception exception)
             {
-                FailActiveRegistrations(standardError, exception);
+                FailWriterUsers(standardError, fallback, exception);
                 throw;
             }
         }
@@ -251,6 +259,21 @@ internal static class ConsoleOutputCoordinator
         catch (Exception exception)
         {
             output.Fail(new IOException("The host console writer could not be restored.", exception));
+        }
+    }
+
+    private static void FailWriterUsers(bool standardError, TextWriter writer, Exception exception)
+    {
+        lock (Sync)
+        {
+            string stream = standardError ? "error" : "output";
+            foreach (Registration active in Registrations.Values)
+            {
+                if (active.Output.UsesWriter(writer))
+                {
+                    active.Output.Fail(new IOException($"The host console {stream} writer failed.", exception));
+                }
+            }
         }
     }
 
