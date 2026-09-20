@@ -48,6 +48,8 @@ verification work without relaxing those contracts.
 - Replaced the ANSI flags with independent immutable stdout/stderr capability profiles, made exact `--plain`
   apply before model errors, and captured `NO_COLOR` once per invocation. The capability tests cover mixed streams,
   width limits, color-only suppression, failed probes, early reports and reuse of the lookup by option binding.
+  Review fixed mixed-case `NO_COLOR` aliases causing duplicate lookups on Windows, while preserving Unix's
+  case-sensitive environment names and cached lookup failures.
 
 ## Local verification
 
@@ -57,10 +59,10 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 213 passed, zero failed or skipped, including 14 observer-failure and 26 capability cases |
+| Solution tests | 216 passed, zero failed or skipped, including 14 observer-failure and 29 capability cases |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
-| Packaged PDB identity and canonical Source Link map | Passed; 58 runtime documents mapped |
+| Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
 | Fresh-cache external project and file-app consumers | Passed; both bind and execute the public command API |
 | Canonical reference check | All 29 examples retain their original project reference |
 | Implemented-example compilation and plain help | All 24 classified examples passed |
@@ -128,10 +130,14 @@ passed all three OS jobs and package verification. It pins Linux jobs to the val
 of the announced `ubuntu-latest` migration.
 
 [CI 16](https://github.com/ghidello/rafter/actions/runs/35519505085), for `aec96c0`, passed all three OS jobs and
-package verification with 187 tests, including the 14 observer-failure regressions. The 26 capability cases were
-added afterwards; their local verification is recorded above and their pushed revision requires its own CI result.
-The package/source-map rows above describe the verified 58-document baseline; the new capability source adds one
-document and must pass the same package checks.
+package verification with 187 tests, including the 14 observer-failure regressions.
+
+[CI 17](https://github.com/ghidello/rafter/actions/runs/35520592866), for `d873080`, passed on its second attempt
+with 213 tests, including the initial 26 capability cases, all examples and package verification for 59 source
+documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
+step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
+The package rows above refer to this verified revision. The three additional environment-name review cases have
+passed locally; pushing and CI are deferred to the planned final verification run.
 
 ## Next implementation order
 

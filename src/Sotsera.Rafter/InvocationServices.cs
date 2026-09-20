@@ -66,7 +66,10 @@ internal sealed record InvocationServices(
 
         string? ReadCapturedEnvironment(string name)
         {
-            if (name is not "NO_COLOR")
+            StringComparison comparison = OperatingSystem.IsWindows()
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+            if (!string.Equals(name, "NO_COLOR", comparison))
             {
                 return ReadEnvironment(name);
             }

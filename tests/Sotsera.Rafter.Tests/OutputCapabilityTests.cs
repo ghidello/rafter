@@ -102,8 +102,10 @@ public sealed class OutputCapabilityTests
         prepared.StandardErrorCapabilities.Should().Be(PhaseFiveTestSupport.RichCapabilities);
     }
 
-    [Fact]
-    public void NoColorLookupFailureDisablesColorButPreservesBindingFailure()
+    [Theory]
+    [InlineData("NO_COLOR")]
+    [InlineData("no_color")]
+    public void NoColorLookupFailureDisablesColorButPreservesBindingFailure(string environmentName)
     {
         IOException failure = new("lookup failed");
         int reads = 0;
@@ -117,9 +119,9 @@ public sealed class OutputCapabilityTests
         {
             SupportsColor = false,
         });
-        Action read = () => services.ReadEnvironment("NO_COLOR");
+        Action read = () => services.ReadEnvironment(environmentName);
         read.Should().Throw<IOException>().Which.Should().BeSameAs(failure);
-        reads.Should().Be(1);
+        reads.Should().Be(OperatingSystem.IsWindows() || environmentName is "NO_COLOR" ? 1 : 2);
     }
 
     [Theory]
@@ -192,6 +194,39 @@ public sealed class OutputCapabilityTests
 
         values.Should().Equal("1", "2");
         reads.Should().Be(2);
+    }
+
+    [Theory]
+    [InlineData("no_color")]
+    [InlineData("No_Color")]
+    public async Task NoColorBindingUsesThePlatformsEnvironmentNameComparison(string environmentName)
+    {
+        List<string> reads = [];
+        Command command = PhaseFiveTestSupport.CreateCommand();
+        RequiredOption<string> value = command.RequiredOption<string>("value").Description("Value.")
+            .FromEnvironment(environmentName);
+        command.InvocationServicesFactory = () => Services(name =>
+        {
+            reads.Add(name);
+            return reads.Count.ToString(CultureInfo.InvariantCulture);
+        });
+        string? bound = null;
+        Target target = command.Target("work").Description("Read value.")
+            .Run(context => bound = context.Value(value));
+
+        int code = await command.RunAsync(target, [], TestContext.Current.CancellationToken);
+
+        code.Should().Be(0);
+        if (OperatingSystem.IsWindows())
+        {
+            reads.Should().Equal("NO_COLOR");
+            bound.Should().Be("1");
+        }
+        else
+        {
+            reads.Should().Equal("NO_COLOR", environmentName);
+            bound.Should().Be("2");
+        }
     }
 
     [Fact]

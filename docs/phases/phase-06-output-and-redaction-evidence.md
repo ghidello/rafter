@@ -53,10 +53,15 @@ Production ANSI detection uses the pinned Spectre implementation with explicit c
 `NO_COLOR`/`FORCE_COLOR` color detection. Capability-probe failures select plain output for only that stream;
 failure to capture the writers remains an infrastructure failure.
 
-`OutputCapabilityTests` supplies 26 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
+The cached environment name follows platform semantics: case-insensitive on Windows and case-sensitive on Unix.
+The review regressions reproduce duplicate Windows lookups for `no_color`/`No_Color` before the fix and cover both
+successful values and cached failures. Unix keeps differently cased variables distinct.
+
+`OutputCapabilityTests` supplies 29 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
 failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
-host-terminal detection. The Release build and 213-test solution suite pass locally with formatting unchanged.
+host-terminal detection. The Release build and 216-test solution suite pass locally with formatting unchanged.
+CI for the three added review cases is deferred until the planned final verification run.
 Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
 
 ## Remaining work
