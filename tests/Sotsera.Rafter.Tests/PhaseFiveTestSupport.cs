@@ -4,7 +4,7 @@ namespace Sotsera.Rafter.Tests;
 
 internal static class PhaseFiveTestSupport
 {
-    internal static OutputCapabilities RichCapabilities { get; } = new(false, true, true, true, true, true, 120);
+    internal static OutputCapabilities RichCapabilities { get; } = new(false, true, true, true, true, false, 120);
 
     internal static Command CreateCommand(int? concurrency = null)
     {

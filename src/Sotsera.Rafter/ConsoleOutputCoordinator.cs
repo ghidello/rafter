@@ -79,6 +79,7 @@ internal static class ConsoleOutputCoordinator
 
     private static void Route(bool standardError, TextWriter fallback, string text)
     {
+        using Lock.Scope publication = TerminalPublication.Enter();
         Scope? scope = CurrentScope.Value;
         if (!TerminalPublication.IsPublishing
             && scope is not null
@@ -98,18 +99,43 @@ internal static class ConsoleOutputCoordinator
                 : standardError ? _hostError! : _hostOutput!;
         }
 
-        foreach (Registration registration in registrations)
+        foreach (Registration registration in TerminalPublication.IsPublishing ? [] : registrations)
         {
             registration.Output.FlushConsoleForOrdering(standardError);
         }
 
         try
         {
-            writer.Write(text);
+            TerminalPublication.WriteHost(writer, text);
         }
         catch (Exception exception)
         {
             FailWriterUsers(standardError, writer, exception);
+            throw;
+        }
+    }
+
+    private static void Flush(bool standardError, TextWriter fallback)
+    {
+        using Lock.Scope publication = TerminalPublication.Enter();
+        Scope? scope = CurrentScope.Value;
+        if (!TerminalPublication.IsPublishing && scope is not null && scope.Registration.IsActive
+            && scope.Registration.Output.TryFlushConsole(standardError))
+        {
+            return;
+        }
+
+        if (!TerminalPublication.IsPublishing)
+        {
+            FlushBeforeReport(fallback);
+        }
+        try
+        {
+            TerminalPublication.Flush(fallback);
+        }
+        catch (Exception exception)
+        {
+            FailWriterUsers(standardError, fallback, exception);
             throw;
         }
     }
@@ -348,6 +374,20 @@ internal static class ConsoleOutputCoordinator
         }
 
         public override void Write(char value) => Route(_standardError, _fallback, value.ToString());
+
+        public override void Flush() => ConsoleOutputCoordinator.Flush(_standardError, _fallback);
+
+        public override Task FlushAsync()
+        {
+            Flush();
+            return Task.CompletedTask;
+        }
+
+        public override Task FlushAsync(CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return FlushAsync();
+        }
 
         public override void Write(char[] buffer, int index, int count)
         {

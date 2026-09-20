@@ -470,6 +470,7 @@ public sealed class Command
         InvocationPaths paths,
         InvocationOutput output)
     {
+        output.StartLive(execution.Plan);
         ExecutionScope scope = new(
             execution.Model,
             execution.Plan,
@@ -479,9 +480,11 @@ public sealed class Command
             execution.CancellationToken,
             output)
         {
-            Observer = execution.Services.ExecutionObserver is { } observer
-                ? new ExecutionObserver(observer, output)
-                : null,
+            Observer = new ExecutionObserver(notification =>
+            {
+                output.Observe(notification);
+                execution.Services.ExecutionObserver?.Invoke(notification);
+            }, output),
         };
         LastExecutionOutcome = await ExecutionRuntime.ExecuteAsync(scope).ConfigureAwait(false);
         ConsoleOutputCoordinator.VerifyActiveOwnership();

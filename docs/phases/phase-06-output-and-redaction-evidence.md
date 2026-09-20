@@ -211,3 +211,25 @@ O1–O9 remain open except individually substantiated gates in the plan. The cur
 Missing cases include the remaining writer overloads, full console/semantic sealing interleavings, repeated cross-command
 replacement, all renderer/observer failures, and process-wide ordering across semantic, console, and host writes.
 The implementation gaps and repository/CI limits are enumerated in the closeout audit.
+
+## Completion pass: live surfaces, ordering and uncertain boundaries
+
+The earlier unfinished-presentation notes describe historical checkpoints. `LiveTargetDisplayTests` now compares
+all six accepted lifecycle frames in each of the four live profiles, including colorless and ASCII variants.
+A terminal-surface writer interprets cursor-up/erase operations and preserves SGR for document comparison; the existing
+permanent-output fixtures now validate the terminal result after live repainting too. Additional cases exercise two
+overlapping commands, semantic/stdout/stderr output, cleanup, a host partial line, and a failing live sink. Partial
+host lines suspend repainting until a known line boundary so Rafter does not erase application text.
+
+Managed console batches, semantic calls and lifecycle updates now acquire the shared publication boundary before
+buffer mutation, redaction and physical publication. Reports and host writes use the same terminal boundary, and
+live surfaces are cleared and redrawn around physical writes. A 64-writer test checks that eight-line batches stay
+contiguous. Continuation fixtures match all nine profiles; 65,535/65,536/65,537-character tests verify exact segmentation
+and attribution. Flush overloads synchronously settle fragments and flush the captured managed sink; cancelled calls
+leave buffers untouched and managed flush failure remains output infrastructure failure.
+
+The user resolved the immediate-publication/future-input conflict by selecting fail-closed behavior at uncertain
+boundaries. `OutputOrderingBoundaryTests` verifies console prefixes across both stream barriers, semantic multiline
+prefixes, and final sealing. Ordinary final sealing may publish an unmatched prefix because managed input is closed.
+A boundary failure suppresses later managed output without changing callback or cleanup outcomes. This is an explicit
+contract choice, not an assumption that future writes cannot complete a secret.

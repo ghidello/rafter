@@ -176,6 +176,18 @@ internal static class CommandPresentation
         }
     }
 
+    internal static string RenderRich(Report report, OutputCapabilities capabilities)
+    {
+        StringWriter writer = new() { NewLine = "\n" };
+        IAnsiConsole console = OutputPresentation.CreateConsole(writer, capabilities);
+        foreach (ReportLine line in report.Lines)
+        {
+            WriteRichLine(console, line, capabilities.SupportsColor);
+        }
+
+        return writer.ToString().ReplaceLineEndings("\n");
+    }
+
     private static void AddExecutionFailures(ImmutableArray<ReportLine>.Builder lines, ExecutionOutcome outcome)
     {
         if (outcome.InfrastructureException is not null)
@@ -460,18 +472,6 @@ internal static class CommandPresentation
         }
 
         return writer.ToString();
-    }
-
-    private static string RenderRich(Report report, OutputCapabilities capabilities)
-    {
-        StringWriter writer = new() { NewLine = "\n" };
-        IAnsiConsole console = OutputPresentation.CreateConsole(writer, capabilities);
-        foreach (ReportLine line in report.Lines)
-        {
-            WriteRichLine(console, line, capabilities.SupportsColor);
-        }
-
-        return writer.ToString().ReplaceLineEndings("\n");
     }
 
     private static void WriteRichLine(IAnsiConsole console, ReportLine line, bool color)

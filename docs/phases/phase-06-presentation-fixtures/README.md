@@ -5,7 +5,8 @@ After trying the example, the user deferred reconsidering the visual design. Kee
 baseline while internal correctness work continues; further appearance changes are postponed for that review.
 Final target summaries, semantic scopes, rich properties and narrow collections now have executable snapshot
 coverage across all nine profiles. The real canonical `presentation.cs` success and failure runs are compared with
-the plain fixtures by the example harness. Console continuation notation and live repainting remain to be implemented.
+the plain fixtures by the example harness. Console continuation notation now matches all nine profiles. Live lifecycle
+frames match all four cursor-capable profiles; a terminal-surface test writer verifies erasure and the final transcript.
 
 ## Reading the fixtures
 

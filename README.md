@@ -15,9 +15,10 @@ The agreed implementation sequence and acceptance criteria are recorded in the
 ## Current status
 
 Phases 1–4 have completed evidence. Phases 5–7 have implementation and passing cross-platform CI, but their remaining
-completion gates are open. Phase 6 has terminal capability profiles, lifecycle notifications and final summaries;
-rich property layouts are implemented. Live presentation and the complete ordering audit remain. Phase 7 still needs the full
-synthetic race and measured-memory verification. The latest local commits await the final cross-platform CI run.
+completion gates are open. Phase 6 now implements rich properties, live lifecycle surfaces, continuation markers and
+serialized publication. Unresolved sensitive prefixes fail closed at ordering barriers. Phase 7 includes measured
+capture allocations, concurrent-process stress and combined resource-failure checks. Remaining matrix reconciliation
+and the final cross-platform CI run are recorded below.
 See the [closeout audit](docs/phases/phase-05-07-closeout.md) for verified behavior and outstanding work.
 
 The package version is `0.1.0-dev.1`. The initial scope is source execution; published, self-contained, and Native AOT

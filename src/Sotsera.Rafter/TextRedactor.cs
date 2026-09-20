@@ -56,6 +56,23 @@ internal sealed class TextRedactor
     internal bool ContainsPattern(string text)
         => _patterns.Any(pattern => text.Contains(pattern, StringComparison.Ordinal));
 
+    internal void EnsureCompleteBoundary(string text)
+    {
+        string normalized = text.ReplaceLineEndings("\n");
+        foreach (string registered in _patterns)
+        {
+            string pattern = registered.ReplaceLineEndings("\n");
+            int maximum = Math.Min(normalized.Length, pattern.Length - 1);
+            for (int length = 1; length <= maximum; length++)
+            {
+                if (normalized.AsSpan(normalized.Length - length).SequenceEqual(pattern.AsSpan(0, length)))
+                {
+                    throw new InvalidOperationException("An output boundary interrupted unresolved sensitive text.");
+                }
+            }
+        }
+    }
+
     private List<MatchInterval> FindIntervals(string text)
     {
         List<MatchInterval> intervals = [];

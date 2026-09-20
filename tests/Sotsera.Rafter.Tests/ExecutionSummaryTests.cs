@@ -28,8 +28,8 @@ public sealed class ExecutionSummaryTests
             .Single(item => string.Equals(
                 item.GetProperty("profile").GetProperty("name").GetString(), profileName, StringComparison.Ordinal));
         OutputCapabilities capabilities = ReadCapabilities(document.GetProperty("profile"));
-        StringWriter output = new();
-        StringWriter error = new();
+        TerminalSurfaceWriter output = new();
+        TerminalSurfaceWriter error = new();
         Command command = PhaseFiveTestSupport.CreateCommand(concurrency: 1);
         command.InvocationServicesFactory = () => new InvocationServices(_ => null, output, error,
             capabilities, capabilities, "test-command");
@@ -168,7 +168,7 @@ public sealed class ExecutionSummaryTests
 
         (await command.RunAsync(entry, [], TestContext.Current.CancellationToken)).Should().Be(0);
 
-        output.ToString().Should().Be("[work] partial target cleanup\n[command] command cleanup\n"
+        output.ToString().Should().Be("[work] partial target cleanup [continues]\n[command] [continued] command cleanup\n"
             + "\nCommand succeeded\n  [work] Succeeded\n");
     }
 

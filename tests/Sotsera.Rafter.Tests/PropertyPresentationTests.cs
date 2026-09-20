@@ -10,7 +10,10 @@ public sealed class PropertyPresentationTests
 
     public static IEnumerable<object[]> FixtureCases()
     {
-        foreach (string scenario in new[] { "presentation-success", "presentation-failure", "narrow-properties", "semantic-scopes" })
+        foreach (string scenario in new[]
+        {
+            "presentation-success", "presentation-failure", "narrow-properties", "semantic-scopes", "console-continuation",
+        })
         {
             using JsonDocument fixture = ReadFixture(scenario);
             foreach (JsonElement document in fixture.RootElement.GetProperty("documents").EnumerateArray())
@@ -32,8 +35,8 @@ public sealed class PropertyPresentationTests
         OutputCapabilities capabilities = new(false, profile.GetProperty("rich").GetBoolean(), true,
             profile.GetProperty("color").GetBoolean(), profile.GetProperty("unicode").GetBoolean(),
             profile.GetProperty("live").GetBoolean(), profile.GetProperty("width").GetInt32());
-        StringWriter stdout = new();
-        StringWriter stderr = new();
+        TerminalSurfaceWriter stdout = new();
+        TerminalSurfaceWriter stderr = new();
         Command command = PhaseFiveTestSupport.CreateCommand();
         command.InvocationServicesFactory = () => new InvocationServices(_ => null, stdout, stderr,
             capabilities, capabilities, "test-command");
@@ -92,6 +95,13 @@ public sealed class PropertyPresentationTests
 
     private static void Present(RafterOutput output, string scenario)
     {
+        if (scenario is "console-continuation")
+        {
+            Console.Write("part <redacted>");
+            output.Line("Barrier.");
+            Console.WriteLine("rest");
+            return;
+        }
         if (scenario is "narrow-properties")
         {
             output.Property("paths", LongPaths);

@@ -127,7 +127,7 @@ public sealed class TerminalPublicationTests
 
         if (sameSink)
         {
-            beforeReturn.Should().StartWith("[work] earlier partial line\nTest command.\n");
+            beforeReturn.Should().StartWith("[work] earlier partial line [continues]\nTest command.\n");
         }
         else
         {

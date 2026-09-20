@@ -55,6 +55,32 @@ internal sealed class StreamingTextRedactor
         _previousCarriageReturn = false;
     }
 
+    internal void CompleteBoundary(Action<string, string> emit)
+    {
+        // Future writes could complete any proper pattern prefix at the end of this stream. A synchronous
+        // ordering barrier cannot publish that suffix safely or wait for input that has not been authored yet.
+        foreach (string pattern in _patterns)
+        {
+            for (int length = 1; length < pattern.Length && length <= _pending.Count; length++)
+            {
+                LinkedListNode<PendingCharacter>? node = _pending.Last;
+                int index = length - 1;
+                while (index >= 0 && node is not null && node.Value.Character == pattern[index])
+                {
+                    node = node.Previous;
+                    index--;
+                }
+
+                if (index < 0)
+                {
+                    throw new InvalidOperationException("An output boundary interrupted unresolved sensitive text.");
+                }
+            }
+        }
+
+        Complete(emit);
+    }
+
     private void MarkMatches()
     {
         foreach (string pattern in _patterns)

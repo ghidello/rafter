@@ -176,6 +176,13 @@ finalization completes the redactor, flushes unterminated fragments, and settles
 summary. If safe redaction or final verification cannot be proven, the affected managed output is discarded and the
 invocation fails closed.
 
+On 2026-09-20 the user explicitly selected fail-closed behavior at uncertain synchronous boundaries. If a buffered
+console suffix could begin a registered secret, a semantic write, explicit flush, report, host write, or live repaint
+must not complete that suffix as harmless text. Discard the affected managed publication and record output
+infrastructure failure. Do not wait for future input or queue semantic events. A semantic line's known newline is
+part of its boundary check. Final sealing can resolve an unmatched suffix because no later managed input is admitted.
+This deliberately permits an output failure for an innocent prefix when future input cannot be known safely.
+
 Line decoding recognizes a split or contiguous CRLF as one boundary and lone CR or LF as one boundary. Managed
 renderers write the newline captured in the destination profile; deterministic fixtures inject LF. Host pass-through
 preserves the caller's characters unchanged. The coordinating writers preserve `TextWriter.NewLine`: the process-wide

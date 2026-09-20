@@ -21,6 +21,7 @@ internal sealed class InvocationOutput
     private TextRedactor _redactor;
     private TaskCompletionSource? _drained;
     private Exception? _failure;
+    private LiveTargetDisplay? _live;
     private int _admittedCalls;
     private bool _sealed;
     private bool _bindingPending;
@@ -65,8 +66,32 @@ internal sealed class InvocationOutput
 
     internal TextRedactor Redactor => _redactor;
 
+    internal long LastSequence { get; private set; }
+
+    internal void StartLive(GraphPlanner.GraphPlan plan)
+    {
+        if (_outputCapabilities.IsRich && _outputCapabilities.SupportsAnsi && _outputCapabilities.SupportsCursor)
+        {
+            _live = new LiveTargetDisplay(plan, _outputCapabilities, _redactor);
+        }
+    }
+
+    internal void Observe(ExecutionRuntime.TargetNotification notification)
+    {
+        using Lock.Scope publication = TerminalPublication.Enter();
+        LastSequence = TerminalPublication.NextSequence();
+        if (_live is not null && Failure is null)
+        {
+            FlushConsoleForOrdering(standardError: false);
+            FlushConsoleForOrdering(standardError: true);
+            TerminalPublication.UpdateLive(this, _standardOutput, _live.Update(notification));
+        }
+    }
+
     internal void CompleteBinding(TextRedactor? redactor)
     {
+        using Lock.Scope publication = TerminalPublication.Enter();
+        LastSequence = TerminalPublication.NextSequence();
         List<OutputEvent> events = [];
         lock (_consoleSync)
         {
@@ -127,18 +152,43 @@ internal sealed class InvocationOutput
         }
 
         await drain.ConfigureAwait(false);
+        TerminalPublication.EndLive(this);
         FlushConsole();
     }
 
     internal void Publish(OutputEvent outputEvent)
     {
+        using Lock.Scope publication = TerminalPublication.Enter();
+        LastSequence = TerminalPublication.NextSequence();
         bool standardError = IsStandardError(outputEvent.Kind);
-        foreach (OutputEvent buffered in TakeConsole(standardError))
+        FlushConsoleForOrdering(standardError ? _standardError : _standardOutput);
+        PublishCore(outputEvent);
+    }
+
+    internal bool TryFlushConsole(bool standardError)
+    {
+        using Admission? admission = TryAdmit();
+        if (admission is null)
         {
-            PublishCore(buffered);
+            return false;
         }
 
-        PublishCore(outputEvent);
+        using Lock.Scope publication = TerminalPublication.Enter();
+        LastSequence = TerminalPublication.NextSequence();
+        TextWriter writer = standardError ? _standardError : _standardOutput;
+        FlushConsoleForOrdering(writer);
+        if (Failure is null)
+        {
+            try
+            {
+                TerminalPublication.Flush(writer);
+            }
+            catch (Exception exception)
+            {
+                Fail(exception);
+            }
+        }
+        return true;
     }
 
     internal bool TryPublishConsole(bool standardError, OutputScope? scope, string text)
@@ -159,6 +209,8 @@ internal sealed class InvocationOutput
 
     internal void PublishConsoleAdmitted(bool standardError, OutputScope? scope, string text)
     {
+        using Lock.Scope publication = TerminalPublication.Enter();
+        LastSequence = TerminalPublication.NextSequence();
         List<OutputEvent> events;
         lock (_consoleSync)
         {
@@ -205,6 +257,7 @@ internal sealed class InvocationOutput
 
     internal void FlushConsoleForOrdering(bool standardError)
     {
+        using Lock.Scope publication = TerminalPublication.Enter();
         foreach (OutputEvent outputEvent in TakeConsole(standardError))
         {
             PublishCore(outputEvent);
@@ -213,6 +266,7 @@ internal sealed class InvocationOutput
 
     internal void FlushConsoleForOrdering(TextWriter writer)
     {
+        using Lock.Scope publication = TerminalPublication.Enter();
         if (ReferenceEquals(writer, _standardOutput))
         {
             FlushConsoleForOrdering(standardError: false);
@@ -287,6 +341,14 @@ internal sealed class InvocationOutput
                 Recovery = outputEvent.Recovery is null ? null : safeRecovery,
                 Property = property,
             };
+            if (outputEvent.Kind is not (OutputKind.Console or OutputKind.ConsoleError))
+            {
+                _redactor.EnsureCompleteBoundary(safeText + "\n");
+                if (outputEvent.Recovery is not null)
+                {
+                    _redactor.EnsureCompleteBoundary(safeRecovery + "\n");
+                }
+            }
             bool standardError = IsStandardError(safeEvent.Kind);
             TextWriter writer = standardError ? _standardError : _standardOutput;
             OutputCapabilities capabilities = standardError ? _errorCapabilities : _outputCapabilities;
@@ -314,17 +376,26 @@ internal sealed class InvocationOutput
     {
         lock (_consoleSync)
         {
-            return (standardError ? _consoleError : _consoleOutput).Flush();
+            try
+            {
+                return (standardError ? _consoleError : _consoleOutput).Flush(final: false);
+            }
+            catch (Exception exception)
+            {
+                Fail(exception);
+                return [];
+            }
         }
     }
 
     private void FlushConsole()
     {
+        using Lock.Scope publication = TerminalPublication.Enter();
         List<OutputEvent> events = [];
         lock (_consoleSync)
         {
-            events.AddRange(_consoleOutput.Flush());
-            events.AddRange(_consoleError.Flush());
+            events.AddRange(_consoleOutput.Flush(final: true));
+            events.AddRange(_consoleError.Flush(final: true));
         }
 
         foreach (OutputEvent outputEvent in events)
@@ -513,6 +584,7 @@ internal sealed class InvocationOutput
         private readonly StreamingTextRedactor _redactor;
         private bool _pendingInputCarriageReturn;
         private bool _pendingCarriageReturn;
+        private bool _continued;
         private string? _pendingInputScope;
         private string? _scope;
 
@@ -552,7 +624,7 @@ internal sealed class InvocationOutput
             return events;
         }
 
-        internal List<OutputEvent> Flush()
+        internal List<OutputEvent> Flush(bool final)
         {
             List<OutputEvent> events = [];
             if (_pendingInputCarriageReturn)
@@ -562,8 +634,15 @@ internal sealed class InvocationOutput
                 _pendingInputScope = null;
             }
 
-            _redactor.Complete((safeScope, safeText) => AppendSafe(safeScope, safeText, events));
-            FlushInto(events, includeEmptyLine: _pendingCarriageReturn);
+            if (final)
+            {
+                _redactor.Complete((safeScope, safeText) => AppendSafe(safeScope, safeText, events));
+            }
+            else
+            {
+                _redactor.CompleteBoundary((safeScope, safeText) => AppendSafe(safeScope, safeText, events));
+            }
+            FlushInto(events, includeEmptyLine: _pendingCarriageReturn, continues: !final);
             return events;
         }
 
@@ -577,13 +656,13 @@ internal sealed class InvocationOutput
         {
             if (_scope is not null && !string.Equals(_scope, scope, StringComparison.Ordinal))
             {
-                FlushInto(events, includeEmptyLine: _pendingCarriageReturn);
+                FlushInto(events, includeEmptyLine: _pendingCarriageReturn, continues: true);
             }
 
             _scope = scope;
             if (text.Length > 1 && _buffer.Length != 0 && _buffer.Length + text.Length > MaximumSegmentCharacters)
             {
-                FlushInto(events, includeEmptyLine: false);
+                FlushInto(events, includeEmptyLine: false, continues: true);
                 _scope = scope;
             }
 
@@ -614,22 +693,26 @@ internal sealed class InvocationOutput
             }
             else
             {
-                _buffer.Append(character);
                 if (_buffer.Length == MaximumSegmentCharacters)
                 {
-                    FlushInto(events, includeEmptyLine: false);
+                    string? scope = _scope;
+                    FlushInto(events, includeEmptyLine: false, continues: true);
+                    _scope = scope;
                 }
+                _buffer.Append(character);
             }
         }
 
-        private void FlushInto(List<OutputEvent> events, bool includeEmptyLine)
+        private void FlushInto(List<OutputEvent> events, bool includeEmptyLine, bool continues = false)
         {
             if (_buffer.Length != 0 || includeEmptyLine)
             {
                 events.Add(new OutputEvent(
                     _scope ?? "command",
                     _standardError ? OutputKind.ConsoleError : OutputKind.Console,
-                    _buffer.ToString()));
+                    (_continued ? "[continued] " : string.Empty) + _buffer
+                        + (continues ? " [continues]" : string.Empty)));
+                _continued = continues;
             }
 
             _buffer.Clear();
