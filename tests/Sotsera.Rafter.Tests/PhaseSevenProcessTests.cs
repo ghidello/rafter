@@ -133,16 +133,20 @@ public sealed class PhaseSevenProcessTests
     [InlineData(2)]
     [InlineData(3)]
     [InlineData(4)]
+    [InlineData(997)]
     public async Task CapturesUtf8SplitAcrossEveryPossibleRuneBoundary(int chunkBytes)
     {
-        const string expected = "a€𐍈z";
+        const string payload = "a€𐍈z";
+        string expected = string.Concat(Enumerable.Repeat(payload, 6000));
         ProcessCapture? capture = null;
         Command command = PhaseFiveTestSupport.CreateCommand();
         Target target = command.Target("utf8")
             .Description("Capture split UTF-8.")
             .Run(async context => capture = await context.Process(GetFixturePath())
                 .Argument("emit")
-                .Option("--stdout", expected)
+                .Option("--stdout", payload)
+                .Option("--stderr", payload)
+                .Option("--repeat", "6000")
                 .Option("--chunk-bytes", chunkBytes.ToString(CultureInfo.InvariantCulture))
                 .Capture().ConfigureAwait(false));
 
@@ -151,6 +155,7 @@ public sealed class PhaseSevenProcessTests
 
         exitCode.Should().Be(0);
         capture!.StandardOutput.Should().Be(expected);
+        capture.StandardError.Should().Be(expected);
     }
 
     [Fact]

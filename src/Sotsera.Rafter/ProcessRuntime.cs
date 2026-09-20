@@ -646,38 +646,6 @@ internal static class ProcessRuntime
         }
     }
 
-    private static string DecodeSegments(IReadOnlyList<ByteSegment> segments)
-    {
-        UTF8Encoding encoding = new(encoderShouldEmitUTF8Identifier: false, throwOnInvalidBytes: true);
-        Decoder counter = encoding
-            .GetDecoder();
-        int characterCount = 0;
-        foreach (ByteSegment segment in segments)
-        {
-            characterCount += counter.GetCharCount(segment.Buffer, 0, segment.Count, flush: false);
-        }
-
-        characterCount += counter.GetCharCount([], flush: true);
-        return string.Create(characterCount, (encoding, segments), static (characters, state) =>
-        {
-            Decoder decoder = state.encoding.GetDecoder();
-            int offset = 0;
-            foreach (ByteSegment segment in state.segments)
-            {
-                decoder.Convert(
-                    segment.Buffer.AsSpan(0, segment.Count),
-                    characters[offset..],
-                    flush: false,
-                    out _,
-                    out int charactersUsed,
-                    out _);
-                offset += charactersUsed;
-            }
-
-            decoder.Convert([], characters[offset..], flush: true, out _, out _, out _);
-        });
-    }
-
     private static void ThrowOutputFailure(
         DrainResult stdout,
         DrainResult stderr,
@@ -810,13 +778,6 @@ internal static class ProcessRuntime
         bool InvalidUtf8,
         string? CapturedText);
 
-    private sealed class ByteSegment
-    {
-        internal byte[] Buffer { get; } = new byte[BufferSize];
-
-        internal int Count { get; set; }
-    }
-
     private sealed class ProcessObservers : IDisposable
     {
         internal CancellationTokenSource DrainCancellation { get; } = new();
@@ -879,23 +840,20 @@ internal static class ProcessRuntime
     private sealed class DrainAccumulator
     {
         private readonly bool _capture;
-        private readonly long? _captureLimitBytes;
+        private readonly ProcessCaptureBuffer? _buffer;
         private readonly ProcessOutputLease? _output;
         private readonly ProcessOutputStream _outputStream;
-        private readonly List<ByteSegment>? _segments;
         private readonly StreamingTextRedactor? _streaming;
         private readonly Utf8Validator _validator = new();
         private bool _invalidUtf8;
         private bool _overflow;
-        private long _retainedBytes;
 
         internal DrainAccumulator(DrainRequest request, ProcessOutputLease? output)
         {
             _outputStream = request.OutputStream;
             _output = output;
-            _captureLimitBytes = request.CaptureLimitBytes;
+            _buffer = request.Capture ? new ProcessCaptureBuffer(request.CaptureLimitBytes!.Value) : null;
             _capture = request.Capture;
-            _segments = request.Capture ? [] : null;
             _streaming = request.Redactor is null ? null : new StreamingTextRedactor(request.Redactor);
         }
 
@@ -910,8 +868,7 @@ internal static class ProcessRuntime
             if (!_validator.Append(bytes, _streaming is null ? null : Publish))
             {
                 _invalidUtf8 = true;
-                _segments?.Clear();
-                _retainedBytes = 0;
+                _buffer?.Clear();
             }
         }
 
@@ -925,43 +882,17 @@ internal static class ProcessRuntime
             _streaming?.Complete((_, safe) => PublishSafe(safe));
 
             string? captured = _capture && !_overflow && !_invalidUtf8
-                ? DecodeSegments(_segments!)
+                ? _buffer!.Materialize()
                 : null;
+            _buffer?.Clear();
             return new DrainResult(_outputStream, _overflow, _invalidUtf8, captured);
         }
 
         private void Retain(ReadOnlySpan<byte> bytes)
         {
-            if (!_capture || _overflow)
-            {
-                return;
-            }
-
-            if (_retainedBytes + bytes.Length > _captureLimitBytes!.Value)
+            if (_buffer is not null && !_overflow && !_buffer.TryAppend(bytes))
             {
                 _overflow = true;
-                _segments!.Clear();
-                return;
-            }
-
-            while (!bytes.IsEmpty)
-            {
-                ByteSegment segment;
-                if (_segments!.Count == 0 || _segments[^1].Count == BufferSize)
-                {
-                    segment = new ByteSegment();
-                    _segments.Add(segment);
-                }
-                else
-                {
-                    segment = _segments[^1];
-                }
-
-                int copied = Math.Min(BufferSize - segment.Count, bytes.Length);
-                bytes[..copied].CopyTo(segment.Buffer.AsSpan(segment.Count));
-                segment.Count += copied;
-                _retainedBytes += copied;
-                bytes = bytes[copied..];
             }
         }
 

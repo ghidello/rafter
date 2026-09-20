@@ -73,12 +73,40 @@ fixture requires a verb and returns 64 for invalid arguments; the CI smoke comma
 inactive omissions, foreign handles, executable forms and timeout boundaries remain open; the frozen tables in the
 phase plan retain authority. No public API additions or removals were made by this closeout change.
 
-## Memory and cross-platform limitations
+## Capture memory and segment boundaries
 
-The implementation retains capture in 16 KiB segments and creates UTF-16 strings only for successful complete
-capture. The current tests verify data limits, not the specified measured managed-memory envelope. R3 therefore
-remains open. The current three-OS CI establishes R11, while the broader R2 and R5–R9 matrices remain open.
+`ProcessCaptureBuffer` now owns the runtime's 16 KiB capture segments and releases their references after successful
+materialization, decode failure or overflow. Its character-counting pass uses stateful `Decoder.Convert` across
+segments: the previous `GetCharCount` pass lost split-rune state and rejected valid UTF-8. Two buffer regressions
+reproduced that defect. The real-process UTF-8 test now captures 54,000 bytes on each pipe with chunks of 1, 2, 3, 4
+and 997 bytes, crossing internal segment boundaries as well as input-read boundaries.
+
+Eleven buffer tests measure allocations, one-segment slack, overflow release and successful/failed materialization.
+These synchronous measurements use thread-local allocated-byte counters around the actual buffer component after
+warming it, excluding test inputs/assertions. They measure managed allocations, not whole-process RSS or native
+process resources. For equal ASCII streams of N bytes and S segments each, the tested upper bound is
+`6*N + 2*16,384 + 256*S + 16,384`: byte segments plus both UTF-16 results, segment slack, metadata and fixed overhead.
+The runtime's two pooled 16 KiB read buffers and fixed decoder state are additional constant overhead.
+
+| Bytes per stream | Combined segment capacity | Allocated bytes | Tested bound |
+| --- | --- | --- | --- |
+| 16,383 | 32,768 | 99,248 | 147,706 |
+| 16,384 | 32,768 | 99,248 | 147,712 |
+| 16,385 | 65,536 | 132,128 | 147,974 |
+| 1,048,576 | 2,097,152 | 6,301,568 | 6,356,992 |
+| 8,388,608 | 16,777,216 | 50,414,560 | 50,511,872 |
+
+Two real-process stress cases concurrently launch 8 and 24 children, each draining and capturing 256 KiB on both
+pipes. They verify exact text, independent process-handle exit confirmation, exactly-once adapter disposal and an
+empty reaper. Every observed child is independently cleaned in a finally block, including after assertion failure.
+The complete 537-test suite passes locally; supported-OS CI remains deferred.
+
+## Cross-platform limitations
+
+The capture component now has measured local allocation evidence; current three-OS evidence predates this change.
+The broader R2–R9 matrices remain open pending the remaining failure combinations and cross-platform verification.
 Post-start observer failures now have focused regression coverage. Simultaneous failure ordering, exit-verification
-failures, disposal exceptions, repeated races and many-process stress still require focused verification. The
+failures and repeated races still require focused verification. Disposal and concurrent captures now have the
+focused local checks recorded above. The
 macOS diagnostic split has passed, but the earlier runner disconnect remains unexplained. The Phase 8 extension
 and typed-tool examples remain explicitly deferred.

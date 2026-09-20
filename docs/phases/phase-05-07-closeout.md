@@ -74,6 +74,8 @@ verification work without relaxing those contracts.
   overwritten startup, output, invalid-exit, cancellation and timeout failures; cleanup now remains secondary.
 - Implemented accepted rich properties and attributed multiline semantic output. Forty-four new cases cover the
   nine-profile fixtures, escaped controls and property secrets redacted before JSON encoding.
+- Fixed UTF-8 decoding across internal capture segments and measured the actual capture buffer allocation envelope
+  through 8 MiB per stream. Concurrent real-child stress now covers 8 and 24 processes with independent exit checks.
 
 ## Local verification
 
@@ -83,7 +85,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 523 passed, zero failed or skipped, including 14 process-disposal and 44 property-presentation cases added during the completion audit |
+| Solution tests | 537 passed, zero failed or skipped; completion work adds disposal, property, memory and real-process stress coverage |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
@@ -110,8 +112,8 @@ claiming the presentation gates. No new syntax or weakened requirement is propos
 
 The Phase 7 adapter seam now covers post-start observer failures and late kill/drain transfer. The broader matrix
 of start, cancellation, timeout, exit-verification, kill and disposal failures remains open. `DrainAccumulator` is
-segmented, but the planned allocator-slack and materialization envelope has not been measured. Do not mark these
-gates complete based on ordinary successful child processes or the focused regressions.
+segmented, and the capture component's allocator-slack and materialization envelope is now measured locally.
+Cross-platform and remaining combined-failure evidence is still required before marking these gates complete.
 
 ## Cross-platform evidence
 
