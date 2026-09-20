@@ -29,6 +29,13 @@ synthetic failure/race matrix, memory measurement, stress/resource evidence and 
 
 ## Lifecycle and deadlines
 
+Disposal review added fourteen capture/streaming cases spanning success, false/throwing startup, invalid exit,
+invalid UTF-8, cancellation and authored timeout. Every case initially exposed a raw disposal exception replacing
+the selected result. The runtime now classifies invalid exits before disposal, retains complete raw capture,
+preserves the selected exception type/token/timeout/output metadata, and appends disposal as a secondary cause.
+Disposal alone produces a safe `ProcessException`; the adapter is disposed once. The 479-test suite and the
+analyzer-clean Release build and formatting checks pass locally. The wider combined-failure matrix remains open.
+
 The generic runtime prepares a complete immutable specification, registers callback ownership, arms its lifecycle
 arbiter, starts the process synchronously, establishes independent stdout/stderr drains and exit observation, then
 settles according to the winning natural-exit, external-cancellation, ownership-cancellation or timeout outcome.

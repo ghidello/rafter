@@ -3,8 +3,8 @@ namespace Sotsera.Rafter;
 /// <summary>Represents a child process that returned an invalid exit code.</summary>
 public sealed class ProcessExitException : ProcessException
 {
-    internal ProcessExitException(int exitCode, ProcessCapture? capture)
-        : base($"The process exited with invalid code {exitCode}.")
+    internal ProcessExitException(int exitCode, ProcessCapture? capture, Exception? innerException = null)
+        : base($"The process exited with invalid code {exitCode}.", innerException)
     {
         ExitCode = exitCode;
         Capture = capture;

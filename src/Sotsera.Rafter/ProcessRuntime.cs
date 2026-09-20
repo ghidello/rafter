@@ -48,11 +48,6 @@ internal static class ProcessRuntime
                 specification,
                 operation,
                 capture: false).ConfigureAwait(false);
-            if (!specification.ValidExitCodes.Contains(result.ExitCode))
-            {
-                throw new ProcessExitException(result.ExitCode, capture: null);
-            }
-
             return new ProcessExit(result.ExitCode);
         }
         finally
@@ -73,13 +68,7 @@ internal static class ProcessRuntime
                 specification,
                 operation,
                 capture: true).ConfigureAwait(false);
-            ProcessCapture capture = new(result.ExitCode, result.StandardOutput!, result.StandardError!);
-            if (!specification.ValidExitCodes.Contains(result.ExitCode))
-            {
-                throw new ProcessExitException(result.ExitCode, capture);
-            }
-
-            return capture;
+            return new ProcessCapture(result.ExitCode, result.StandardOutput!, result.StandardError!);
         }
         finally
         {
@@ -103,6 +92,7 @@ internal static class ProcessRuntime
             context.CancellationToken,
             operation.OwnershipToken);
         using ProcessOwnership ownership = new(AdapterFactory.Create(prepared.StartInfo));
+        ProcessExecutionResult result;
         try
         {
             Start(ownership.Process);
@@ -114,20 +104,52 @@ internal static class ProcessRuntime
                 arbiter,
                 policy,
                 capture);
-            return await ExecuteStartedAsync(ownership, execution).ConfigureAwait(false);
-        }
-        catch (ProcessException)
-        {
-            throw;
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
+            result = await ExecuteStartedAsync(ownership, execution).ConfigureAwait(false);
+            if (!specification.ValidExitCodes.Contains(result.ExitCode))
+            {
+                ProcessCapture? captured = capture
+                    ? new ProcessCapture(result.ExitCode, result.StandardOutput!, result.StandardError!)
+                    : null;
+                throw new ProcessExitException(result.ExitCode, captured);
+            }
         }
         catch (Exception exception)
         {
+            ownership.Dispose();
+            if (ownership.DisposalFailure is not null)
+            {
+                throw AppendDisposalFailure(exception, ownership.DisposalFailure);
+            }
+            if (exception is ProcessException or OperationCanceledException)
+            {
+                throw;
+            }
             throw new ProcessException("The process runtime failed.", exception);
         }
+
+        ownership.Dispose();
+        if (ownership.DisposalFailure is not null)
+        {
+            throw new ProcessException("Process resource disposal failed.", ownership.DisposalFailure);
+        }
+        return result;
+    }
+
+    private static Exception AppendDisposalFailure(Exception primary, Exception disposal)
+    {
+        Exception? earlier = primary is ProcessException or OperationCanceledException ? primary.InnerException : primary;
+        Exception detail = earlier is null ? disposal : new AggregateException(earlier, disposal);
+        return primary switch
+        {
+            ProcessStartException => new ProcessStartException(detail),
+            ProcessTimeoutException timeout => new ProcessTimeoutException(timeout.Timeout, detail),
+            ProcessOutputException output => new ProcessOutputException(output.Reason, output.Stream, output.LimitBytes, detail),
+            ProcessExitException exit => new ProcessExitException(exit.ExitCode, exit.Capture, detail),
+            ProcessException => new ProcessException(primary.Message, detail),
+            OperationCanceledException cancelled => new OperationCanceledException(
+                cancelled.Message, detail, cancelled.CancellationToken),
+            _ => new ProcessException("The process runtime failed.", detail),
+        };
     }
 
     private static void Start(IProcessAdapter process)
@@ -831,6 +853,20 @@ internal static class ProcessRuntime
         internal IProcessAdapter Process => _process
             ?? throw new InvalidOperationException("Process ownership has been transferred.");
 
+        internal Exception? DisposalFailure { get; private set; }
+
+        public void Dispose()
+        {
+            try
+            {
+                Interlocked.Exchange(ref _process, null)?.Dispose();
+            }
+            catch (Exception exception)
+            {
+                DisposalFailure = exception;
+            }
+        }
+
         internal void Transfer(Task completion)
         {
             IProcessAdapter process = Interlocked.Exchange(ref _process, null)
@@ -838,7 +874,6 @@ internal static class ProcessRuntime
             ProcessOperationReaper.Observe(completion, process);
         }
 
-        public void Dispose() => Interlocked.Exchange(ref _process, null)?.Dispose();
     }
 
     private sealed class DrainAccumulator

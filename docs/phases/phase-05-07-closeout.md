@@ -70,6 +70,8 @@ verification work without relaxing those contracts.
 - Added 14 output-admission cases covering sealing during scalar/collection-element formatting, preserved caller
   failures after recorded output failure, rejection before validation, and 64 concurrent facade calls racing the seal.
   The existing admission implementation passed these checks without a runtime change.
+- Preserved process outcomes when adapter disposal also fails. Fourteen capture/streaming regressions exposed
+  overwritten startup, output, invalid-exit, cancellation and timeout failures; cleanup now remains secondary.
 
 ## Local verification
 
@@ -79,7 +81,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 465 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure, 148 console-overload, 4 console-validation and 14 output-admission cases |
+| Solution tests | 479 passed, zero failed or skipped, including 14 process-disposal cases added during the Phase 7 completion audit |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
