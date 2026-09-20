@@ -24,7 +24,7 @@ internal static class OutputPresentation
         IEnumerable<string> lines = capabilities.IsRich && outputEvent.Property is not null
             ? RenderProperty(outputEvent.Property, prefix.Length, capabilities.Width!.Value)
             : NormalizeLines(text);
-        StringWriter writer = new() { NewLine = "\n" };
+        StringWriter writer = new() { NewLine = capabilities.NewLine };
         if (!capabilities.IsRich)
         {
             foreach (string line in lines)
@@ -65,7 +65,7 @@ internal static class OutputPresentation
             console.MarkupLine($"[olive]{Markup.Escape(prefix + "recovery: " + EscapeText(outputEvent.Recovery))}[/]");
         }
 
-        return writer.ToString().ReplaceLineEndings("\n");
+        return writer.ToString().ReplaceLineEndings(capabilities.NewLine);
     }
 
     internal static IAnsiConsole CreateConsole(TextWriter writer, OutputCapabilities capabilities)

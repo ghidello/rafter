@@ -44,10 +44,12 @@ internal sealed record OutputCapabilities(
 
     internal static OutputCapabilities Plain { get; } = new(false, false, false, false, false, false, null);
 
+    internal string NewLine { get; init; } = "\n";
+
     internal bool IsRich => !IsRedirected && SupportsStaticLayout && Width is >= 20 and <= 4096;
 
     internal OutputCapabilities Resolve(bool plain, bool suppressColor)
         => plain || !IsRich
-            ? Plain
+            ? Plain with { NewLine = NewLine }
             : this with { SupportsColor = SupportsColor && SupportsAnsi && !suppressColor };
 }

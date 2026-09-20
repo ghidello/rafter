@@ -731,8 +731,17 @@ internal static class ProcessRuntime
             return true;
         }
 
-        Task delay = Task.Delay(timeout, timeProvider, CancellationToken.None);
-        return await Task.WhenAny(task, delay).ConfigureAwait(false) == task;
+        using CancellationTokenSource timerCancellation = new();
+        Task delay = Task.Delay(timeout, timeProvider, timerCancellation.Token);
+        try
+        {
+            return await Task.WhenAny(task, delay).ConfigureAwait(false) == task;
+        }
+        finally
+        {
+            // A fast operation must release the losing deadline timer before its owner settles.
+            await timerCancellation.CancelAsync().ConfigureAwait(false);
+        }
     }
 
     private static void CloseDrains(
@@ -1015,7 +1024,7 @@ internal static class ProcessRuntime
             TaskCreationOptions.RunContinuationsAsynchronously);
         private readonly CancellationTokenRegistration _externalRegistration;
         private readonly CancellationTokenRegistration _ownershipRegistration;
-        private readonly ITimer? _timer;
+        private ITimer? _timer;
 
         internal LifecycleArbiter(
             TimeSpan? timeout,
@@ -1036,6 +1045,10 @@ internal static class ProcessRuntime
                     this,
                     timeout.Value,
                     Timeout.InfiniteTimeSpan);
+                if (_completion.Task.IsCompleted)
+                {
+                    Interlocked.Exchange(ref _timer, null)?.Dispose();
+                }
             }
         }
 
@@ -1055,9 +1068,16 @@ internal static class ProcessRuntime
         {
             _externalRegistration.Dispose();
             _ownershipRegistration.Dispose();
-            _timer?.Dispose();
+            Interlocked.Exchange(ref _timer, null)?.Dispose();
         }
 
-        private void TrySet(LifecycleOutcome outcome) => _completion.TrySetResult(outcome);
+        private void TrySet(LifecycleOutcome outcome)
+        {
+            if (_completion.TrySetResult(outcome))
+            {
+                // Execution time ends at the selected outcome; pipe drainage has its own deadline.
+                Interlocked.Exchange(ref _timer, null)?.Dispose();
+            }
+        }
     }
 }

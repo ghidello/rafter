@@ -13,6 +13,7 @@ public sealed class PropertyPresentationTests
         foreach (string scenario in new[]
         {
             "presentation-success", "presentation-failure", "narrow-properties", "semantic-scopes", "console-continuation",
+            "concurrent-attribution",
         })
         {
             using JsonDocument fixture = ReadFixture(scenario);
@@ -37,12 +38,13 @@ public sealed class PropertyPresentationTests
             profile.GetProperty("live").GetBoolean(), profile.GetProperty("width").GetInt32());
         TerminalSurfaceWriter stdout = new();
         TerminalSurfaceWriter stderr = new();
-        Command command = PhaseFiveTestSupport.CreateCommand();
+        Command command = PhaseFiveTestSupport.CreateCommand(concurrency: 2);
         command.InvocationServicesFactory = () => new InvocationServices(_ => null, stdout, stderr,
             capabilities, capabilities, "test-command");
         bool presentation = scenario.StartsWith("presentation-", StringComparison.Ordinal);
-        Target target = command.Target(presentation ? "present" : "work").Description("Present.")
-            .Run(context => Present(context.Output, scenario));
+        Target target = scenario is "concurrent-attribution" ? DefineConcurrent(command)
+            : command.Target(presentation ? "present" : "work").Description("Present.")
+                .Run(context => Present(context.Output, scenario));
         if (scenario is "semantic-scopes")
         {
             command.Finally(context => Present(context.Output, scenario));
@@ -92,6 +94,27 @@ public sealed class PropertyPresentationTests
 
     private static JsonDocument ReadFixture(string name)
         => JsonDocument.Parse(File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "PresentationFixtures", name + ".json")));
+
+    private static Target DefineConcurrent(Command command)
+    {
+        TaskCompletionSource first = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource second = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Target alpha = command.Target("alpha").Description("Alpha.").Run(async context =>
+        {
+            await first.Task.WaitAsync(TimeSpan.FromSeconds(5), context.CancellationToken).ConfigureAwait(false);
+            context.Output.Line("Second delivered.");
+            context.Output.Warning("Optional step omitted.");
+            second.SetResult();
+        });
+        Target beta = command.Target("beta").Description("Beta.").Run(async context =>
+        {
+            context.Output.Line("First delivered.");
+            first.SetResult();
+            await second.Task.WaitAsync(TimeSpan.FromSeconds(5), context.CancellationToken).ConfigureAwait(false);
+            context.Output.Success("Complete.");
+        });
+        return command.Target("entry").Description("Entry.").DependsOn(alpha, beta);
+    }
 
     private static void Present(RafterOutput output, string scenario)
     {

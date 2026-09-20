@@ -53,7 +53,7 @@ public sealed class FoundationIntegrationTests
 
         result.ExitCode.Should().Be(0);
         result.StandardError.Should().BeEmpty();
-        result.StandardOutput.Should().Contain("[entry] message=\"first\\nsecond\"\n")
+        result.StandardOutput.ReplaceLineEndings("\n").Should().Contain("[entry] message=\"first\\nsecond\"\n")
             .And.Contain("[entry] jsonReflection=false\n");
     }
 

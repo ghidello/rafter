@@ -96,7 +96,7 @@ foreach ($failed in @($false, $true)) {
     $presentationFixturePath = Join-Path $repositoryRoot "docs/phases/phase-06-presentation-fixtures/$presentationScenario.json"
     $presentationFixture = Get-Content -LiteralPath $presentationFixturePath -Raw | ConvertFrom-Json
     $presentationExpected = $presentationFixture.documents | Where-Object { $_.profile.name -eq "plain" }
-    if ($presentationResult.Output -cne $presentationExpected.stdout -or $presentationResult.Error -cne $presentationExpected.stderr) {
+    if ($presentationResult.Output.ReplaceLineEndings("`n") -cne $presentationExpected.stdout -or $presentationResult.Error.ReplaceLineEndings("`n") -cne $presentationExpected.stderr) {
         throw "$presentationScenario does not match its accepted plain stdout/stderr documents."
     }
 }

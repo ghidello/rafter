@@ -161,7 +161,9 @@ internal static class CommandPresentation
                 return Task.FromResult(false);
             }
 
-            string rendered = capabilities.IsRich ? RenderRich(safeReport!, capabilities) : RenderPlain(safeReport!);
+            string rendered = capabilities.IsRich
+                ? RenderRich(safeReport!, capabilities)
+                : RenderPlain(safeReport!, capabilities.NewLine);
             if (redactor.ContainsPattern(rendered))
             {
                 return Task.FromResult(false);
@@ -185,7 +187,7 @@ internal static class CommandPresentation
             WriteRichLine(console, line, capabilities.SupportsColor);
         }
 
-        return writer.ToString().ReplaceLineEndings("\n");
+        return writer.ToString().ReplaceLineEndings(capabilities.NewLine);
     }
 
     private static void AddExecutionFailures(ImmutableArray<ReportLine>.Builder lines, ExecutionOutcome outcome)
@@ -463,9 +465,9 @@ internal static class CommandPresentation
         return true;
     }
 
-    private static string RenderPlain(Report report)
+    private static string RenderPlain(Report report, string newLine)
     {
-        StringWriter writer = new() { NewLine = "\n" };
+        StringWriter writer = new() { NewLine = newLine };
         foreach (ReportLine line in report.Lines)
         {
             writer.WriteLine(line.Text);

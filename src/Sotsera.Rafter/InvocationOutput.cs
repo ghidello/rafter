@@ -70,7 +70,8 @@ internal sealed class InvocationOutput
 
     internal void StartLive(GraphPlanner.GraphPlan plan)
     {
-        if (_outputCapabilities.IsRich && _outputCapabilities.SupportsAnsi && _outputCapabilities.SupportsCursor)
+        if (_outputCapabilities.IsRich && _outputCapabilities.SupportsAnsi && _outputCapabilities.SupportsCursor
+            && _outputCapabilities.NewLine is "\n" or "\r\n")
         {
             _live = new LiveTargetDisplay(plan, _outputCapabilities, _redactor);
         }

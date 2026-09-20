@@ -6,6 +6,7 @@ internal sealed class ConsoleCancellationCoordinator(IConsoleSignalSource signal
     private readonly IConsoleSignalSource _signalSource = signalSource;
     private readonly Lock _sync = new();
     private IDisposable? _subscription;
+    private object? _subscriptionEpoch;
 
     internal static ConsoleCancellationCoordinator Shared { get; } = new(ConsoleSignalSource.Instance);
 
@@ -22,7 +23,17 @@ internal sealed class ConsoleCancellationCoordinator(IConsoleSignalSource signal
             {
                 if (_registrations.Count == 0)
                 {
-                    _subscription = _signalSource.Subscribe(HandleSignal);
+                    object epoch = new();
+                    _subscriptionEpoch = epoch;
+                    try
+                    {
+                        _subscription = _signalSource.Subscribe(signal => HandleSignal(signal, epoch));
+                    }
+                    catch
+                    {
+                        _subscriptionEpoch = null;
+                        throw;
+                    }
                 }
 
                 _registrations.Add(registration);
@@ -38,11 +49,15 @@ internal sealed class ConsoleCancellationCoordinator(IConsoleSignalSource signal
         return new Lease(this, registration);
     }
 
-    private void HandleSignal(ConsoleSignal signal)
+    private void HandleSignal(ConsoleSignal signal, object epoch)
     {
         List<CancellationTokenSource> cancellations = [];
         lock (_sync)
         {
+            if (!ReferenceEquals(_subscriptionEpoch, epoch))
+            {
+                return;
+            }
             foreach (Registration registration in _registrations)
             {
                 if (!registration.LinkedCancellation.IsCancellationRequested && !registration.SignalRequested)
@@ -73,20 +88,26 @@ internal sealed class ConsoleCancellationCoordinator(IConsoleSignalSource signal
 
     private void Unregister(Registration registration)
     {
-        IDisposable? subscription = null;
-        lock (_sync)
+        try
         {
-            _registrations.Remove(registration);
-            if (_registrations.Count == 0)
+            lock (_sync)
             {
-                subscription = _subscription;
-                _subscription = null;
+                _registrations.Remove(registration);
+                if (_registrations.Count == 0)
+                {
+                    IDisposable? subscription = _subscription;
+                    _subscription = null;
+                    _subscriptionEpoch = null;
+                    // Keep replacement registration behind actual unsubscription, not just removal from the set.
+                    subscription?.Dispose();
+                }
             }
         }
-
-        subscription?.Dispose();
-        registration.LinkedCancellation.Dispose();
-        registration.SignalCancellation.Dispose();
+        finally
+        {
+            registration.LinkedCancellation.Dispose();
+            registration.SignalCancellation.Dispose();
+        }
     }
 
     internal sealed class Registration(
@@ -140,7 +161,10 @@ internal sealed class ConsoleCancellationCoordinator(IConsoleSignalSource signal
                 {
                     ConsoleSignal signal = new();
                     handler(signal);
-                    arguments.Cancel = signal.Handled;
+                    if (signal.Handled)
+                    {
+                        arguments.Cancel = true;
+                    }
                 };
                 Console.CancelKeyPress += _handler;
             }

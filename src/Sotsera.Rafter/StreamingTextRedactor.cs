@@ -7,7 +7,6 @@ internal sealed class StreamingTextRedactor
     private readonly int _unresolvedCharacters;
     private readonly string[] _patterns;
     private readonly LinkedList<PendingCharacter> _pending = [];
-    private bool _insideRedaction;
     private bool _previousCarriageReturn;
 
     internal StreamingTextRedactor(TextRedactor redactor)
@@ -51,7 +50,6 @@ internal sealed class StreamingTextRedactor
             EmitFirst(emit);
         }
 
-        _insideRedaction = false;
         _previousCarriageReturn = false;
     }
 
@@ -98,12 +96,17 @@ internal sealed class StreamingTextRedactor
                 continue;
             }
 
+            LinkedListNode<PendingCharacter> first = node is null ? _pending.First! : node.Next!;
+            bool startsRedaction = !first.Value.Redacted || first.Value.StartsRedaction;
             node = _pending.Last;
             for (int matched = 0; matched < pattern.Length; matched++)
             {
                 node!.Value.Redacted = true;
+                node.Value.StartsRedaction = false;
                 node = node.Previous;
             }
+            // Overlapping matches share their earliest marker; merely adjacent intervals keep separate markers.
+            first.Value.StartsRedaction = startsRedaction;
         }
     }
 
@@ -113,16 +116,14 @@ internal sealed class StreamingTextRedactor
         _pending.RemoveFirst();
         if (character.Redacted)
         {
-            if (!_insideRedaction)
+            if (character.StartsRedaction)
             {
                 emit(character.Scope, _marker);
-                _insideRedaction = true;
             }
 
             return;
         }
 
-        _insideRedaction = false;
         emit(character.Scope, character.Character.ToString());
     }
 
@@ -142,5 +143,7 @@ internal sealed class StreamingTextRedactor
         internal string Scope { get; }
 
         internal bool Redacted { get; set; }
+
+        internal bool StartsRedaction { get; set; }
     }
 }

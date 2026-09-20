@@ -28,8 +28,12 @@ internal sealed record InvocationServices(
             output,
             error,
             // Spectre identifies the physical stream by the current Console writer, even during interception.
-            OutputCapabilities.Capture(() => OutputCapabilities.Probe(Console.Out, Console.IsOutputRedirected)),
-            OutputCapabilities.Capture(() => OutputCapabilities.Probe(Console.Error, Console.IsErrorRedirected)),
+            OutputCapabilities.Capture(() => OutputCapabilities.Probe(Console.Out, Console.IsOutputRedirected))
+                with
+            { NewLine = output.NewLine },
+            OutputCapabilities.Capture(() => OutputCapabilities.Probe(Console.Error, Console.IsErrorRedirected))
+                with
+            { NewLine = error.NewLine },
             invocationName)
         {
             ReadSourceFilePath = () => filePath,
