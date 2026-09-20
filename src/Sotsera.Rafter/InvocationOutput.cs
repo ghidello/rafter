@@ -17,8 +17,8 @@ internal sealed class InvocationOutput
     private readonly Lock _sync = new();
     private readonly TextWriter _standardOutput;
     private readonly TextWriter _standardError;
-    private readonly bool _richOutput;
-    private readonly bool _richError;
+    private readonly OutputCapabilities _outputCapabilities;
+    private readonly OutputCapabilities _errorCapabilities;
     private ConsoleBuffer _consoleError;
     private ConsoleBuffer _consoleOutput;
     private TextRedactor _redactor;
@@ -31,25 +31,25 @@ internal sealed class InvocationOutput
     internal InvocationOutput(
         TextWriter standardOutput,
         TextWriter standardError,
-        bool richOutput,
-        bool richError,
+        OutputCapabilities outputCapabilities,
+        OutputCapabilities errorCapabilities,
         TextRedactor redactor)
     {
         _standardOutput = standardOutput;
         _standardError = standardError;
-        _richOutput = richOutput;
-        _richError = richError;
+        _outputCapabilities = outputCapabilities;
+        _errorCapabilities = errorCapabilities;
         _redactor = redactor;
         _consoleOutput = new ConsoleBuffer(standardError: false, redactor);
         _consoleError = new ConsoleBuffer(standardError: true, redactor);
     }
 
-    internal static InvocationOutput ForBinding(InvocationServices services, bool plain)
+    internal static InvocationOutput ForBinding(InvocationServices services)
         => new(
             services.StandardOutput,
             services.StandardError,
-            !plain && services.StandardOutputSupportsAnsi,
-            !plain && services.StandardErrorSupportsAnsi,
+            services.StandardOutputCapabilities,
+            services.StandardErrorCapabilities,
             TextRedactor.Empty)
         {
             _bindingPending = true,
@@ -271,8 +271,8 @@ internal sealed class InvocationOutput
             };
             bool standardError = IsStandardError(safeEvent.Kind);
             TextWriter writer = standardError ? _standardError : _standardOutput;
-            bool rich = standardError ? _richError : _richOutput;
-            string rendered = OutputPresentation.Render(safeEvent, rich);
+            OutputCapabilities capabilities = standardError ? _errorCapabilities : _outputCapabilities;
+            string rendered = OutputPresentation.Render(safeEvent, capabilities);
             if (_redactor.ContainsPattern(rendered))
             {
                 throw new InvalidOperationException("Rendered output failed redaction verification.");

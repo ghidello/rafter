@@ -2,7 +2,7 @@
 
 ## Status
 
-Partial implementation, verified locally and in three-OS CI on 2026-09-19. The [closeout audit](phase-05-07-closeout.md) records the
+Partial implementation, with capability-profile work added on 2026-09-20. The [closeout audit](phase-05-07-closeout.md) records the
 repository baseline and explicitly identifies unfinished presentation and verification work. This is not a phase
 completion certificate.
 
@@ -35,8 +35,29 @@ completion certificate.
 
 Warnings, errors, and recovery lines are asserted separately on stderr. The redaction tests assert `<redacted>` and
 the absence of the disposable input. `console.cs` is checked for each authored target prefix on its expected stream.
-These snapshots cover existing semantic output; final target-state rows, rich properties, live transitions and
-capability combinations still require implementation and their own approved snapshots.
+These snapshots cover existing semantic output; final target-state rows, rich properties and live transitions
+still require implementation and their own approved snapshots.
+
+## Capability profiles
+
+`OutputCapabilities` replaces the two ANSI flags with immutable per-stream redirection, static-layout, ANSI,
+color, Unicode, cursor and width values. Invocation preparation selects plain output before any report when an
+exact `--plain` token is present, or independently for a redirected/incapable stream or width outside 20–4,096.
+Malformed and duplicate common-option validation remains unchanged.
+
+`NO_COLOR` is read once per invocation, including early reports, and its captured result is reused if an option
+also binds that variable. A non-empty value, including whitespace, disables only color. A failed lookup disables
+color; if the command binds that variable, binding still observes the original exception. Rendering uses explicit
+Spectre settings, disables default profile enrichment, and takes width and Unicode from the injected profile.
+Production ANSI detection uses the pinned Spectre implementation with explicit color policy, avoiding automatic
+`NO_COLOR`/`FORCE_COLOR` color detection. Capability-probe failures select plain output for only that stream;
+failure to capture the writers remains an infrastructure failure.
+
+`OutputCapabilityTests` supplies 26 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
+failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
+lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
+host-terminal detection. The Release build and 213-test solution suite pass locally with formatting unchanged.
+Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
 
 ## Remaining work
 

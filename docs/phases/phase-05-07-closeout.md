@@ -45,6 +45,9 @@ verification work without relaxing those contracts.
   streaming, original failure preservation, reader settlement and eventual disposal after late drainage. Review
   also exposed cancellation winning while the exit observer fails: teardown now verifies actual child exit before
   releasing ownership, including when the original observer faults or is cancelled.
+- Replaced the ANSI flags with independent immutable stdout/stderr capability profiles, made exact `--plain`
+  apply before model errors, and captured `NO_COLOR` once per invocation. The capability tests cover mixed streams,
+  width limits, color-only suppression, failed probes, early reports and reuse of the lookup by option binding.
 
 ## Local verification
 
@@ -54,7 +57,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 187 passed, zero failed or skipped, including 14 observer-failure regressions |
+| Solution tests | 213 passed, zero failed or skipped, including 14 observer-failure and 26 capability cases |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed; 58 runtime documents mapped |
@@ -71,10 +74,10 @@ The full list and its limits are in the development guide. Artifacts are generat
 | Phase | Established evidence | Still required before phase completion |
 | --- | --- | --- |
 | 5 | Reachable graph planning, dependency ordering, failure isolation, conditions, cleanup, cancellation and callback-scope ownership tests; state/cleanup/exit tables; passing current OS matrix and package job | Remaining exhaustive overlap/transition/concurrency cases |
-| 6 | Semantic routing, console attribution, binding quarantine, restoration, incremental redaction, capture re-entry and sink-failure regressions | Independent capability profiles and `NO_COLOR`; lifecycle observer and live states; full final summary and rich property layout; process-wide ordering/serialization audit; complete boundary, replacement, observer, and renderer-failure matrices |
+| 6 | Semantic routing, independent capability profiles and `NO_COLOR`, early `--plain`, console attribution, binding quarantine, restoration, incremental redaction, capture re-entry and sink-failure regressions | Lifecycle observer and live states; full final summary and rich property layout; process-wide ordering/serialization audit; complete boundary, replacement, observer, and renderer-failure matrices |
 | 7 | Exact hostile argument vectors, simultaneous pipe drainage, raw capture, per-stream overflow, UTF-8, exit classification, environment, timeout/cancellation, retained pipes and tracked late teardown; passing current OS matrix | Synthetic start/observer/exit/kill/dispose race matrix; measured memory envelope and concurrent-launch stress; exhaustive diagnostic/handle/path/policy tables; full per-test process/resource cleanup evidence; unexplained earlier macOS stall |
 
-The Phase 6 renderer still uses two ANSI Booleans and retains the Phase 5 failure report. `ExecutionRuntime` records
+The Phase 6 renderer now uses capability profiles but retains the Phase 5 failure report. `ExecutionRuntime` records
 transitions internally but has no live execution observer. Rich properties currently reuse the canonical plain value
 representation with color. These are implementation gaps, not missing checkmarks, and must be implemented before
 claiming the presentation gates. No new syntax or weakened requirement is proposed here.
@@ -122,12 +125,17 @@ the available evidence does not identify a failing test or establish a runtime r
 test but does not reproduce the original shared-process execution. Its success is not proof that the underlying
 runner-loss issue is fixed. [CI 15](https://github.com/ghidello/rafter/actions/runs/35494118283), for `d6e66f8`, also
 passed all three OS jobs and package verification. It pins Linux jobs to the validated `ubuntu-24.04` image ahead
-of the announced `ubuntu-latest` migration. These runs precede the 14 new observer-failure regressions; their local
-verification is recorded above, and the corresponding pushed revision requires its own CI result.
+of the announced `ubuntu-latest` migration.
+
+[CI 16](https://github.com/ghidello/rafter/actions/runs/35519505085), for `aec96c0`, passed all three OS jobs and
+package verification with 187 tests, including the 14 observer-failure regressions. The 26 capability cases were
+added afterwards; their local verification is recorded above and their pushed revision requires its own CI result.
+The package/source-map rows above describe the verified 58-document baseline; the new capability source adds one
+document and must pass the same package checks.
 
 ## Next implementation order
 
-1. Complete the Phase 6 capability, lifecycle, presentation and shared-ordering contracts with their specified tests.
+1. Complete the Phase 6 lifecycle, presentation and shared-ordering contracts with their specified tests.
 2. Complete the Phase 7 startup/teardown failure matrix, memory measurements and stress/resource checks.
 3. Reconcile the remaining Phase 5 exhaustive verification cases and investigate the intermittent macOS stall.
 4. Close all affected gates with evidence before beginning the Phase 8 typed builders.

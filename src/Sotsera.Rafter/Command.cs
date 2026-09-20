@@ -205,10 +205,12 @@ public sealed class Command
         ModelFreezeResult freezeResult,
         CancellationToken cancellationToken)
     {
+        bool plain = _lastArguments.Any(static argument =>
+            string.Equals(argument, "--plain", StringComparison.Ordinal));
         InvocationServices services;
         try
         {
-            services = InvocationServicesFactory();
+            services = InvocationServicesFactory().PreparePresentation(plain);
         }
         catch
         {
@@ -225,15 +227,12 @@ public sealed class Command
 
         CommandDefinition model = freezeResult.Model!;
         bool help = _lastArguments.Any(static argument => argument is "--help" or "-h");
-        bool plain = _lastArguments.Any(static argument =>
-            string.Equals(argument, "--plain", StringComparison.Ordinal));
         if (help)
         {
             return await CompleteHelpAsync(
                 model,
                 entryTargetId,
                 services,
-                plain,
                 defaultRedactor).ConfigureAwait(false);
         }
 
@@ -241,11 +240,10 @@ public sealed class Command
         {
             return await CompleteCancellationAsync(
                 services,
-                plain,
                 defaultRedactor).ConfigureAwait(false);
         }
 
-        InvocationStart start = new(model, entryTargetId, services, plain, defaultRedactor, cancellationToken);
+        InvocationStart start = new(model, entryTargetId, services, defaultRedactor, cancellationToken);
         return await ExecuteNormalInvocationAsync(start).ConfigureAwait(false);
     }
 
@@ -260,7 +258,6 @@ public sealed class Command
         {
             return await CompleteInfrastructureFailureAsync(
                 start.Services,
-                start.Plain,
                 start.Redactor,
                 "Cancellation coordination could not be initialized.").ConfigureAwait(false);
         }
@@ -272,7 +269,6 @@ public sealed class Command
             {
                 return await CompleteCancellationAsync(
                     start.Services,
-                    start.Plain,
                     start.Redactor).ConfigureAwait(false);
             }
 
@@ -280,7 +276,6 @@ public sealed class Command
             {
                 return await CompleteInfrastructureFailureAsync(
                     start.Services,
-                    start.Plain,
                     start.Redactor,
                     "Target graph planning failed because the frozen model was inconsistent.").ConfigureAwait(false);
             }
@@ -295,22 +290,21 @@ public sealed class Command
             {
                 return await CompleteCancellationAsync(
                     start.Services,
-                    start.Plain,
                     start.Redactor).ConfigureAwait(false);
             }
 
-            InvocationOutput output = InvocationOutput.ForBinding(start.Services, start.Plain);
+            InvocationOutput output = InvocationOutput.ForBinding(start.Services);
             InvocationExecution execution = new(
                 start.Model,
                 planningResult.Plan!,
                 start.Services,
                 output,
                 invocationToken);
-            return await BindWithOutputAsync(execution, start.Plain).ConfigureAwait(false);
+            return await BindWithOutputAsync(execution).ConfigureAwait(false);
         }
     }
 
-    private async Task<int> BindWithOutputAsync(InvocationExecution execution, bool plain)
+    private async Task<int> BindWithOutputAsync(InvocationExecution execution)
     {
         InvocationOutput output = execution.Output;
         ConsoleOutputCoordinator.Lease lease;
@@ -335,7 +329,7 @@ public sealed class Command
                 exitCode = output.Failure is null
                     ? await CompleteBindingAsync(execution, LastBindingResult).ConfigureAwait(false)
                     : await CompleteInfrastructureFailureAsync(
-                        execution.Services, plain, LastBindingResult.Redactor, "Command output failed.").ConfigureAwait(false);
+                        execution.Services, LastBindingResult.Redactor, "Command output failed.").ConfigureAwait(false);
             }
             finally
             {
@@ -388,7 +382,7 @@ public sealed class Command
                     bool written = await TryWriteAsync(
                         report,
                         execution.Services.StandardError,
-                        !result.Plain && execution.Services.StandardErrorSupportsAnsi,
+                        execution.Services.StandardErrorCapabilities,
                         result.Redactor).ConfigureAwait(false);
                     LastInvocationStatus = written
                         ? InvocationStatus.InputFailure
@@ -402,7 +396,7 @@ public sealed class Command
                     bool written = await TryWriteAsync(
                         report,
                         execution.Services.StandardError,
-                        !result.Plain && execution.Services.StandardErrorSupportsAnsi,
+                        execution.Services.StandardErrorCapabilities,
                         result.Redactor).ConfigureAwait(false);
                     LastInvocationStatus = !written || result.Status == BindingStatus.InfrastructureFailure
                         ? InvocationStatus.InfrastructureFailure
@@ -414,7 +408,6 @@ public sealed class Command
                 {
                     return await CompleteCancellationAsync(
                         execution.Services,
-                        result.Plain,
                         result.Redactor).ConfigureAwait(false);
                 }
 
@@ -442,7 +435,7 @@ public sealed class Command
             bool written = await TryWriteAsync(
                 report,
                 execution.Services.StandardError,
-                !result.Plain && execution.Services.StandardErrorSupportsAnsi,
+                execution.Services.StandardErrorCapabilities,
                 result.Redactor).ConfigureAwait(false);
             LastInvocationStatus = written ? InvocationStatus.PathFailure : InvocationStatus.InfrastructureFailure;
             return written ? 2 : 1;
@@ -454,7 +447,7 @@ public sealed class Command
             _ = await TryWriteAsync(
                 report,
                 execution.Services.StandardError,
-                !result.Plain && execution.Services.StandardErrorSupportsAnsi,
+                execution.Services.StandardErrorCapabilities,
                 result.Redactor).ConfigureAwait(false);
             LastInvocationStatus = InvocationStatus.InfrastructureFailure;
             return 1;
@@ -493,7 +486,6 @@ public sealed class Command
         {
             return await CompleteInfrastructureFailureAsync(
                 execution.Services,
-                result.Plain,
                 result.Redactor,
                 "Command output failed.").ConfigureAwait(false);
         }
@@ -530,7 +522,7 @@ public sealed class Command
         bool outcomeWritten = await TryWriteAsync(
             outcomeReport,
             services.StandardError,
-            !result.Plain && services.StandardErrorSupportsAnsi,
+            services.StandardErrorCapabilities,
             result.Redactor).ConfigureAwait(false);
         if (!outcomeWritten)
         {
@@ -553,7 +545,7 @@ public sealed class Command
         bool written = await TryWriteAsync(
             report,
             services.StandardError,
-            services.StandardErrorSupportsAnsi,
+            services.StandardErrorCapabilities,
             redactor).ConfigureAwait(false);
         LastInvocationStatus = written ? InvocationStatus.InvalidModel : InvocationStatus.InfrastructureFailure;
         return written ? 2 : 1;
@@ -563,7 +555,6 @@ public sealed class Command
         CommandDefinition model,
         Guid entryTargetId,
         InvocationServices services,
-        bool plain,
         TextRedactor redactor)
     {
         CommandPresentation.Report report = CommandPresentation.CreateHelp(
@@ -573,7 +564,7 @@ public sealed class Command
         bool written = await TryWriteAsync(
             report,
             services.StandardOutput,
-            !plain && services.StandardOutputSupportsAnsi,
+            services.StandardOutputCapabilities,
             redactor).ConfigureAwait(false);
         LastInvocationStatus = written ? InvocationStatus.Help : InvocationStatus.InfrastructureFailure;
         return written ? 0 : 1;
@@ -587,7 +578,7 @@ public sealed class Command
         bool written = await TryWriteAsync(
             report,
             start.Services.StandardError,
-            !start.Plain && start.Services.StandardErrorSupportsAnsi,
+            start.Services.StandardErrorCapabilities,
             start.Redactor).ConfigureAwait(false);
         LastInvocationStatus = written ? InvocationStatus.GraphFailure : InvocationStatus.InfrastructureFailure;
         return written ? 2 : 1;
@@ -595,13 +586,12 @@ public sealed class Command
 
     private async Task<int> CompleteCancellationAsync(
         InvocationServices services,
-        bool plain,
         TextRedactor redactor)
     {
         bool written = await TryWriteAsync(
             CommandPresentation.CreateCancellation(),
             services.StandardError,
-            !plain && services.StandardErrorSupportsAnsi,
+            services.StandardErrorCapabilities,
             redactor).ConfigureAwait(false);
         LastInvocationStatus = written ? InvocationStatus.Cancelled : InvocationStatus.InfrastructureFailure;
         return written ? 130 : 1;
@@ -609,14 +599,13 @@ public sealed class Command
 
     private async Task<int> CompleteInfrastructureFailureAsync(
         InvocationServices services,
-        bool plain,
         TextRedactor redactor,
         string message)
     {
         _ = await TryWriteAsync(
             CommandPresentation.CreateInfrastructureFailure(message),
             services.StandardError,
-            !plain && services.StandardErrorSupportsAnsi,
+            services.StandardErrorCapabilities,
             redactor).ConfigureAwait(false);
         LastInvocationStatus = InvocationStatus.InfrastructureFailure;
         return 1;
@@ -625,12 +614,12 @@ public sealed class Command
     private static async Task<bool> TryWriteAsync(
         CommandPresentation.Report report,
         TextWriter writer,
-        bool rich,
+        OutputCapabilities capabilities,
         TextRedactor redactor)
     {
         try
         {
-            return await CommandPresentation.WriteAsync(report, writer, rich, redactor).ConfigureAwait(false);
+            return await CommandPresentation.WriteAsync(report, writer, capabilities, redactor).ConfigureAwait(false);
         }
         catch
         {
@@ -674,7 +663,6 @@ public sealed class Command
         CommandDefinition Model,
         Guid EntryTargetId,
         InvocationServices Services,
-        bool Plain,
         TextRedactor Redactor,
         CancellationToken CallerToken);
 

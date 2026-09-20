@@ -137,7 +137,7 @@ internal static class CommandPresentation
     internal static async Task<bool> WriteAsync(
         Report report,
         TextWriter writer,
-        bool rich,
+        OutputCapabilities capabilities,
         TextRedactor redactor)
     {
         if (!redactor.IsUsable || !TryRedact(report, redactor, out Report? safeReport))
@@ -145,7 +145,7 @@ internal static class CommandPresentation
             return false;
         }
 
-        string rendered = rich ? RenderRich(safeReport!) : RenderPlain(safeReport!);
+        string rendered = capabilities.IsRich ? RenderRich(safeReport!, capabilities) : RenderPlain(safeReport!);
         if (redactor.ContainsPattern(rendered))
         {
             return false;
@@ -408,17 +408,10 @@ internal static class CommandPresentation
         return writer.ToString();
     }
 
-    private static string RenderRich(Report report)
+    private static string RenderRich(Report report, OutputCapabilities capabilities)
     {
         StringWriter writer = new() { NewLine = "\n" };
-        AnsiConsoleSettings settings = new()
-        {
-            Ansi = AnsiSupport.Yes,
-            ColorSystem = ColorSystemSupport.TrueColor,
-            Interactive = InteractionSupport.No,
-            Out = new AnsiConsoleOutput(writer),
-        };
-        IAnsiConsole console = AnsiConsole.Create(settings);
+        IAnsiConsole console = OutputPresentation.CreateConsole(writer, capabilities);
         foreach (ReportLine line in report.Lines)
         {
             WriteRichLine(console, line);

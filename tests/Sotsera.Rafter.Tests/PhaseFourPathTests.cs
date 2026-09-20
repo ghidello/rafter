@@ -318,8 +318,8 @@ public sealed class PhaseFourPathTests
             _ => null,
             new StringWriter(CultureInfo.InvariantCulture),
             error,
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             invocationName)
         {
             ReadInvocationDirectory = invocationDirectory,

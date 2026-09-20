@@ -5,7 +5,7 @@ namespace Sotsera.Rafter;
 
 internal static class OutputPresentation
 {
-    internal static string Render(OutputEvent outputEvent, bool rich)
+    internal static string Render(OutputEvent outputEvent, OutputCapabilities capabilities)
     {
         string prefix = $"[{outputEvent.Scope}] ";
         string text = outputEvent.Kind switch
@@ -21,19 +21,13 @@ internal static class OutputPresentation
         string recovery = outputEvent.Recovery is null
             ? string.Empty
             : $"{prefix}recovery: {outputEvent.Recovery}\n";
-        if (!rich)
+        if (!capabilities.IsRich)
         {
             return $"{prefix}{text}\n{recovery}";
         }
 
         StringWriter writer = new() { NewLine = "\n" };
-        IAnsiConsole console = AnsiConsole.Create(new AnsiConsoleSettings
-        {
-            Ansi = AnsiSupport.Yes,
-            ColorSystem = ColorSystemSupport.TrueColor,
-            Interactive = InteractionSupport.No,
-            Out = new AnsiConsoleOutput(writer),
-        });
+        IAnsiConsole console = CreateConsole(writer, capabilities);
         string color = outputEvent.Kind switch
         {
             OutputKind.Success => "green",
@@ -58,5 +52,20 @@ internal static class OutputPresentation
         }
 
         return writer.ToString();
+    }
+
+    internal static IAnsiConsole CreateConsole(TextWriter writer, OutputCapabilities capabilities)
+    {
+        IAnsiConsole console = AnsiConsole.Create(new AnsiConsoleSettings
+        {
+            Ansi = capabilities.SupportsAnsi ? AnsiSupport.Yes : AnsiSupport.No,
+            ColorSystem = capabilities.SupportsColor ? ColorSystemSupport.Standard : ColorSystemSupport.NoColors,
+            Interactive = InteractionSupport.No,
+            Enrichment = new ProfileEnrichment { UseDefaultEnrichers = false },
+            Out = new AnsiConsoleOutput(writer),
+        });
+        console.Profile.Width = capabilities.Width!.Value;
+        console.Profile.Capabilities.Unicode = capabilities.SupportsUnicode;
+        return console;
     }
 }

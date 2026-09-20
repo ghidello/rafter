@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using static Sotsera.Rafter.PathRuntime;
 
 namespace Sotsera.Rafter;
@@ -7,17 +8,10 @@ internal sealed record InvocationServices(
     Func<string, string?> ReadEnvironment,
     TextWriter StandardOutput,
     TextWriter StandardError,
-    bool StandardOutputSupportsAnsi,
-    bool StandardErrorSupportsAnsi,
+    OutputCapabilities StandardOutputCapabilities,
+    OutputCapabilities StandardErrorCapabilities,
     string InvocationName)
 {
-    internal Func<string> ReadInvocationDirectory { get; init; } = Directory.GetCurrentDirectory;
-
-    internal Func<string?> ReadSourceFilePath { get; init; }
-        = static () => AppContext.GetData("EntryPointFilePath") as string;
-
-    internal IFileSystemPrimitives FileSystem { get; init; } = PhysicalFileSystemPrimitives.Instance;
-
     internal static InvocationServices Capture()
     {
         string? filePath = AppContext.GetData("EntryPointFilePath") as string;
@@ -27,16 +21,59 @@ internal sealed record InvocationServices(
         string invocationName = InvocationNameResolver.Resolve(filePath, processPath, entryAssembly, launchToken);
 
         (TextWriter Output, TextWriter Error)? coordinated = ConsoleOutputCoordinator.TryGetHostWriters();
+        TextWriter output = coordinated?.Output ?? Console.Out;
+        TextWriter error = coordinated?.Error ?? Console.Error;
         return new InvocationServices(
             Environment.GetEnvironmentVariable,
-            coordinated?.Output ?? Console.Out,
-            coordinated?.Error ?? Console.Error,
-            !Console.IsOutputRedirected,
-            !Console.IsErrorRedirected,
+            output,
+            error,
+            // Spectre identifies the physical stream by the current Console writer, even during interception.
+            OutputCapabilities.Capture(() => OutputCapabilities.Probe(Console.Out, Console.IsOutputRedirected)),
+            OutputCapabilities.Capture(() => OutputCapabilities.Probe(Console.Error, Console.IsErrorRedirected)),
             invocationName)
         {
             ReadSourceFilePath = () => filePath,
         };
+    }
+
+    internal Func<string> ReadInvocationDirectory { get; init; } = Directory.GetCurrentDirectory;
+
+    internal Func<string?> ReadSourceFilePath { get; init; }
+        = static () => AppContext.GetData("EntryPointFilePath") as string;
+
+    internal IFileSystemPrimitives FileSystem { get; init; } = PhysicalFileSystemPrimitives.Instance;
+
+    internal InvocationServices PreparePresentation(bool plain)
+    {
+        string? noColor = null;
+        ExceptionDispatchInfo? noColorFailure = null;
+        try
+        {
+            noColor = ReadEnvironment("NO_COLOR");
+        }
+        catch (Exception exception)
+        {
+            noColorFailure = ExceptionDispatchInfo.Capture(exception);
+        }
+
+        bool suppressColor = noColorFailure is not null || !string.IsNullOrEmpty(noColor);
+        return this with
+        {
+            ReadEnvironment = ReadCapturedEnvironment,
+            StandardOutputCapabilities = StandardOutputCapabilities.Resolve(plain, suppressColor),
+            StandardErrorCapabilities = StandardErrorCapabilities.Resolve(plain, suppressColor),
+        };
+
+        string? ReadCapturedEnvironment(string name)
+        {
+            if (name is not "NO_COLOR")
+            {
+                return ReadEnvironment(name);
+            }
+
+            noColorFailure?.Throw();
+            return noColor;
+        }
     }
 
     internal static class InvocationNameResolver

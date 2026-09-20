@@ -4,6 +4,8 @@ namespace Sotsera.Rafter.Tests;
 
 internal static class PhaseFiveTestSupport
 {
+    internal static OutputCapabilities RichCapabilities { get; } = new(false, true, true, true, true, true, 120);
+
     internal static Command CreateCommand(int? concurrency = null)
     {
         Command command = global::Sotsera.Rafter.Rafter.Command(Root.Invocation).Description("Test command.");
@@ -26,8 +28,8 @@ internal static class PhaseFiveTestSupport
             environment ?? (_ => null),
             output ?? new StringWriter(CultureInfo.InvariantCulture),
             error ?? new StringWriter(CultureInfo.InvariantCulture),
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             "test-command");
     }
 }

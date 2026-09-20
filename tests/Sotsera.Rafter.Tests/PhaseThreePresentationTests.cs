@@ -14,8 +14,7 @@ public sealed class PhaseThreePresentationTests
         int conditionCalls = 0;
         Command command = NewCommand();
         command.Option<string>("configuration")
-            .Description("Build configuration.")
-            .Alias('c')
+            .Description("Build configuration.").Alias('c')
             .FromEnvironment("CONFIGURATION")
             .Default("Release")
             .Validate(_ =>
@@ -36,15 +35,16 @@ public sealed class PhaseThreePresentationTests
         StringWriter output = new(CultureInfo.InvariantCulture);
         StringWriter error = new(CultureInfo.InvariantCulture);
         command.InvocationServicesFactory = () => new InvocationServices(
-            _ =>
+            name =>
             {
+                name.Should().Be("NO_COLOR");
                 environmentReads++;
                 return "environment-value";
             },
             output,
             error,
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             "build-script");
 
         int exitCode = await command.RunAsync(
@@ -53,7 +53,7 @@ public sealed class PhaseThreePresentationTests
             TestContext.Current.CancellationToken);
 
         exitCode.Should().Be(0);
-        environmentReads.Should().Be(0);
+        environmentReads.Should().Be(1);
         validatorCalls.Should().Be(0);
         conditionCalls.Should().Be(0);
         error.ToString().Should().BeEmpty();
@@ -178,8 +178,8 @@ public sealed class PhaseThreePresentationTests
             _ => null,
             output,
             error,
-            true,
-            true,
+            PhaseFiveTestSupport.RichCapabilities,
+            PhaseFiveTestSupport.RichCapabilities,
             "test-command");
 
         int exitCode = await command.RunAsync(
@@ -203,8 +203,8 @@ public sealed class PhaseThreePresentationTests
             _ => null,
             output,
             error,
-            true,
-            true,
+            PhaseFiveTestSupport.RichCapabilities,
+            PhaseFiveTestSupport.RichCapabilities,
             "test-command");
 
         int exitCode = await command.RunAsync(entry, ["--help"], TestContext.Current.CancellationToken);
@@ -278,7 +278,8 @@ public sealed class PhaseThreePresentationTests
             diagnostics);
         StringWriter writer = new(CultureInfo.InvariantCulture);
 
-        bool success = await CommandPresentation.WriteAsync(report, writer, rich, TextRedactor.Empty);
+        bool success = await CommandPresentation.WriteAsync(
+            report, writer, rich ? PhaseFiveTestSupport.RichCapabilities : OutputCapabilities.Plain, TextRedactor.Empty);
 
         success.Should().BeTrue();
         Count(writer.ToString(), "Unknown option").Should().Be(Math.Min(diagnosticCount, 20));
@@ -338,8 +339,8 @@ public sealed class PhaseThreePresentationTests
             _ => null,
             new ThrowingWriter(),
             new StringWriter(CultureInfo.InvariantCulture),
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             "test-command");
 
         int failedExit = await command.RunAsync(entry, ["--help"], TestContext.Current.CancellationToken);
@@ -392,8 +393,8 @@ public sealed class PhaseThreePresentationTests
             _ => null,
             output,
             error,
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             "test-command");
     }
 

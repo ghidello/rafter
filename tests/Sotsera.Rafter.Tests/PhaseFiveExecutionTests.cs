@@ -310,15 +310,16 @@ public sealed class PhaseFiveExecutionTests
         Target entry = command.Target("entry").Description("Entry.").Run(() => callbacks++);
         command.Finally(() => callbacks++);
         command.InvocationServicesFactory = () => new InvocationServices(
-            _ =>
+            name =>
             {
+                name.Should().Be("NO_COLOR");
                 environmentReads++;
                 return "value";
             },
             TextWriter.Null,
             TextWriter.Null,
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             "test-command")
         {
             ReadInvocationDirectory = () =>
@@ -333,7 +334,7 @@ public sealed class PhaseFiveExecutionTests
 
         cancelledExit.Should().Be(130);
         helpExit.Should().Be(0);
-        environmentReads.Should().Be(0);
+        environmentReads.Should().Be(2);
         directoryReads.Should().Be(0);
         callbacks.Should().Be(0);
     }
@@ -600,8 +601,8 @@ public sealed class PhaseFiveExecutionTests
             _ => null,
             TextWriter.Null,
             TextWriter.Null,
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             "test-command")
         {
             FileSystem = fileSystem,

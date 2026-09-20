@@ -194,8 +194,8 @@ public sealed class PhaseThreeBindingTests
             _ => null,
             new StringWriter(CultureInfo.InvariantCulture),
             new StringWriter(CultureInfo.InvariantCulture),
-            false,
-            false,
+            OutputCapabilities.Plain,
+            OutputCapabilities.Plain,
             "test-command");
 
         BindingResult result = BindingEngine.Bind(
@@ -257,11 +257,11 @@ public sealed class PhaseThreeBindingTests
         bool ansi = false)
     {
         command.InvocationServicesFactory = () => new InvocationServices(
-            environment ?? (_ => null),
+            name => name is "NO_COLOR" ? null : environment?.Invoke(name),
             output ?? new StringWriter(CultureInfo.InvariantCulture),
             error ?? new StringWriter(CultureInfo.InvariantCulture),
-            ansi,
-            ansi,
+            ansi ? PhaseFiveTestSupport.RichCapabilities : OutputCapabilities.Plain,
+            ansi ? PhaseFiveTestSupport.RichCapabilities : OutputCapabilities.Plain,
             "test-command");
     }
 

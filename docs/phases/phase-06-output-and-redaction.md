@@ -321,13 +321,13 @@ not make unreviewed user-experience choices.
 - [ ] Replace, rather than supplement, Phase 5's temporary minimal execution report after an execution outcome exists.
 - [ ] Make the common `--plain` option force both stdout and stderr into deterministic width-independent output with
       no ANSI, cursor/live control, or Unicode-only status glyphs.
-- [ ] Observe exact `--plain` before selecting any early report, including invalid-model, graph, and initial
+- [x] Observe exact `--plain` before selecting any early report, including invalid-model, graph, and initial
       cancellation paths, without bypassing Phase 3 duplicate or malformed-token diagnostics.
-- [ ] Without `--plain`, detect stdout and stderr capabilities independently and use plain output for each redirected
+- [x] Without `--plain`, detect stdout and stderr capabilities independently and use plain output for each redirected
       or incapable stream even when the other stream remains rich.
-- [ ] Replace the two ANSI Booleans with independently injectable immutable stream profiles covering redirection,
+- [x] Replace the two ANSI Booleans with independently injectable immutable stream profiles covering redirection,
       static layout, ANSI/color, Unicode, cursor control, and width; read `NO_COLOR` exactly once per invocation.
-- [ ] Treat writer-capture failure as infrastructure failure, but downgrade only the affected stream to plain after a
+- [x] Treat writer-capture failure as infrastructure failure, but downgrade only the affected stream to plain after a
       cosmetic probe failure, disable color after `NO_COLOR` lookup failure, and reject unknown or out-of-range width.
 - [ ] Route line, success, property, ordinary lifecycle/progress, successful help, managed stdout, and child stdout
       to stdout.
