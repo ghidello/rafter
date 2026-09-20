@@ -2,7 +2,8 @@
 
 ## Status
 
-Partial implementation, with capability-profile work added on 2026-09-20. The [closeout audit](phase-05-07-closeout.md) records the
+Partial implementation, with capability profiles and lifecycle notifications added on 2026-09-20.
+The [closeout audit](phase-05-07-closeout.md) records the
 repository baseline and explicitly identifies unfinished presentation and verification work. This is not a phase
 completion certificate.
 
@@ -60,9 +61,26 @@ successful values and cached failures. Unix keeps differently cased variables di
 `OutputCapabilityTests` supplies 29 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
 failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
-host-terminal detection. The Release build and 216-test solution suite pass locally with formatting unchanged.
+host-terminal detection. The Release build and 231-test solution suite pass locally with formatting unchanged.
 CI for the three added review cases is deferred until the planned final verification run.
 Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
+
+## Execution lifecycle notifications
+
+The runtime now publishes immutable target identity, plan index and lifecycle notifications immediately after each
+transition. Every initial `Pending` notification is delivered in plan order before admission. Outcome, successful
+shape and authored-order direct blockers appear only after settlement; previously delivered values remain unchanged.
+
+Each invocation creates a serialized observer guard. Its first callback exception disables further delivery and
+records output infrastructure failure while execution, target cleanup and command cleanup continue. The underlying
+execution outcome retains its original cancellation, callback and cleanup failures. A later invocation gets a fresh
+guard. The seam is internal and introduces no public API or transient presentation output.
+
+`ExecutionObserverTests` supplies 15 cases covering live execution/cleanup timing, initial ordering, immutable
+terminal data, failure at each lifecycle, concurrent delivery, cancellation, original callback/cleanup failures,
+per-invocation isolation, and unchanged plain/static output. All 231 solution tests pass locally; the Release build,
+formatting and diff checks pass. CI is deferred to the planned final verification run. Live rendering, the
+`Pending`/`Ready` to `Waiting` presentation mapping, and final summaries remain unfinished.
 
 ## Remaining work
 

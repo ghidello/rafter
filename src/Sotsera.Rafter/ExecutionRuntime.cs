@@ -8,92 +8,6 @@ namespace Sotsera.Rafter;
 
 internal static class ExecutionRuntime
 {
-    internal enum TargetLifecycle
-    {
-        Pending,
-        Ready,
-        Running,
-        CleaningUp,
-        Settled,
-    }
-
-    internal enum TargetOutcome
-    {
-        Succeeded,
-        Skipped,
-        Failed,
-        Cancelled,
-        Blocked,
-    }
-
-    internal enum SuccessfulShape
-    {
-        Executed,
-        Aggregate,
-        NoWork,
-    }
-
-    internal enum FailurePhase
-    {
-        Condition,
-        Execution,
-        Cleanup,
-    }
-
-    internal sealed record TargetResult(
-        TargetDefinition Target,
-        int PlanIndex,
-        TargetOutcome Outcome,
-        SuccessfulShape? Shape,
-        FailurePhase? FailurePhase,
-        Exception? PrimaryException,
-        Exception? CleanupException,
-        ImmutableArray<Guid> DirectBlockers,
-        ImmutableArray<TargetLifecycle> Transitions);
-
-    internal sealed record ExecutionOutcome(
-        GraphPlan Plan,
-        ImmutableArray<TargetResult> Targets,
-        Exception? InfrastructureException,
-        Exception? CommandCleanupException,
-        bool InvocationCancellationRequested,
-        int ExitCode);
-
-    internal sealed record ExecutionScope
-    {
-        internal ExecutionScope(
-            CommandDefinition model,
-            GraphPlan plan,
-            BindingEngine.InvocationSnapshot snapshot,
-            InvocationPaths paths,
-            IFileSystemPrimitives fileSystem,
-            CancellationToken cancellationToken,
-            InvocationOutput? output = null)
-        {
-            Model = model;
-            Plan = plan;
-            Snapshot = snapshot;
-            Paths = paths;
-            FileSystem = fileSystem;
-            CancellationToken = cancellationToken;
-            Output = output;
-        }
-
-        internal CommandDefinition Model { get; }
-
-        internal GraphPlan Plan { get; }
-
-        internal BindingEngine.InvocationSnapshot Snapshot { get; }
-
-        internal InvocationPaths Paths { get; }
-
-        internal IFileSystemPrimitives FileSystem { get; }
-
-        internal CancellationToken CancellationToken { get; }
-
-        internal InvocationOutput? Output { get; }
-    }
-
     internal static async Task<ExecutionOutcome> ExecuteAsync(ExecutionScope scope)
     {
         ImmutableArray<TargetResult> targets = [];
@@ -133,7 +47,7 @@ internal static class ExecutionRuntime
 
     private static async Task<ImmutableArray<TargetResult>> ExecuteTargetsAsync(ExecutionScope scope)
     {
-        Dictionary<Guid, TargetNode> nodes = CreateTargetNodes(scope.Plan);
+        Dictionary<Guid, TargetNode> nodes = CreateTargetNodes(scope.Plan, scope.Observer);
         PriorityQueue<TargetNode, int> ready = CreateReadyQueue(scope.Plan, nodes);
         Dictionary<Task<TargetCompletion>, TargetNode> running = [];
         int settledCount = 0;
@@ -183,10 +97,10 @@ internal static class ExecutionRuntime
         return scope.Plan.Targets.Select(target => nodes[target.Id].CreateResult()).ToImmutableArray();
     }
 
-    private static Dictionary<Guid, TargetNode> CreateTargetNodes(GraphPlan plan)
+    private static Dictionary<Guid, TargetNode> CreateTargetNodes(GraphPlan plan, ExecutionObserver? observer)
     {
         Dictionary<Guid, TargetNode> nodes = plan.Targets
-            .Select((target, index) => new TargetNode(target, index))
+            .Select((target, index) => new TargetNode(target, index, observer))
             .ToDictionary(static node => node.Target.Id);
         foreach (TargetNode node in nodes.Values)
         {
@@ -624,9 +538,107 @@ internal static class ExecutionRuntime
                 : 0;
     }
 
+    internal enum TargetLifecycle
+    {
+        Pending,
+        Ready,
+        Running,
+        CleaningUp,
+        Settled,
+    }
+
+    internal enum TargetOutcome
+    {
+        Succeeded,
+        Skipped,
+        Failed,
+        Cancelled,
+        Blocked,
+    }
+
+    internal enum SuccessfulShape
+    {
+        Executed,
+        Aggregate,
+        NoWork,
+    }
+
+    internal enum FailurePhase
+    {
+        Condition,
+        Execution,
+        Cleanup,
+    }
+
+    internal sealed record TargetResult(
+        TargetDefinition Target,
+        int PlanIndex,
+        TargetOutcome Outcome,
+        SuccessfulShape? Shape,
+        FailurePhase? FailurePhase,
+        Exception? PrimaryException,
+        Exception? CleanupException,
+        ImmutableArray<Guid> DirectBlockers,
+        ImmutableArray<TargetLifecycle> Transitions);
+
+    internal sealed record TargetNotification(
+        Guid TargetId,
+        string TargetName,
+        int PlanIndex,
+        TargetLifecycle Lifecycle,
+        TargetOutcome? Outcome,
+        SuccessfulShape? Shape,
+        ImmutableArray<Guid> DirectBlockers);
+
+    internal sealed record ExecutionOutcome(
+        GraphPlan Plan,
+        ImmutableArray<TargetResult> Targets,
+        Exception? InfrastructureException,
+        Exception? CommandCleanupException,
+        bool InvocationCancellationRequested,
+        int ExitCode);
+
+    internal sealed record ExecutionScope
+    {
+        internal ExecutionScope(
+            CommandDefinition model,
+            GraphPlan plan,
+            BindingEngine.InvocationSnapshot snapshot,
+            InvocationPaths paths,
+            IFileSystemPrimitives fileSystem,
+            CancellationToken cancellationToken,
+            InvocationOutput? output = null)
+        {
+            Model = model;
+            Plan = plan;
+            Snapshot = snapshot;
+            Paths = paths;
+            FileSystem = fileSystem;
+            CancellationToken = cancellationToken;
+            Output = output;
+        }
+
+        internal CommandDefinition Model { get; }
+
+        internal GraphPlan Plan { get; }
+
+        internal BindingEngine.InvocationSnapshot Snapshot { get; }
+
+        internal InvocationPaths Paths { get; }
+
+        internal IFileSystemPrimitives FileSystem { get; }
+
+        internal CancellationToken CancellationToken { get; }
+
+        internal InvocationOutput? Output { get; }
+
+        internal ExecutionObserver? Observer { get; init; }
+    }
+
     private sealed class TargetNode
     {
         private readonly List<TargetNode> _dependents = [];
+        private readonly ExecutionObserver? _observer;
         private readonly List<TargetLifecycle> _transitions = [TargetLifecycle.Pending];
         private ImmutableArray<Guid> _directBlockers = [];
         private Exception? _cleanupException;
@@ -635,11 +647,13 @@ internal static class ExecutionRuntime
         private Exception? _primaryException;
         private SuccessfulShape? _shape;
 
-        internal TargetNode(TargetDefinition target, int planIndex)
+        internal TargetNode(TargetDefinition target, int planIndex, ExecutionObserver? observer)
         {
             Target = target;
             PlanIndex = planIndex;
             RemainingDependencies = target.Dependencies.Length;
+            _observer = observer;
+            PublishTransition();
         }
 
         internal IEnumerable<TargetNode> Dependents => _dependents;
@@ -724,7 +738,12 @@ internal static class ExecutionRuntime
             }
 
             _transitions.Add(lifecycle);
+            PublishTransition();
         }
+
+        private void PublishTransition()
+            => _observer?.Publish(new TargetNotification(
+                Target.Id, Target.Name, PlanIndex, Lifecycle, _outcome, _shape, _directBlockers));
     }
 
     private sealed record TargetCompletion(

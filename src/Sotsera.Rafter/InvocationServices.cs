@@ -43,6 +43,8 @@ internal sealed record InvocationServices(
 
     internal IFileSystemPrimitives FileSystem { get; init; } = PhysicalFileSystemPrimitives.Instance;
 
+    internal Action<ExecutionRuntime.TargetNotification>? ExecutionObserver { get; init; }
+
     internal InvocationServices PreparePresentation(bool plain)
     {
         string? noColor = null;

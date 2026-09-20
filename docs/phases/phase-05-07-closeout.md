@@ -50,6 +50,9 @@ verification work without relaxing those contracts.
   width limits, color-only suppression, failed probes, early reports and reuse of the lookup by option binding.
   Review fixed mixed-case `NO_COLOR` aliases causing duplicate lookups on Windows, while preserving Unix's
   case-sensitive environment names and cached lookup failures.
+- Added immutable execution lifecycle notifications at actual transitions, including initial plan-ordered pending
+  states and settled outcome data. A serialized guard disables observation after its first failure and records
+  output infrastructure failure without changing scheduling, callback counts, cleanup or the execution outcome.
 
 ## Local verification
 
@@ -59,7 +62,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 216 passed, zero failed or skipped, including 14 observer-failure and 29 capability cases |
+| Solution tests | 231 passed, zero failed or skipped, including 14 process-observer, 29 capability and 15 lifecycle-observer cases |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
@@ -76,11 +79,11 @@ The full list and its limits are in the development guide. Artifacts are generat
 | Phase | Established evidence | Still required before phase completion |
 | --- | --- | --- |
 | 5 | Reachable graph planning, dependency ordering, failure isolation, conditions, cleanup, cancellation and callback-scope ownership tests; state/cleanup/exit tables; passing current OS matrix and package job | Remaining exhaustive overlap/transition/concurrency cases |
-| 6 | Semantic routing, independent capability profiles and `NO_COLOR`, early `--plain`, console attribution, binding quarantine, restoration, incremental redaction, capture re-entry and sink-failure regressions | Lifecycle observer and live states; full final summary and rich property layout; process-wide ordering/serialization audit; complete boundary, replacement, observer, and renderer-failure matrices |
+| 6 | Semantic routing, independent capability profiles and `NO_COLOR`, early `--plain`, actual lifecycle notifications and observer-failure isolation, console attribution, binding quarantine, restoration, incremental redaction, capture re-entry and sink-failure regressions | Live state rendering; full final summary and rich property layout; process-wide ordering/serialization audit; complete boundary, replacement, observer, and renderer-failure matrices |
 | 7 | Exact hostile argument vectors, simultaneous pipe drainage, raw capture, per-stream overflow, UTF-8, exit classification, environment, timeout/cancellation, retained pipes and tracked late teardown; passing current OS matrix | Synthetic start/observer/exit/kill/dispose race matrix; measured memory envelope and concurrent-launch stress; exhaustive diagnostic/handle/path/policy tables; full per-test process/resource cleanup evidence; unexplained earlier macOS stall |
 
 The Phase 6 renderer now uses capability profiles but retains the Phase 5 failure report. `ExecutionRuntime` records
-transitions internally but has no live execution observer. Rich properties currently reuse the canonical plain value
+and publishes actual lifecycle transitions, but has no live state renderer. Rich properties reuse the canonical plain value
 representation with color. These are implementation gaps, not missing checkmarks, and must be implemented before
 claiming the presentation gates. No new syntax or weakened requirement is proposed here.
 
@@ -136,12 +139,12 @@ package verification with 187 tests, including the 14 observer-failure regressio
 with 213 tests, including the initial 26 capability cases, all examples and package verification for 59 source
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
-The package rows above refer to this verified revision. The three additional environment-name review cases have
-passed locally; pushing and CI are deferred to the planned final verification run.
+The package rows above refer to this verified revision. The three additional environment-name review cases and
+15 lifecycle-observer cases have passed locally; pushing and CI are deferred to the planned final verification run.
 
 ## Next implementation order
 
-1. Complete the Phase 6 lifecycle, presentation and shared-ordering contracts with their specified tests.
+1. Complete the Phase 6 live presentation, final summaries and shared-ordering contracts with their specified tests.
 2. Complete the Phase 7 startup/teardown failure matrix, memory measurements and stress/resource checks.
 3. Reconcile the remaining Phase 5 exhaustive verification cases and investigate the intermittent macOS stall.
 4. Close all affected gates with evidence before beginning the Phase 8 typed builders.

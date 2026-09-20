@@ -477,7 +477,12 @@ public sealed class Command
             paths,
             execution.Services.FileSystem,
             execution.CancellationToken,
-            output);
+            output)
+        {
+            Observer = execution.Services.ExecutionObserver is { } observer
+                ? new ExecutionObserver(observer, output)
+                : null,
+        };
         LastExecutionOutcome = await ExecutionRuntime.ExecuteAsync(scope).ConfigureAwait(false);
         ConsoleOutputCoordinator.VerifyActiveOwnership();
         await output.SealAsync().ConfigureAwait(false);

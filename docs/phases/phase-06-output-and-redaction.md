@@ -347,7 +347,7 @@ not make unreviewed user-experience choices.
       emit no synthetic transient-state lines in plain mode.
 - [ ] Add a thread-safe non-throwing Phase 5 execution observer, map `Pending` and `Ready` to `Waiting`, and prove that
       emitted state reflects actual transition timing without changing scheduler behavior.
-- [ ] Emit initial `Pending` notifications in plan order and immutable notifications after every state mutation; add
+- [x] Emit initial `Pending` notifications in plan order and immutable notifications after every state mutation; add
       terminal outcome, successful shape, and direct blockers only to `Settled`, then disable observation after its
       first exception.
 - [ ] Emit the final summary to stdout when the command succeeds and to stderr with detailed failures when it fails
@@ -471,7 +471,7 @@ not make unreviewed user-experience choices.
       cleanup-failure combinations, success/failure stream routing, `NO_COLOR` symbols, and `--plain` ASCII labels.
 - [ ] Assert actual observer timing for `Waiting`, `Running`, `Cleaning up`, and settlement, and prove an observer
       failure records infrastructure failure without changing target transitions or callback counts.
-- [ ] Assert initial observer notifications are in plan order, terminal notifications contain the already-mutated
+- [x] Assert initial observer notifications are in plan order, terminal notifications contain the already-mutated
       outcome/shape/blockers, and no observer call occurs after its first exception.
 - [ ] Run concurrent console examples repeatedly across all await patterns.
 - [ ] Overlap different commands with distinct injected sinks; prove they share one global writer pair, retain
