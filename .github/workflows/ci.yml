@@ -14,7 +14,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        # Keep the validated Ubuntu baseline stable when ubuntu-latest migrates to 26.04.
+        os: [windows-latest, ubuntu-24.04, macos-latest]
 
     steps:
       - uses: actions/checkout@v7
@@ -278,7 +279,7 @@ jobs:
 
   package:
     name: Package integrity
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: build-and-test
 
     steps:
