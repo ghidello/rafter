@@ -351,7 +351,7 @@ internal static class ConsoleOutputCoordinator
 
         public override void Write(char[] buffer, int index, int count)
         {
-            ArgumentNullException.ThrowIfNull(buffer);
+            ValidateSegment(buffer, index, count);
             Route(_standardError, _fallback, new string(buffer, index, count));
         }
 
@@ -380,7 +380,7 @@ internal static class ConsoleOutputCoordinator
 
         public override void WriteLine(char[] buffer, int index, int count)
         {
-            ArgumentNullException.ThrowIfNull(buffer);
+            ValidateSegment(buffer, index, count);
             WriteLine(new string(buffer, index, count));
         }
 
@@ -479,6 +479,18 @@ internal static class ConsoleOutputCoordinator
             cancellationToken.ThrowIfCancellationRequested();
             WriteLine(value);
             return Task.CompletedTask;
+        }
+
+        private static void ValidateSegment(char[] buffer, int index, int count)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+            ArgumentOutOfRangeException.ThrowIfNegative(index);
+            ArgumentOutOfRangeException.ThrowIfNegative(count);
+            if (buffer.Length - index < count)
+            {
+                // TextWriter rejects the combined range without naming either individually valid argument.
+                throw new ArgumentException("The index and count must identify a range within the buffer.", paramName: null);
+            }
         }
     }
 

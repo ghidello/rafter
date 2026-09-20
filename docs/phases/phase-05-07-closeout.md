@@ -65,6 +65,8 @@ verification work without relaxing those contracts.
 - Made console line overloads route the complete payload and newline together, and snapshot `StringBuilder`
   chunks before routing. The 148 overload cases cover both streams, managed/host delivery, changed newlines,
   synchronous completion, null values and pre-cancelled writes; 36 initial cases reproduced split host writes.
+- Restored `TextWriter` exception types and parameter names for invalid character-array slices. Four validation
+  cases cover synchronous/asynchronous writes and lines on both streams without output or infrastructure failure.
 
 ## Local verification
 
@@ -74,7 +76,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 447 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure and 148 console-overload cases |
+| Solution tests | 451 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure, 148 console-overload and 4 console-validation cases |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |

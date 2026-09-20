@@ -170,6 +170,12 @@ host and managed calls, atomic publication of multiple buffered events, or proce
 The full overload gate still needs non-line scalar/formatting, validation and flush coverage. Output appearance and
 the canonical examples remain unchanged.
 
+Review added four `ConsoleWriterValidationTests` cases, each comparing six invalid slices through synchronous and
+asynchronous write/line calls against `StringWriter`. All four initially exposed constructor parameter names leaking
+through the console API. Array slices now preserve `TextWriter` exception types and parameter names for null,
+negative and out-of-range arguments without publishing or changing invocation health. The full suite has 451 passing
+tests; the Release build and formatting checks pass. The wider formatting and flush matrix remains open.
+
 ## Remaining work
 
 O1–O9 remain open except individually substantiated gates in the plan. The current suite is not the full phase matrix.
