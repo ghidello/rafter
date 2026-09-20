@@ -66,7 +66,7 @@ successful values and cached failures. Unix keeps differently cased variables di
 `OutputCapabilityTests` supplies 29 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
 failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
-host-terminal detection. The Release build and 299-test solution suite pass locally with formatting unchanged.
+host-terminal detection. The Release build and 447-test solution suite pass locally with formatting unchanged.
 CI for the three added review cases is deferred until the planned final verification run.
 Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
 
@@ -83,7 +83,7 @@ guard. The seam is internal and introduces no public API or transient presentati
 
 `ExecutionObserverTests` supplies 15 cases covering live execution/cleanup timing, initial ordering, immutable
 terminal data, failure at each lifecycle, concurrent delivery, cancellation, original callback/cleanup failures,
-per-invocation isolation, and the absence of transient plain/static output. All 299 solution tests pass locally; the Release build,
+per-invocation isolation, and the absence of transient plain/static output. All 447 solution tests pass locally; the Release build,
 formatting and diff checks pass. CI is deferred to the planned final verification run. Live rendering, the
 `Pending`/`Ready` to `Waiting` presentation mapping remain unfinished.
 
@@ -127,7 +127,7 @@ independently injected sinks separate. The same-sink ordering regression failed 
 the final tests cover stdout and stderr, both shared and distinct sinks.
 
 The first ten `TerminalPublicationTests` cases cover synchronous report delivery, overlapping reports/semantic writes,
-reentrant sinks, guard restoration, failure suppression and pending-fragment ordering. All 299 solution tests pass.
+reentrant sinks, guard restoration, failure suppression and pending-fragment ordering. All 447 solution tests pass.
 This does not close the full ordering gate: process-monotonic event sequencing, atomic buffered-event publication,
 host pass-through coordination, all writer overloads and live-display suspension still require their broader audit.
 The user has deferred reconsidering the visual design; this work retains the existing rendering fixtures.
@@ -152,9 +152,27 @@ attribution and redaction while the invocation remains active. This brings that 
 These repairs leave visible formatting unchanged. Full host/managed write serialization and process-wide event
 sequencing remain open; the host failure tests establish classification and isolation, not those broader ordering gates.
 
+## Console line overloads
+
+The inherited `TextWriter` line overloads could route the payload and newline separately. Thirty-six cases in the
+initial 112-case matrix reproduced two host sink calls for one line. The coordinating writer now constructs the
+complete line before routing, including scalar, character, array, span, object and `StringBuilder` inputs. Async
+overloads use the same synchronous path. `StringBuilder` writes snapshot all chunks before entering routing.
+
+`ConsoleWriterOverloadTests` supplies 148 cases: 33 line variants on stdout/stderr through managed and host paths,
+eight multi-chunk builder cases and eight pre-cancelled memory/builder cases. Changed newline strings and null
+values match ordinary `StringWriter` behavior. Host lines arrive in one sink call, managed lines retain attribution,
+async calls are complete before returning, and cancellation produces no output or invocation failure. Writers are
+restored after each case. All 447 solution tests pass locally.
+
+This repairs splitting within an individual line call. It does not establish serialization between independent
+host and managed calls, atomic publication of multiple buffered events, or process-monotonic event sequencing.
+The full overload gate still needs non-line scalar/formatting, validation and flush coverage. Output appearance and
+the canonical examples remain unchanged.
+
 ## Remaining work
 
 O1–O9 remain open except individually substantiated gates in the plan. The current suite is not the full phase matrix.
-Missing cases include every writer overload, sealing races with caller-owned formatting, repeated cross-command
+Missing cases include the remaining writer overloads, sealing races with caller-owned formatting, repeated cross-command
 replacement, all renderer/observer failures, and process-wide ordering across semantic, console, and host writes.
 The implementation gaps and repository/CI limits are enumerated in the closeout audit.

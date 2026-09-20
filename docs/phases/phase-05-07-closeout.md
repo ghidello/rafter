@@ -62,6 +62,9 @@ verification work without relaxing those contracts.
   exception, prior invocation failure and cleanup behavior. Ten tests cover both streams and independent sinks.
 - Replaced the copied publication-depth guard with a scope that closes in inherited execution contexts too. Two
   regressions reproduced deferred sink writes bypassing redaction after publication; both now remain managed.
+- Made console line overloads route the complete payload and newline together, and snapshot `StringBuilder`
+  chunks before routing. The 148 overload cases cover both streams, managed/host delivery, changed newlines,
+  synchronous completion, null values and pre-cancelled writes; 36 initial cases reproduced split host writes.
 
 ## Local verification
 
@@ -71,7 +74,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 299 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary, 12 publication and 10 host-failure cases |
+| Solution tests | 447 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure and 148 console-overload cases |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
@@ -149,8 +152,8 @@ with 213 tests, including the initial 26 capability cases, all examples and pack
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
 The package rows above refer to this verified revision. The three additional environment-name review cases and
-15 lifecycle-observer, 46 summary, 12 publication and 10 host-failure cases have passed locally; pushing and CI are deferred to the
-planned final verification run.
+15 lifecycle-observer, 46 summary, 12 publication, 10 host-failure and 148 console-overload cases have passed locally;
+pushing and CI are deferred to the planned final verification run.
 
 ## Next implementation order
 

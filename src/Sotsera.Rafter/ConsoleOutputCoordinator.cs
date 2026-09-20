@@ -363,10 +363,51 @@ internal static class ConsoleOutputCoordinator
             }
         }
 
+        public override void Write(ReadOnlySpan<char> buffer)
+            => Route(_standardError, _fallback, buffer.ToString());
+
+        public override void Write(StringBuilder? value) => Write(value?.ToString());
+
+        // Base line overloads can split the payload and newline into separate routing calls.
         public override void WriteLine(string? value)
             => Route(_standardError, _fallback, string.Concat(value, NewLine));
 
         public override void WriteLine() => Route(_standardError, _fallback, NewLine);
+
+        public override void WriteLine(char value) => WriteLine(value.ToString());
+
+        public override void WriteLine(char[]? buffer) => WriteLine(buffer is null ? null : new string(buffer));
+
+        public override void WriteLine(char[] buffer, int index, int count)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+            WriteLine(new string(buffer, index, count));
+        }
+
+        public override void WriteLine(ReadOnlySpan<char> buffer) => WriteLine(buffer.ToString());
+
+        public override void WriteLine(StringBuilder? value) => WriteLine(value?.ToString());
+
+        public override void WriteLine(bool value) => WriteLine(value ? bool.TrueString : bool.FalseString);
+
+        public override void WriteLine(int value) => WriteLine(value.ToString(FormatProvider));
+
+        public override void WriteLine(uint value) => WriteLine(value.ToString(FormatProvider));
+
+        public override void WriteLine(long value) => WriteLine(value.ToString(FormatProvider));
+
+        public override void WriteLine(ulong value) => WriteLine(value.ToString(FormatProvider));
+
+        public override void WriteLine(float value) => WriteLine(value.ToString(FormatProvider));
+
+        public override void WriteLine(double value) => WriteLine(value.ToString(FormatProvider));
+
+        public override void WriteLine(decimal value) => WriteLine(value.ToString(FormatProvider));
+
+        public override void WriteLine(object? value)
+            => WriteLine(value is IFormattable formattable
+                ? formattable.ToString(null, FormatProvider)
+                : value?.ToString());
 
         public override Task WriteAsync(char value)
         {
@@ -393,12 +434,50 @@ internal static class ConsoleOutputCoordinator
             return Task.CompletedTask;
         }
 
+        public override Task WriteAsync(StringBuilder? value, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            Write(value);
+            return Task.CompletedTask;
+        }
+
+        public override Task WriteLineAsync()
+        {
+            WriteLine();
+            return Task.CompletedTask;
+        }
+
+        public override Task WriteLineAsync(char value)
+        {
+            WriteLine(value);
+            return Task.CompletedTask;
+        }
+
+        public override Task WriteLineAsync(string? value)
+        {
+            WriteLine(value);
+            return Task.CompletedTask;
+        }
+
+        public override Task WriteLineAsync(char[] buffer, int index, int count)
+        {
+            WriteLine(buffer, index, count);
+            return Task.CompletedTask;
+        }
+
         public override Task WriteLineAsync(
             ReadOnlyMemory<char> buffer,
             CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            Route(_standardError, _fallback, string.Concat(buffer, NewLine));
+            WriteLine(buffer.Span);
+            return Task.CompletedTask;
+        }
+
+        public override Task WriteLineAsync(StringBuilder? value, CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            WriteLine(value);
             return Task.CompletedTask;
         }
     }
