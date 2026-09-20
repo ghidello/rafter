@@ -1,13 +1,30 @@
 using System.Collections.Concurrent;
+using System.Collections.Immutable;
 
 namespace Sotsera.Rafter;
 
 internal static class ProcessOperationReaper
 {
-    private static readonly ConcurrentQueue<Exception> Failures = new();
+    private const int MaximumFailureSamples = 32;
+    private static readonly Queue<Exception> Failures = new();
+    private static readonly Lock FailureSync = new();
     private static readonly ConcurrentDictionary<Guid, Task> Operations = new();
+    private static long _failureCount;
 
     internal static int Count => Operations.Count;
+
+    internal static long FailureCount => Interlocked.Read(ref _failureCount);
+
+    internal static ImmutableArray<Exception> FailureSamples
+    {
+        get
+        {
+            lock (FailureSync)
+            {
+                return [.. Failures];
+            }
+        }
+    }
 
     internal static async Task WaitForEmptyAsync(CancellationToken cancellationToken)
     {
@@ -47,7 +64,7 @@ internal static class ProcessOperationReaper
         }
         catch (Exception exception)
         {
-            Failures.Enqueue(exception);
+            RecordFailure(exception);
         }
         finally
         {
@@ -57,12 +74,26 @@ internal static class ProcessOperationReaper
             }
             catch (Exception exception)
             {
-                Failures.Enqueue(exception);
+                RecordFailure(exception);
             }
             finally
             {
                 Operations.TryRemove(id, out _);
             }
+        }
+    }
+
+    private static void RecordFailure(Exception exception)
+    {
+        lock (FailureSync)
+        {
+            if (Failures.Count == MaximumFailureSamples)
+            {
+                Failures.Dequeue();
+            }
+
+            Failures.Enqueue(exception);
+            Interlocked.Increment(ref _failureCount);
         }
     }
 }

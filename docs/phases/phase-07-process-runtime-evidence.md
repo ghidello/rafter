@@ -110,3 +110,12 @@ failures and repeated races still require focused verification. Disposal and con
 focused local checks recorded above. The
 macOS diagnostic split has passed, but the earlier runner disconnect remains unexplained. The Phase 8 extension
 and typed-tool examples remain explicitly deferred.
+
+## Completion pass: resource failure classification and retention
+
+`ProcessResourceFailureTests` adds seven cases. Adapter construction now uses the safe `ProcessStartException`
+classification while retaining the original failure as its inner exception. Combined kill, stream-close and disposal
+failures retain cancellation or timeout as primary and preserve the secondary failures in lifecycle order in both
+streaming and capture modes. Late-operation failure history now keeps at most 32 exception samples and a total count;
+a 200-resource test observes 400 operation/disposal failures, exactly one disposal per resource, and an empty reaper.
+The full local suite after this pass contains 586 passing tests. Cross-platform validation of these changes is pending.

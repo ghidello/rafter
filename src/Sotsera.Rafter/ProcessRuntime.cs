@@ -91,7 +91,7 @@ internal static class ProcessRuntime
             policy.TimeProvider,
             context.CancellationToken,
             operation.OwnershipToken);
-        using ProcessOwnership ownership = new(AdapterFactory.Create(prepared.StartInfo));
+        using ProcessOwnership ownership = new(CreateAdapter(prepared.StartInfo));
         ProcessExecutionResult result;
         try
         {
@@ -150,6 +150,18 @@ internal static class ProcessRuntime
                 cancelled.Message, detail, cancelled.CancellationToken),
             _ => new ProcessException("The process runtime failed.", detail),
         };
+    }
+
+    private static IProcessAdapter CreateAdapter(ProcessStartInfo startInfo)
+    {
+        try
+        {
+            return AdapterFactory.Create(startInfo);
+        }
+        catch (Exception exception)
+        {
+            throw new ProcessStartException(exception);
+        }
     }
 
     private static void Start(IProcessAdapter process)
