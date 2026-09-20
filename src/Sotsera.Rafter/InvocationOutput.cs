@@ -9,8 +9,6 @@ internal sealed class InvocationOutput
     private const int MaximumPropertyCharacters = 1_048_576;
     private const int MaximumPropertyItems = 1_024;
     private const int MaximumBindingCharacters = 1_048_576;
-    private static readonly AsyncLocal<int> PublicationDepth = new();
-    private static readonly Lock TerminalSync = new();
     private readonly StringBuilder _bindingError = new();
     private readonly StringBuilder _bindingOutput = new();
     private readonly Lock _consoleSync = new();
@@ -65,8 +63,6 @@ internal sealed class InvocationOutput
             }
         }
     }
-
-    internal static bool IsPublishing => PublicationDepth.Value != 0;
 
     internal TextRedactor Redactor => _redactor;
 
@@ -213,6 +209,18 @@ internal sealed class InvocationOutput
         }
     }
 
+    internal void FlushConsoleForOrdering(TextWriter writer)
+    {
+        if (ReferenceEquals(writer, _standardOutput))
+        {
+            FlushConsoleForOrdering(standardError: false);
+        }
+        if (ReferenceEquals(writer, _standardError))
+        {
+            FlushConsoleForOrdering(standardError: true);
+        }
+    }
+
     internal static OutputProperty SnapshotProperty(string name, object? value)
     {
         string canonical;
@@ -278,26 +286,7 @@ internal sealed class InvocationOutput
                 throw new InvalidOperationException("Rendered output failed redaction verification.");
             }
 
-            lock (TerminalSync)
-            {
-                lock (_sync)
-                {
-                    if (_failure is not null)
-                    {
-                        return;
-                    }
-                }
-
-                PublicationDepth.Value++;
-                try
-                {
-                    writer.Write(rendered);
-                }
-                finally
-                {
-                    PublicationDepth.Value--;
-                }
-            }
+            TerminalPublication.Write(writer, rendered, this);
         }
         catch (Exception exception)
         {

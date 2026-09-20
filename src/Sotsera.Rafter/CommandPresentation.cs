@@ -148,25 +148,32 @@ internal static class CommandPresentation
             new ReportLine($"error: {message}", LineRole.Error),
         ]);
 
-    internal static async Task<bool> WriteAsync(
+    internal static Task<bool> WriteAsync(
         Report report,
         TextWriter writer,
         OutputCapabilities capabilities,
         TextRedactor redactor)
     {
-        if (!redactor.IsUsable || !TryRedact(report, redactor, out Report? safeReport))
+        try
         {
-            return false;
-        }
+            if (!redactor.IsUsable || !TryRedact(report, redactor, out Report? safeReport))
+            {
+                return Task.FromResult(false);
+            }
 
-        string rendered = capabilities.IsRich ? RenderRich(safeReport!, capabilities) : RenderPlain(safeReport!);
-        if (redactor.ContainsPattern(rendered))
+            string rendered = capabilities.IsRich ? RenderRich(safeReport!, capabilities) : RenderPlain(safeReport!);
+            if (redactor.ContainsPattern(rendered))
+            {
+                return Task.FromResult(false);
+            }
+
+            TerminalPublication.WriteReport(writer, rendered);
+            return Task.FromResult(true);
+        }
+        catch (Exception exception)
         {
-            return false;
+            return Task.FromException<bool>(exception);
         }
-
-        await writer.WriteAsync(rendered).ConfigureAwait(false);
-        return true;
     }
 
     private static void AddExecutionFailures(ImmutableArray<ReportLine>.Builder lines, ExecutionOutcome outcome)

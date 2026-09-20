@@ -63,10 +63,24 @@ internal static class ConsoleOutputCoordinator
         }
     }
 
+    internal static void FlushBeforeReport(TextWriter writer)
+    {
+        Registration[] registrations;
+        lock (Sync)
+        {
+            registrations = [.. Registrations.Values];
+        }
+
+        foreach (Registration registration in registrations)
+        {
+            registration.Output.FlushConsoleForOrdering(writer);
+        }
+    }
+
     private static void Route(bool standardError, TextWriter fallback, string text)
     {
         Scope? scope = CurrentScope.Value;
-        if (!InvocationOutput.IsPublishing
+        if (!TerminalPublication.IsPublishing
             && scope is not null
             && scope.Registration.IsActive
             && scope.Registration.Output.TryPublishConsole(standardError, scope.Target, text))

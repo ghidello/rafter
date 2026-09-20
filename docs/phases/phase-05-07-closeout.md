@@ -55,6 +55,9 @@ verification work without relaxing those contracts.
   output infrastructure failure without changing scheduling, callback counts, cleanup or the execution outcome.
 - Implemented the user-accepted final target summaries, Unicode/ASCII states, authored blocker order and secondary
   cleanup sections. Summary failures retain the execution outcome and record output infrastructure failure.
+- Unified report and semantic-output publication after regressions reproduced overlapping writes and reentrant
+  report-sink recapture. Reports now flush earlier managed fragments on the same writer, and managed sink failure
+  is recorded before another publication can enter. Ten regressions cover the shared boundary and its limits.
 
 ## Local verification
 
@@ -64,7 +67,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 277 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer and 46 summary cases |
+| Solution tests | 287 passed, zero failed or skipped, including 14 process-observer, 29 capability, 15 lifecycle-observer, 46 summary and 10 publication cases |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
@@ -142,13 +145,14 @@ with 213 tests, including the initial 26 capability cases, all examples and pack
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
 The package rows above refer to this verified revision. The three additional environment-name review cases and
-15 lifecycle-observer and 46 summary cases have passed locally; pushing and CI are deferred to the planned final verification run.
+15 lifecycle-observer, 46 summary and 10 publication cases have passed locally; pushing and CI are deferred to the
+planned final verification run.
 
 ## Next implementation order
 
-1. Complete Phase 6 live presentation, rich properties and shared ordering against the
-   [accepted presentation fixtures](phase-06-presentation-fixtures/README.md). The user approved the format on
-   2026-09-20; final summaries now have local executable evidence, while other rendering contracts remain open.
+1. Continue the Phase 6 internal ordering/serialization audit and remaining boundary verification. The user has
+   deferred reconsidering output appearance; retain the current [rendering fixtures](phase-06-presentation-fixtures/README.md)
+   and postpone further visual design, rich property layout and live presentation changes until that review.
 2. Complete the Phase 7 startup/teardown failure matrix, memory measurements and stress/resource checks.
 3. Reconcile the remaining Phase 5 exhaustive verification cases and investigate the intermittent macOS stall.
 4. Close all affected gates with evidence before beginning the Phase 8 typed builders.

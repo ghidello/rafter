@@ -405,6 +405,6 @@ public sealed class PhaseThreePresentationTests
     {
         public override Encoding Encoding => Encoding.UTF8;
 
-        public override Task WriteAsync(string? value) => Task.FromException(new IOException("Synthetic writer failure."));
+        public override void Write(string? value) => throw new IOException("Synthetic writer failure.");
     }
 }

@@ -1,6 +1,8 @@
 # Accepted Phase 6 presentation contract
 
 Status: **accepted by the user on 2026-09-20**. These authored expected documents define the rendering contract.
+After trying the example, the user deferred reconsidering the visual design. Keep these as the current regression
+baseline while internal correctness work continues; further appearance changes are postponed for that review.
 Final target summaries now have executable snapshot coverage, including all nine profiles. The real canonical
 `presentation.cs` success and failure runs are compared with the plain fixtures by the example harness. Rich property
 layout, console continuation notation and live repainting remain to be implemented against these accepted documents.

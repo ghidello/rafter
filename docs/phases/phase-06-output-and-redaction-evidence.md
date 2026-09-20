@@ -66,7 +66,7 @@ successful values and cached failures. Unix keeps differently cased variables di
 `OutputCapabilityTests` supplies 29 cases covering mixed stdout/stderr redirection, color policy, width boundaries,
 failed cosmetic probes, early model/graph/cancellation/input reports, malformed `--plain`, shared environment
 lookup, per-invocation refresh, and writer-capture failure. All tests inject complete profiles rather than use
-host-terminal detection. The Release build and 277-test solution suite pass locally with formatting unchanged.
+host-terminal detection. The Release build and 287-test solution suite pass locally with formatting unchanged.
 CI for the three added review cases is deferred until the planned final verification run.
 Live cursor coordination, status glyphs and rich property/final-summary layouts remain separate unfinished work.
 
@@ -83,7 +83,7 @@ guard. The seam is internal and introduces no public API or transient presentati
 
 `ExecutionObserverTests` supplies 15 cases covering live execution/cleanup timing, initial ordering, immutable
 terminal data, failure at each lifecycle, concurrent delivery, cancellation, original callback/cleanup failures,
-per-invocation isolation, and the absence of transient plain/static output. All 277 solution tests pass locally; the Release build,
+per-invocation isolation, and the absence of transient plain/static output. All 287 solution tests pass locally; the Release build,
 formatting and diff checks pass. CI is deferred to the planned final verification run. Live rendering, the
 `Pending`/`Ready` to `Waiting` presentation mapping remain unfinished.
 
@@ -109,6 +109,28 @@ here prove their final static summary only; they do not establish live cursor re
 Interactive Windows UTF-8 terminal runs of the unchanged example also displayed `✓ [present] Succeeded` and
 `✗ [present] Failed` with exit codes 0 and 1 respectively. These smoke checks confirm the production capability
 path, separately from the deterministic injected-profile tests.
+
+## Shared report publication
+
+Review after the summary implementation found that help, diagnostics and summaries bypassed the semantic-output
+publication lock. Concurrent report and semantic writes overlapped the same sink, and report sinks calling Console
+could have their own writes recaptured as target output. New regressions reproduced both defects before repair.
+
+`TerminalPublication` now gives reports and semantic events one synchronous physical-write boundary and one
+publication guard. Report APIs return completed or faulted tasks after synchronous publication; no thread blocks on
+a task or holds the lock across an await. The guard is restored after exceptions. Managed sink failures are recorded
+before releasing the boundary, so a concurrent later call cannot observe that invocation as healthy.
+
+Reports flush pending managed console fragments to the same captured writer before publishing their document.
+This also covers help from another command that has not registered for interception. Writer identity keeps
+independently injected sinks separate. The same-sink ordering regression failed before this repair on stdout;
+the final tests cover stdout and stderr, both shared and distinct sinks.
+
+`TerminalPublicationTests` adds ten cases for synchronous report delivery, overlapping reports/semantic writes,
+reentrant sinks, guard restoration, failure suppression and pending-fragment ordering. All 287 solution tests pass.
+This does not close the full ordering gate: process-monotonic event sequencing, atomic buffered-event publication,
+host pass-through coordination, all writer overloads and live-display suspension still require their broader audit.
+The user has deferred reconsidering the visual design; this work retains the existing rendering fixtures.
 
 ## Remaining work
 
