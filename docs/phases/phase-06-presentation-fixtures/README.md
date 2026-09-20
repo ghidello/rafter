@@ -3,9 +3,9 @@
 Status: **accepted by the user on 2026-09-20**. These authored expected documents define the rendering contract.
 After trying the example, the user deferred reconsidering the visual design. Keep these as the current regression
 baseline while internal correctness work continues; further appearance changes are postponed for that review.
-Final target summaries now have executable snapshot coverage, including all nine profiles. The real canonical
-`presentation.cs` success and failure runs are compared with the plain fixtures by the example harness. Rich property
-layout, console continuation notation and live repainting remain to be implemented against these accepted documents.
+Final target summaries, semantic scopes, rich properties and narrow collections now have executable snapshot
+coverage across all nine profiles. The real canonical `presentation.cs` success and failure runs are compared with
+the plain fixtures by the example harness. Console continuation notation and live repainting remain to be implemented.
 
 ## Reading the fixtures
 
@@ -171,5 +171,4 @@ dotnet run examples/presentation.cs --configuration Release -- --plain
 The success summary includes `✓ [present] Succeeded`; the failure summary includes `✗ [present] Failed` when the
 destination supports Unicode and rich output. Redirected streams and `--plain` use ASCII labels. In a Windows
 terminal whose .NET output encoding is not Unicode, set `[Console]::OutputEncoding = [Text.UTF8Encoding]::new()`
-before running the example. `NO_COLOR` disables color while retaining the symbols. Until rich properties land,
-property lines retain their existing `name=value` layout even when the final summary is rich.
+before running the example. `NO_COLOR` disables color while retaining symbols and rich property layouts.

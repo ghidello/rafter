@@ -72,6 +72,8 @@ verification work without relaxing those contracts.
   The existing admission implementation passed these checks without a runtime change.
 - Preserved process outcomes when adapter disposal also fails. Fourteen capture/streaming regressions exposed
   overwritten startup, output, invalid-exit, cancellation and timeout failures; cleanup now remains secondary.
+- Implemented accepted rich properties and attributed multiline semantic output. Forty-four new cases cover the
+  nine-profile fixtures, escaped controls and property secrets redacted before JSON encoding.
 
 ## Local verification
 
@@ -81,7 +83,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 479 passed, zero failed or skipped, including 14 process-disposal cases added during the Phase 7 completion audit |
+| Solution tests | 523 passed, zero failed or skipped, including 14 process-disposal and 44 property-presentation cases added during the completion audit |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `d873080`; 59 runtime documents mapped |
@@ -102,8 +104,8 @@ The full list and its limits are in the development guide. Artifacts are generat
 | 7 | Exact hostile argument vectors, simultaneous pipe drainage, raw capture, per-stream overflow, UTF-8, exit classification, environment, timeout/cancellation, retained pipes and tracked late teardown; passing current OS matrix | Synthetic start/observer/exit/kill/dispose race matrix; measured memory envelope and concurrent-launch stress; exhaustive diagnostic/handle/path/policy tables; full per-test process/resource cleanup evidence; unexplained earlier macOS stall |
 
 The Phase 6 renderer uses capability profiles and replaces the Phase 5 failure report with final target summaries.
-`ExecutionRuntime` publishes actual lifecycle transitions, but has no live state renderer. Rich properties reuse the canonical plain value
-representation with color. These are implementation gaps, not missing checkmarks, and must be implemented before
+`ExecutionRuntime` publishes actual lifecycle transitions, but has no live state renderer. Rich property layouts now
+match their accepted fixtures. Live presentation and ordering remain implementation gaps and must be completed before
 claiming the presentation gates. No new syntax or weakened requirement is proposed here.
 
 The Phase 7 adapter seam now covers post-start observer failures and late kill/drain transfer. The broader matrix

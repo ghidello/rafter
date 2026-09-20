@@ -55,7 +55,8 @@ public sealed class RafterOutput
         using InvocationOutput.Admission admission = _output.Admit();
         string propertyName = RequireSingleLineText(name, nameof(name));
         OutputProperty property = InvocationOutput.SnapshotProperty(propertyName, value);
-        Publish(OutputKind.Property, $"{property.Name}={property.CanonicalValue}");
+        _output.Publish(new OutputEvent(_scope.GetName(), OutputKind.Property,
+            $"{property.Name}={property.CanonicalValue}", Property: property));
     }
 
     private static string RequireText(string text, string parameterName)

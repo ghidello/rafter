@@ -1,6 +1,5 @@
 using System.Globalization;
 using System.Text;
-using System.Text.Json;
 
 namespace Sotsera.Rafter;
 
@@ -269,7 +268,13 @@ internal sealed class InvocationOutput
 
         try
         {
-            if (!_redactor.TryRedact(outputEvent.Text, out string safeText)
+            OutputProperty? property = outputEvent.Property?.Redact(_redactor);
+            if (property is not null)
+            {
+                outputEvent = outputEvent with { Text = $"{property.Name}={property.CanonicalValue}" };
+            }
+            if (!_redactor.TryRedact(outputEvent.Scope, out string safeScope)
+                || !_redactor.TryRedact(outputEvent.Text, out string safeText)
                 || !_redactor.TryRedact(outputEvent.Recovery ?? string.Empty, out string safeRecovery))
             {
                 throw new InvalidOperationException("Output could not be redacted safely.");
@@ -277,8 +282,10 @@ internal sealed class InvocationOutput
 
             OutputEvent safeEvent = outputEvent with
             {
+                Scope = safeScope,
                 Text = safeText,
                 Recovery = outputEvent.Recovery is null ? null : safeRecovery,
+                Property = property,
             };
             bool standardError = IsStandardError(safeEvent.Kind);
             TextWriter writer = standardError ? _standardError : _standardOutput;
@@ -406,10 +413,13 @@ internal sealed class InvocationOutput
         }
 
         string formatted = FormatInvariant(value);
-        return IsJsonNumber(value.GetType()) ? formatted : Quote(formatted);
+        bool nonFinite = value is double d && !double.IsFinite(d)
+            || value is float f && !float.IsFinite(f)
+            || value is Half h && !Half.IsFinite(h);
+        return IsJsonNumber(value.GetType()) && !nonFinite ? formatted : Quote(formatted);
     }
 
-    private static string Quote(string value) => $"\"{JsonEncodedText.Encode(value)}\"";
+    private static string Quote(string value) => OutputProperty.Quote(value);
 
     private static string FormatInvariant(object value)
         => value is IFormattable formattable

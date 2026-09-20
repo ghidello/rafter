@@ -193,6 +193,20 @@ checks; full command-cleanup/console/final-summary interleavings and the wider P
 
 ## Remaining work
 
+### Accepted property and semantic presentation
+
+The completion pass implements the accepted rich property grammar: colon separators, explicit null/empty values,
+attributed multiline values and vertical collections at narrow widths. Thirty-six fixture rows cover canonical
+success/failure, semantic scopes and narrow properties across all nine profiles. Static output uses the specified
+SGR colors and LF independently of the host platform. Eight additional regressions cover decoded property secrets
+containing quotes/newlines/tabs and attributed multiline semantic text with escaped terminal controls. Properties
+are redacted before JSON encoding, closing the previous encoded-secret bypass. Non-finite numbers use quoted literals.
+
+All 523 tests pass locally with an analyzer-clean Release build and formatting verification. Live-profile rows in
+these tests still establish permanent output only; live surfaces and continuation markers remain unfinished.
+
+## Remaining work
+
 O1–O9 remain open except individually substantiated gates in the plan. The current suite is not the full phase matrix.
 Missing cases include the remaining writer overloads, full console/semantic sealing interleavings, repeated cross-command
 replacement, all renderer/observer failures, and process-wide ordering across semantic, console, and host writes.
