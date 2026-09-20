@@ -265,6 +265,9 @@ recompute the budget.
 
 ## Presentation contract gate
 
+The [proposed golden documents](phase-06-presentation-fixtures/README.md) now specify the grammar and profile matrix.
+They are awaiting user approval; their presence does not close this gate or establish renderer conformance.
+
 Before implementing either renderer, commit and approve golden documents for the representative calls in
 `presentation.cs`; command- and target-scoped line, warning, error, recovery, success, and property events; concurrent
 target attribution; every final target shape; cancellation; primary failure; and secondary cleanup failure. Each

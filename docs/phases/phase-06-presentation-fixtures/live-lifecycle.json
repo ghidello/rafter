@@ -1,0 +1,232 @@
+{
+  "status": "proposed-awaiting-approval",
+  "description": "Terminal surface snapshots, not append-only output or raw cursor bytes. Fixed plan order work, entry.",
+  "documents": [
+    {
+      "profile": {
+        "name": "plain",
+        "width": 80,
+        "rich": false,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdoutFrames": [],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdoutFrames": [],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdoutFrames": [],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdoutFrames": [],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdoutFrames": [],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "live-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdoutFrames": [
+        {
+          "after": "Initial Pending notifications, before admission",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[90m  · [work] Waiting\u001b[0m\n\u001b[90m  · [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work becomes Ready",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[90m  · [work] Waiting\u001b[0m\n\u001b[90m  · [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work becomes Running, before its callback",
+          "document": "\u001b[1;34mTargets\u001b[0m\n  › [work] Running\n\u001b[90m  · [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work becomes CleaningUp, before its cleanup callback",
+          "document": "\u001b[1;34mTargets\u001b[0m\n  ↳ [work] Cleaning up\n\u001b[90m  · [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work settles successfully",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n\u001b[90m  · [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "entry settles as an aggregate",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n\u001b[32m  ✓ [entry] Aggregate\u001b[0m\n"
+        }
+      ],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "live-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdoutFrames": [
+        {
+          "after": "Initial Pending notifications, before admission",
+          "document": "Targets\n  · [work] Waiting\n  · [entry] Waiting\n"
+        },
+        {
+          "after": "work becomes Ready",
+          "document": "Targets\n  · [work] Waiting\n  · [entry] Waiting\n"
+        },
+        {
+          "after": "work becomes Running, before its callback",
+          "document": "Targets\n  › [work] Running\n  · [entry] Waiting\n"
+        },
+        {
+          "after": "work becomes CleaningUp, before its cleanup callback",
+          "document": "Targets\n  ↳ [work] Cleaning up\n  · [entry] Waiting\n"
+        },
+        {
+          "after": "work settles successfully",
+          "document": "Targets\n  ✓ [work] Succeeded\n  · [entry] Waiting\n"
+        },
+        {
+          "after": "entry settles as an aggregate",
+          "document": "Targets\n  ✓ [work] Succeeded\n  ✓ [entry] Aggregate\n"
+        }
+      ],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "live-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdoutFrames": [
+        {
+          "after": "Initial Pending notifications, before admission",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[90m  [work] Waiting\u001b[0m\n\u001b[90m  [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work becomes Ready",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[90m  [work] Waiting\u001b[0m\n\u001b[90m  [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work becomes Running, before its callback",
+          "document": "\u001b[1;34mTargets\u001b[0m\n  [work] Running\n\u001b[90m  [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work becomes CleaningUp, before its cleanup callback",
+          "document": "\u001b[1;34mTargets\u001b[0m\n  [work] Cleaning up\n\u001b[90m  [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "work settles successfully",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n\u001b[90m  [entry] Waiting\u001b[0m\n"
+        },
+        {
+          "after": "entry settles as an aggregate",
+          "document": "\u001b[1;34mTargets\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n\u001b[32m  [entry] Aggregate\u001b[0m\n"
+        }
+      ],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    },
+    {
+      "profile": {
+        "name": "live-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdoutFrames": [
+        {
+          "after": "Initial Pending notifications, before admission",
+          "document": "Targets\n  [work] Waiting\n  [entry] Waiting\n"
+        },
+        {
+          "after": "work becomes Ready",
+          "document": "Targets\n  [work] Waiting\n  [entry] Waiting\n"
+        },
+        {
+          "after": "work becomes Running, before its callback",
+          "document": "Targets\n  [work] Running\n  [entry] Waiting\n"
+        },
+        {
+          "after": "work becomes CleaningUp, before its cleanup callback",
+          "document": "Targets\n  [work] Cleaning up\n  [entry] Waiting\n"
+        },
+        {
+          "after": "work settles successfully",
+          "document": "Targets\n  [work] Succeeded\n  [entry] Waiting\n"
+        },
+        {
+          "after": "entry settles as an aggregate",
+          "document": "Targets\n  [work] Succeeded\n  [entry] Aggregate\n"
+        }
+      ],
+      "stderrFrames": [],
+      "afterSummary": "No live surface remains. The final summary is printed once."
+    }
+  ]
+}

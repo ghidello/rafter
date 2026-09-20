@@ -1,0 +1,123 @@
+{
+  "status": "proposed-awaiting-approval",
+  "description": "Barrier-controlled arrival order beta, alpha, beta; plan order alpha, beta, entry. No general scheduling order promised.",
+  "documents": [
+    {
+      "profile": {
+        "name": "plain",
+        "width": 80,
+        "rich": false,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n[beta] success: Complete.\n\nCommand succeeded\n  [alpha] Succeeded\n  [beta] Succeeded\n  [entry] Aggregate\n",
+      "stderr": "[alpha] warning: Optional step omitted.\n"
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n\u001b[32m[beta] success: Complete.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [alpha] Succeeded\u001b[0m\n\u001b[32m  ✓ [beta] Succeeded\u001b[0m\n\u001b[32m  ✓ [entry] Aggregate\u001b[0m\n",
+      "stderr": "\u001b[33m[alpha] warning: Optional step omitted.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n[beta] success: Complete.\n\nCommand succeeded\n  ✓ [alpha] Succeeded\n  ✓ [beta] Succeeded\n  ✓ [entry] Aggregate\n",
+      "stderr": "[alpha] warning: Optional step omitted.\n"
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n\u001b[32m[beta] success: Complete.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [alpha] Succeeded\u001b[0m\n\u001b[32m  [beta] Succeeded\u001b[0m\n\u001b[32m  [entry] Aggregate\u001b[0m\n",
+      "stderr": "\u001b[33m[alpha] warning: Optional step omitted.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n[beta] success: Complete.\n\nCommand succeeded\n  [alpha] Succeeded\n  [beta] Succeeded\n  [entry] Aggregate\n",
+      "stderr": "[alpha] warning: Optional step omitted.\n"
+    },
+    {
+      "profile": {
+        "name": "live-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n\u001b[32m[beta] success: Complete.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [alpha] Succeeded\u001b[0m\n\u001b[32m  ✓ [beta] Succeeded\u001b[0m\n\u001b[32m  ✓ [entry] Aggregate\u001b[0m\n",
+      "stderr": "\u001b[33m[alpha] warning: Optional step omitted.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "live-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n[beta] success: Complete.\n\nCommand succeeded\n  ✓ [alpha] Succeeded\n  ✓ [beta] Succeeded\n  ✓ [entry] Aggregate\n",
+      "stderr": "[alpha] warning: Optional step omitted.\n"
+    },
+    {
+      "profile": {
+        "name": "live-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n\u001b[32m[beta] success: Complete.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [alpha] Succeeded\u001b[0m\n\u001b[32m  [beta] Succeeded\u001b[0m\n\u001b[32m  [entry] Aggregate\u001b[0m\n",
+      "stderr": "\u001b[33m[alpha] warning: Optional step omitted.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "live-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[beta] First delivered.\n[alpha] Second delivered.\n[beta] success: Complete.\n\nCommand succeeded\n  [alpha] Succeeded\n  [beta] Succeeded\n  [entry] Aggregate\n",
+      "stderr": "[alpha] warning: Optional step omitted.\n"
+    }
+  ]
+}

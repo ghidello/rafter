@@ -39,6 +39,11 @@ the absence of the disposable input. `console.cs` is checked for each authored t
 These snapshots cover existing semantic output; final target-state rows, rich properties and live transitions
 still require implementation and their own approved snapshots.
 
+The [proposed presentation fixtures](phase-06-presentation-fixtures/README.md) add 99 authored stdout/stderr pairs
+across nine profiles and a separate live lifecycle frame matrix. They cover canonical presentation, all terminal
+shapes, cleanup failures, concurrent attribution, continuations and narrow collections. They await user approval
+and are not renderer captures or passing conformance tests. No production renderer changes accompany the proposal.
+
 ## Capability profiles
 
 `OutputCapabilities` replaces the two ANSI flags with immutable per-stream redirection, static-layout, ANSI,

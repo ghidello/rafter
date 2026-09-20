@@ -1,0 +1,123 @@
+{
+  "status": "proposed-awaiting-approval",
+  "description": "Unchanged examples/presentation.cs, without --fail.",
+  "documents": [
+    {
+      "profile": {
+        "name": "plain",
+        "width": 80,
+        "rich": false,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n[present] fixture=\"presentation\"\n[present] missing=null\n[present] empty=\"\"\n[present] notes=\"First line.\\nSecond line.\"\n[present] include=[\"src\",\"tests\"]\n[present] retries=3\n[present] success: Presentation fixture passed.\n\nCommand succeeded\n  [present] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n\u001b[36m[present] fixture: \"presentation\"\u001b[0m\n\u001b[36m[present] missing: <null>\u001b[0m\n\u001b[36m[present] empty: \"\"\u001b[0m\n\u001b[36m[present] notes:\u001b[0m\n\u001b[36m[present]   First line.\u001b[0m\n\u001b[36m[present]   Second line.\u001b[0m\n\u001b[36m[present] include: [\"src\", \"tests\"]\u001b[0m\n\u001b[36m[present] retries: 3\u001b[0m\n\u001b[32m[present] success: Presentation fixture passed.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [present] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n[present] fixture: \"presentation\"\n[present] missing: <null>\n[present] empty: \"\"\n[present] notes:\n[present]   First line.\n[present]   Second line.\n[present] include: [\"src\", \"tests\"]\n[present] retries: 3\n[present] success: Presentation fixture passed.\n\nCommand succeeded\n  ✓ [present] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n\u001b[36m[present] fixture: \"presentation\"\u001b[0m\n\u001b[36m[present] missing: <null>\u001b[0m\n\u001b[36m[present] empty: \"\"\u001b[0m\n\u001b[36m[present] notes:\u001b[0m\n\u001b[36m[present]   First line.\u001b[0m\n\u001b[36m[present]   Second line.\u001b[0m\n\u001b[36m[present] include: [\"src\", \"tests\"]\u001b[0m\n\u001b[36m[present] retries: 3\u001b[0m\n\u001b[32m[present] success: Presentation fixture passed.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [present] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n[present] fixture: \"presentation\"\n[present] missing: <null>\n[present] empty: \"\"\n[present] notes:\n[present]   First line.\n[present]   Second line.\n[present] include: [\"src\", \"tests\"]\n[present] retries: 3\n[present] success: Presentation fixture passed.\n\nCommand succeeded\n  [present] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n\u001b[36m[present] fixture: \"presentation\"\u001b[0m\n\u001b[36m[present] missing: <null>\u001b[0m\n\u001b[36m[present] empty: \"\"\u001b[0m\n\u001b[36m[present] notes:\u001b[0m\n\u001b[36m[present]   First line.\u001b[0m\n\u001b[36m[present]   Second line.\u001b[0m\n\u001b[36m[present] include: [\"src\", \"tests\"]\u001b[0m\n\u001b[36m[present] retries: 3\u001b[0m\n\u001b[32m[present] success: Presentation fixture passed.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [present] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n[present] fixture: \"presentation\"\n[present] missing: <null>\n[present] empty: \"\"\n[present] notes:\n[present]   First line.\n[present]   Second line.\n[present] include: [\"src\", \"tests\"]\n[present] retries: 3\n[present] success: Presentation fixture passed.\n\nCommand succeeded\n  ✓ [present] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n\u001b[36m[present] fixture: \"presentation\"\u001b[0m\n\u001b[36m[present] missing: <null>\u001b[0m\n\u001b[36m[present] empty: \"\"\u001b[0m\n\u001b[36m[present] notes:\u001b[0m\n\u001b[36m[present]   First line.\u001b[0m\n\u001b[36m[present]   Second line.\u001b[0m\n\u001b[36m[present] include: [\"src\", \"tests\"]\u001b[0m\n\u001b[36m[present] retries: 3\u001b[0m\n\u001b[32m[present] success: Presentation fixture passed.\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [present] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[present] Starting presentation fixture.\n[present] Managed console output from the presentation fixture.\n[present] fixture: \"presentation\"\n[present] missing: <null>\n[present] empty: \"\"\n[present] notes:\n[present]   First line.\n[present]   Second line.\n[present] include: [\"src\", \"tests\"]\n[present] retries: 3\n[present] success: Presentation fixture passed.\n\nCommand succeeded\n  [present] Succeeded\n",
+      "stderr": ""
+    }
+  ]
+}

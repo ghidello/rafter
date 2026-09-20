@@ -1,0 +1,123 @@
+{
+  "status": "proposed-awaiting-approval",
+  "description": "Same-stream semantic write flushes a redacted partial console fragment; later fragment completes it. Input secret is already redacted.",
+  "documents": [
+    {
+      "profile": {
+        "name": "plain",
+        "width": 80,
+        "rich": false,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\nCommand succeeded\n  ✓ [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\nCommand succeeded\n  ✓ [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] part <redacted> [continues]\n[work] Barrier.\n[work] [continued] rest\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": ""
+    }
+  ]
+}

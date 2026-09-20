@@ -144,7 +144,9 @@ The package rows above refer to this verified revision. The three additional env
 
 ## Next implementation order
 
-1. Complete the Phase 6 live presentation, final summaries and shared-ordering contracts with their specified tests.
+1. Approve the [proposed presentation fixtures](phase-06-presentation-fixtures/README.md), then complete Phase 6
+   live presentation, final summaries and shared ordering with their specified tests. Fixtures are authored
+   expectations; they do not establish implementation or close the presentation-contract gate.
 2. Complete the Phase 7 startup/teardown failure matrix, memory measurements and stress/resource checks.
 3. Reconcile the remaining Phase 5 exhaustive verification cases and investigate the intermittent macOS stall.
 4. Close all affected gates with evidence before beginning the Phase 8 typed builders.

@@ -1,0 +1,123 @@
+{
+  "status": "proposed-awaiting-approval",
+  "description": "Work fails during execution and again during cleanup; command cleanup also fails. Exit 1.",
+  "documents": [
+    {
+      "profile": {
+        "name": "plain",
+        "width": 80,
+        "rich": false,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\nCommand failed\n  [work] Failed\n  [entry] Blocked; blocked by: work\n\nerror: Target 'work' failed during execution (InvalidOperationException).\n\nCleanup also failed\nerror: Target 'work' cleanup failed (IOException).\nerror: Command cleanup failed (UnauthorizedAccessException).\n"
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\n\u001b[1;31mCommand failed\u001b[0m\n\u001b[31m  ✗ [work] Failed\u001b[0m\n\u001b[31m  ! [entry] Blocked; blocked by: work\u001b[0m\n\n\u001b[31merror: Target 'work' failed during execution (InvalidOperationException).\u001b[0m\n\n\u001b[1;31mCleanup also failed\u001b[0m\n\u001b[31merror: Target 'work' cleanup failed (IOException).\u001b[0m\n\u001b[31merror: Command cleanup failed (UnauthorizedAccessException).\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\nCommand failed\n  ✗ [work] Failed\n  ! [entry] Blocked; blocked by: work\n\nerror: Target 'work' failed during execution (InvalidOperationException).\n\nCleanup also failed\nerror: Target 'work' cleanup failed (IOException).\nerror: Command cleanup failed (UnauthorizedAccessException).\n"
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\n\u001b[1;31mCommand failed\u001b[0m\n\u001b[31m  [work] Failed\u001b[0m\n\u001b[31m  [entry] Blocked; blocked by: work\u001b[0m\n\n\u001b[31merror: Target 'work' failed during execution (InvalidOperationException).\u001b[0m\n\n\u001b[1;31mCleanup also failed\u001b[0m\n\u001b[31merror: Target 'work' cleanup failed (IOException).\u001b[0m\n\u001b[31merror: Command cleanup failed (UnauthorizedAccessException).\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\nCommand failed\n  [work] Failed\n  [entry] Blocked; blocked by: work\n\nerror: Target 'work' failed during execution (InvalidOperationException).\n\nCleanup also failed\nerror: Target 'work' cleanup failed (IOException).\nerror: Command cleanup failed (UnauthorizedAccessException).\n"
+    },
+    {
+      "profile": {
+        "name": "live-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\n\u001b[1;31mCommand failed\u001b[0m\n\u001b[31m  ✗ [work] Failed\u001b[0m\n\u001b[31m  ! [entry] Blocked; blocked by: work\u001b[0m\n\n\u001b[31merror: Target 'work' failed during execution (InvalidOperationException).\u001b[0m\n\n\u001b[1;31mCleanup also failed\u001b[0m\n\u001b[31merror: Target 'work' cleanup failed (IOException).\u001b[0m\n\u001b[31merror: Command cleanup failed (UnauthorizedAccessException).\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "live-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\nCommand failed\n  ✗ [work] Failed\n  ! [entry] Blocked; blocked by: work\n\nerror: Target 'work' failed during execution (InvalidOperationException).\n\nCleanup also failed\nerror: Target 'work' cleanup failed (IOException).\nerror: Command cleanup failed (UnauthorizedAccessException).\n"
+    },
+    {
+      "profile": {
+        "name": "live-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\n\u001b[1;31mCommand failed\u001b[0m\n\u001b[31m  [work] Failed\u001b[0m\n\u001b[31m  [entry] Blocked; blocked by: work\u001b[0m\n\n\u001b[31merror: Target 'work' failed during execution (InvalidOperationException).\u001b[0m\n\n\u001b[1;31mCleanup also failed\u001b[0m\n\u001b[31merror: Target 'work' cleanup failed (IOException).\u001b[0m\n\u001b[31merror: Command cleanup failed (UnauthorizedAccessException).\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "live-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "",
+      "stderr": "\nCommand failed\n  [work] Failed\n  [entry] Blocked; blocked by: work\n\nerror: Target 'work' failed during execution (InvalidOperationException).\n\nCleanup also failed\nerror: Target 'work' cleanup failed (IOException).\nerror: Command cleanup failed (UnauthorizedAccessException).\n"
+    }
+  ]
+}

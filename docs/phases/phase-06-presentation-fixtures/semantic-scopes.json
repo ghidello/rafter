@@ -1,0 +1,123 @@
+{
+  "status": "proposed-awaiting-approval",
+  "description": "Target callback followed by command cleanup emits all event kinds. Output.Error alone does not fail execution.",
+  "documents": [
+    {
+      "profile": {
+        "name": "plain",
+        "width": 80,
+        "rich": false,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n[work] success: A result.\n[work] value=\"a\\\"b\"\n[command] A line.\n[command] success: A result.\n[command] value=\"a\\\"b\"\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": "[work] warning: Optional input is missing.\n[work] error: A package is missing.\n[work] recovery: Pack it and retry.\n[command] warning: Optional input is missing.\n[command] error: A package is missing.\n[command] recovery: Pack it and retry.\n"
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n\u001b[32m[work] success: A result.\u001b[0m\n\u001b[36m[work] value: \"a\\\"b\"\u001b[0m\n[command] A line.\n\u001b[32m[command] success: A result.\u001b[0m\n\u001b[36m[command] value: \"a\\\"b\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n",
+      "stderr": "\u001b[33m[work] warning: Optional input is missing.\u001b[0m\n\u001b[31m[work] error: A package is missing.\u001b[0m\n\u001b[33m[work] recovery: Pack it and retry.\u001b[0m\n\u001b[33m[command] warning: Optional input is missing.\u001b[0m\n\u001b[31m[command] error: A package is missing.\u001b[0m\n\u001b[33m[command] recovery: Pack it and retry.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n[work] success: A result.\n[work] value: \"a\\\"b\"\n[command] A line.\n[command] success: A result.\n[command] value: \"a\\\"b\"\n\nCommand succeeded\n  ✓ [work] Succeeded\n",
+      "stderr": "[work] warning: Optional input is missing.\n[work] error: A package is missing.\n[work] recovery: Pack it and retry.\n[command] warning: Optional input is missing.\n[command] error: A package is missing.\n[command] recovery: Pack it and retry.\n"
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n\u001b[32m[work] success: A result.\u001b[0m\n\u001b[36m[work] value: \"a\\\"b\"\u001b[0m\n[command] A line.\n\u001b[32m[command] success: A result.\u001b[0m\n\u001b[36m[command] value: \"a\\\"b\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n",
+      "stderr": "\u001b[33m[work] warning: Optional input is missing.\u001b[0m\n\u001b[31m[work] error: A package is missing.\u001b[0m\n\u001b[33m[work] recovery: Pack it and retry.\u001b[0m\n\u001b[33m[command] warning: Optional input is missing.\u001b[0m\n\u001b[31m[command] error: A package is missing.\u001b[0m\n\u001b[33m[command] recovery: Pack it and retry.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n[work] success: A result.\n[work] value: \"a\\\"b\"\n[command] A line.\n[command] success: A result.\n[command] value: \"a\\\"b\"\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": "[work] warning: Optional input is missing.\n[work] error: A package is missing.\n[work] recovery: Pack it and retry.\n[command] warning: Optional input is missing.\n[command] error: A package is missing.\n[command] recovery: Pack it and retry.\n"
+    },
+    {
+      "profile": {
+        "name": "live-unicode-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n\u001b[32m[work] success: A result.\u001b[0m\n\u001b[36m[work] value: \"a\\\"b\"\u001b[0m\n[command] A line.\n\u001b[32m[command] success: A result.\u001b[0m\n\u001b[36m[command] value: \"a\\\"b\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n",
+      "stderr": "\u001b[33m[work] warning: Optional input is missing.\u001b[0m\n\u001b[31m[work] error: A package is missing.\u001b[0m\n\u001b[33m[work] recovery: Pack it and retry.\u001b[0m\n\u001b[33m[command] warning: Optional input is missing.\u001b[0m\n\u001b[31m[command] error: A package is missing.\u001b[0m\n\u001b[33m[command] recovery: Pack it and retry.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "live-unicode-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n[work] success: A result.\n[work] value: \"a\\\"b\"\n[command] A line.\n[command] success: A result.\n[command] value: \"a\\\"b\"\n\nCommand succeeded\n  ✓ [work] Succeeded\n",
+      "stderr": "[work] warning: Optional input is missing.\n[work] error: A package is missing.\n[work] recovery: Pack it and retry.\n[command] warning: Optional input is missing.\n[command] error: A package is missing.\n[command] recovery: Pack it and retry.\n"
+    },
+    {
+      "profile": {
+        "name": "live-ascii-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n\u001b[32m[work] success: A result.\u001b[0m\n\u001b[36m[work] value: \"a\\\"b\"\u001b[0m\n[command] A line.\n\u001b[32m[command] success: A result.\u001b[0m\n\u001b[36m[command] value: \"a\\\"b\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n",
+      "stderr": "\u001b[33m[work] warning: Optional input is missing.\u001b[0m\n\u001b[31m[work] error: A package is missing.\u001b[0m\n\u001b[33m[work] recovery: Pack it and retry.\u001b[0m\n\u001b[33m[command] warning: Optional input is missing.\u001b[0m\n\u001b[31m[command] error: A package is missing.\u001b[0m\n\u001b[33m[command] recovery: Pack it and retry.\u001b[0m\n"
+    },
+    {
+      "profile": {
+        "name": "live-ascii-no-color",
+        "width": 80,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] A line.\n[work] success: A result.\n[work] value: \"a\\\"b\"\n[command] A line.\n[command] success: A result.\n[command] value: \"a\\\"b\"\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": "[work] warning: Optional input is missing.\n[work] error: A package is missing.\n[work] recovery: Pack it and retry.\n[command] warning: Optional input is missing.\n[command] error: A package is missing.\n[command] recovery: Pack it and retry.\n"
+    }
+  ]
+}

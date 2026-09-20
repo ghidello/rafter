@@ -1,0 +1,123 @@
+{
+  "status": "proposed-awaiting-approval",
+  "description": "Width 40. Rich collection wraps vertically as a whole; embedded control characters stay escaped. Plain ignores width.",
+  "documents": [
+    {
+      "profile": {
+        "name": "plain",
+        "width": 40,
+        "rich": false,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] paths=[\"source/library\",\"tests/integration\",\"artifacts/packages\"]\n[work] special=\"tab\\tand\\u001b[31m\"\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-color",
+        "width": 40,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "\u001b[36m[work] paths:\u001b[0m\n\u001b[36m[work]   - \"source/library\"\u001b[0m\n\u001b[36m[work]   - \"tests/integration\"\u001b[0m\n\u001b[36m[work]   - \"artifacts/packages\"\u001b[0m\n\u001b[36m[work] special: \"tab\\tand\\u001b[31m\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-unicode-no-color",
+        "width": 40,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] paths:\n[work]   - \"source/library\"\n[work]   - \"tests/integration\"\n[work]   - \"artifacts/packages\"\n[work] special: \"tab\\tand\\u001b[31m\"\n\nCommand succeeded\n  ✓ [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-color",
+        "width": 40,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "\u001b[36m[work] paths:\u001b[0m\n\u001b[36m[work]   - \"source/library\"\u001b[0m\n\u001b[36m[work]   - \"tests/integration\"\u001b[0m\n\u001b[36m[work]   - \"artifacts/packages\"\u001b[0m\n\u001b[36m[work] special: \"tab\\tand\\u001b[31m\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "rich-ascii-no-color",
+        "width": 40,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": false,
+        "newline": "\n"
+      },
+      "stdout": "[work] paths:\n[work]   - \"source/library\"\n[work]   - \"tests/integration\"\n[work]   - \"artifacts/packages\"\n[work] special: \"tab\\tand\\u001b[31m\"\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-unicode-color",
+        "width": 40,
+        "rich": true,
+        "unicode": true,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "\u001b[36m[work] paths:\u001b[0m\n\u001b[36m[work]   - \"source/library\"\u001b[0m\n\u001b[36m[work]   - \"tests/integration\"\u001b[0m\n\u001b[36m[work]   - \"artifacts/packages\"\u001b[0m\n\u001b[36m[work] special: \"tab\\tand\\u001b[31m\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  ✓ [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-unicode-no-color",
+        "width": 40,
+        "rich": true,
+        "unicode": true,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] paths:\n[work]   - \"source/library\"\n[work]   - \"tests/integration\"\n[work]   - \"artifacts/packages\"\n[work] special: \"tab\\tand\\u001b[31m\"\n\nCommand succeeded\n  ✓ [work] Succeeded\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-ascii-color",
+        "width": 40,
+        "rich": true,
+        "unicode": false,
+        "color": true,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "\u001b[36m[work] paths:\u001b[0m\n\u001b[36m[work]   - \"source/library\"\u001b[0m\n\u001b[36m[work]   - \"tests/integration\"\u001b[0m\n\u001b[36m[work]   - \"artifacts/packages\"\u001b[0m\n\u001b[36m[work] special: \"tab\\tand\\u001b[31m\"\u001b[0m\n\n\u001b[1;32mCommand succeeded\u001b[0m\n\u001b[32m  [work] Succeeded\u001b[0m\n",
+      "stderr": ""
+    },
+    {
+      "profile": {
+        "name": "live-ascii-no-color",
+        "width": 40,
+        "rich": true,
+        "unicode": false,
+        "color": false,
+        "live": true,
+        "newline": "\n"
+      },
+      "stdout": "[work] paths:\n[work]   - \"source/library\"\n[work]   - \"tests/integration\"\n[work]   - \"artifacts/packages\"\n[work] special: \"tab\\tand\\u001b[31m\"\n\nCommand succeeded\n  [work] Succeeded\n",
+      "stderr": ""
+    }
+  ]
+}
