@@ -153,37 +153,47 @@ internal static class ProcessRuntime
         ProcessOwnership ownership,
         StartedExecution execution)
     {
-        IProcessAdapter process = ownership.Process;
-        _ = process.Id;
-        using CancellationTokenSource drainCancellation = new();
-        (Task<DrainResult> stdout, Task<DrainResult> stderr) = StartDrains(
-            process,
-            execution.Context,
-            execution.Prepared,
-            execution.Capture,
-            drainCancellation.Token);
-        Task exit = process.WaitForExitAsync();
-        execution.Arbiter.ObserveExit(exit);
+        using ProcessObservers observers = new();
+        try
+        {
+            observers.Initialize(ownership.Process, execution);
+            execution.Arbiter.ObserveExit(observers.Exit!);
+        }
+        catch (Exception initializationFailure)
+        {
+            throw await FailObservationAsync(ownership, observers, execution.Policy, initializationFailure)
+                .ConfigureAwait(false);
+        }
 
         LifecycleOutcome outcome = await execution.Arbiter.Completion.ConfigureAwait(false);
         if (outcome == LifecycleOutcome.NaturalExit)
         {
+            try
+            {
+                await observers.Exit!.ConfigureAwait(false);
+            }
+            catch (Exception observationFailure)
+            {
+                throw await FailObservationAsync(ownership, observers, execution.Policy, observationFailure)
+                    .ConfigureAwait(false);
+            }
+
             return await CompleteNaturalAsync(
                 ownership,
-                exit,
-                stdout,
-                stderr,
-                drainCancellation,
+                observers.Exit!,
+                observers.StandardOutput!,
+                observers.StandardError!,
+                observers.DrainCancellation,
                 execution.Prepared,
                 execution.Policy).ConfigureAwait(false);
         }
 
         Exception? teardown = await TerminateAsync(
             ownership,
-            exit,
-            stdout,
-            stderr,
-            drainCancellation,
+            observers.Exit!,
+            observers.StandardOutput!,
+            observers.StandardError!,
+            observers.DrainCancellation,
             execution.Policy).ConfigureAwait(false);
         ThrowLifecycleOutcome(
             outcome,
@@ -194,29 +204,67 @@ internal static class ProcessRuntime
         throw new UnreachableException();
     }
 
-    private static (Task<DrainResult> StandardOutput, Task<DrainResult> StandardError) StartDrains(
-        IProcessAdapter process,
-        RafterContext context,
-        PreparedProcess prepared,
-        bool capture,
+    private static async Task<ProcessException> FailObservationAsync(
+        ProcessOwnership ownership,
+        ProcessObservers observers,
+        ProcessRuntimePolicy policy,
+        Exception observationFailure)
+    {
+        Task verification = observers.Exit is null || observers.Exit.IsFaulted || observers.Exit.IsCanceled
+            ? ObserveDirectExitAsync(ownership.Process, policy.TimeProvider)
+            : observers.Exit;
+        Exception? teardownFailure = await TerminateAsync(
+            ownership,
+            verification,
+            observers.StandardOutput ?? Task.CompletedTask,
+            observers.StandardError ?? Task.CompletedTask,
+            observers.DrainCancellation,
+            policy).ConfigureAwait(false);
+        return new ProcessException("The process exit or stream observers failed.",
+            teardownFailure is null
+                ? observationFailure
+                : new AggregateException(observationFailure, teardownFailure));
+    }
+
+    private static Task<DrainResult> StartDrain(
+        Stream stream,
+        ProcessOutputStream outputStream,
+        StartedExecution execution,
         CancellationToken cancellationToken)
-        => (
-            DrainAsync(new DrainRequest(
-                process.StandardOutput,
-                ProcessOutputStream.StandardOutput,
-                context,
-                prepared.StreamingRedactor,
-                prepared.CaptureLimitBytes,
-                capture,
-                cancellationToken)),
-            DrainAsync(new DrainRequest(
-                process.StandardError,
-                ProcessOutputStream.StandardError,
-                context,
-                prepared.StreamingRedactor,
-                prepared.CaptureLimitBytes,
-                capture,
-                cancellationToken)));
+        => DrainAsync(new DrainRequest(
+            stream,
+            outputStream,
+            execution.Context,
+            execution.Prepared.StreamingRedactor,
+            execution.Prepared.CaptureLimitBytes,
+            execution.Capture,
+            cancellationToken));
+
+    private static async Task ObserveDirectExitAsync(
+        IProcessAdapter process,
+        TimeProvider timeProvider)
+    {
+        // The normal exit observer may be the failed resource. Teardown still needs independent exit verification;
+        // if it outlives the deadline, the reaper owns this task and the process until verification settles.
+        while (!process.HasExited)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(10), timeProvider, CancellationToken.None).ConfigureAwait(false);
+        }
+    }
+
+    private static async Task VerifyExitAsync(IProcessAdapter process, Task exit, TimeProvider timeProvider)
+    {
+        try
+        {
+            await exit.ConfigureAwait(false);
+        }
+        catch
+        {
+            // A failed observer does not prove child exit. Keep verification owned even when cancellation won.
+            await ObserveDirectExitAsync(process, timeProvider).ConfigureAwait(false);
+            throw;
+        }
+    }
 
     private static async Task<ProcessExecutionResult> CompleteNaturalAsync(
         ProcessOwnership ownership,
@@ -441,13 +489,14 @@ internal static class ProcessRuntime
     private static async Task<Exception?> TerminateAsync(
         ProcessOwnership ownership,
         Task exit,
-        Task<DrainResult> stdout,
-        Task<DrainResult> stderr,
+        Task stdout,
+        Task stderr,
         CancellationTokenSource drainCancellation,
         ProcessRuntimePolicy policy)
     {
         IProcessAdapter process = ownership.Process;
         List<Exception> failures = [];
+        Task verifiedExit = VerifyExitAsync(process, exit, policy.TimeProvider);
         Task kill = Task.Factory.StartNew(
             () => Kill(process),
             CancellationToken.None,
@@ -460,7 +509,7 @@ internal static class ProcessRuntime
             "The process-tree termination request did not settle.",
             failures).ConfigureAwait(false);
         await ObserveBoundedAsync(
-            exit,
+            verifiedExit,
             policy.ForcedKillVerification,
             policy.TimeProvider,
             "Direct-child termination could not be confirmed.",
@@ -475,7 +524,7 @@ internal static class ProcessRuntime
             "Redirected process streams did not settle after closure.",
             failures).ConfigureAwait(false);
 
-        Task[] lateOperations = new[] { kill, exit, drains }.Where(static task => !task.IsCompleted).ToArray();
+        Task[] lateOperations = new[] { kill, verifiedExit, drains }.Where(static task => !task.IsCompleted).ToArray();
         if (lateOperations.Length != 0)
         {
             ownership.Transfer(Task.WhenAll(lateOperations));
@@ -744,6 +793,30 @@ internal static class ProcessRuntime
         internal byte[] Buffer { get; } = new byte[BufferSize];
 
         internal int Count { get; set; }
+    }
+
+    private sealed class ProcessObservers : IDisposable
+    {
+        internal CancellationTokenSource DrainCancellation { get; } = new();
+
+        internal Task<DrainResult>? StandardOutput { get; private set; }
+
+        internal Task<DrainResult>? StandardError { get; private set; }
+
+        internal Task? Exit { get; private set; }
+
+        public void Dispose() => DrainCancellation.Dispose();
+
+        internal void Initialize(IProcessAdapter process, StartedExecution execution)
+        {
+            _ = process.Id;
+            // Retain each task before acquiring the next resource, which may fail independently.
+            StandardOutput = StartDrain(process.StandardOutput, ProcessOutputStream.StandardOutput,
+                execution, DrainCancellation.Token);
+            StandardError = StartDrain(process.StandardError, ProcessOutputStream.StandardError,
+                execution, DrainCancellation.Token);
+            Exit = process.WaitForExitAsync();
+        }
     }
 
     private sealed class ProcessOwnership : IDisposable

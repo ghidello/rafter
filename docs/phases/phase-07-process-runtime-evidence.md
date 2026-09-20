@@ -15,6 +15,9 @@ synthetic failure/race matrix, memory measurement, stress/resource evidence and 
 | Invalid streaming exit | `ProcessExitException`, null capture | `ReportsAStreamingInvalidExitWithoutRetainingCapture` |
 | Invalid capture exit | `ProcessExitException` with complete raw capture | `PreservesCompleteCaptureOnAnExplicitlyInvalidExit` |
 | Start failure / pre-cancellation | `ProcessStartException` / standard cancellation without launch | `ReportsStartupFailureButHonorsPreCancellationBeforeLaunch` |
+| Post-start observer failure | `ProcessException` preserves the cause; child termination, partial-reader closure and disposal remain owned | Ten capture/streaming rows in `ProcessInitializationTests.TerminatesAnOwnedChildWhenInitializationFails` |
+| Late partial drain after observer failure | Bounded teardown failure, tracked reaper ownership and eventual disposal in capture and streaming | Two rows in `ProcessInitializationTests.RetainsOwnershipOfAPartialDrainThatSettlesAfterInitializationFailure` |
+| Cancellation wins while exit observation fails | Cancellation remains primary; failed or cancelled observation cannot release ownership before child exit | Two rows in `ProcessInitializationTests.CancellationStillVerifiesExitWhenTheExitObserverFails` |
 | Per-stream overflow | `ProcessOutputException`, `CaptureLimitExceeded`, affected stream(s), safe limit | `ReportsCaptureOverflowAfterTheChildExits`, three `CaptureOverflowIdentifiesEachAffectedStream` rows |
 | UTF-8 policy | Strict malformed-input failure; split valid runes preserve exact text | `RejectsMalformedUtf8WithoutReplacementText`, four `CapturesUtf8SplitAcrossEveryPossibleRuneBoundary` rows |
 | Authored timeout | `ProcessTimeoutException`; terminate direct child and observed tree | `AuthoredTimeoutTerminatesTheDirectChild`, `AuthoredTimeoutTerminatesAReportedProcessTree` |
@@ -30,6 +33,15 @@ The generic runtime prepares a complete immutable specification, registers callb
 arbiter, starts the process synchronously, establishes independent stdout/stderr drains and exit observation, then
 settles according to the winning natural-exit, external-cancellation, ownership-cancellation or timeout outcome.
 All typed tools must later reuse this runtime.
+
+If process-ID lookup, stream acquisition or exit-observer creation fails after launch, the runtime enters bounded
+teardown with every reader already started. An asynchronous fault in the exit observer also enters teardown. When
+the normal exit observer is unavailable or failed, a separate `HasExited` poll verifies direct-child termination;
+unfinished verification or drainage remains tracked by the reaper. Synthetic tests cover ID/stdout/stderr/exit
+initialization failures and asynchronous exit-observer faults in both modes, plus late readers in both modes.
+Cancellation winning before the exit observer faults or cancels still requires independent direct-child
+verification, with reaper ownership when it settles late. These tests do not establish the full simultaneous
+cancellation/timeout/failure matrix.
 
 | Policy | Production value | Current evidence |
 | --- | --- | --- |
@@ -59,6 +71,7 @@ phase plan retain authority. No public API additions or removals were made by th
 The implementation retains capture in 16 KiB segments and creates UTF-16 strings only for successful complete
 capture. The current tests verify data limits, not the specified measured managed-memory envelope. R3 therefore
 remains open. The current three-OS CI establishes R11, while the broader R2 and R5–R9 matrices remain open.
-Source/observer initialization failure
-after successful launch, simultaneous failure ordering, disposal exceptions, repeated races and many-process stress
-still require focused verification. The Phase 8 extension and typed-tool examples remain explicitly deferred.
+Post-start observer failures now have focused regression coverage. Simultaneous failure ordering, exit-verification
+failures, disposal exceptions, repeated races and many-process stress still require focused verification. The
+macOS diagnostic split has passed, but the earlier runner disconnect remains unexplained. The Phase 8 extension
+and typed-tool examples remain explicitly deferred.

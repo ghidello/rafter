@@ -1,6 +1,6 @@
 # Phase 5–7 closeout audit
 
-## Status as of 2026-09-19
+## Status as of 2026-09-20
 
 The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. Phases 5–7 contain working implementations,
 but they are not complete under the phase contracts. Passing the current suite does not establish every behavior in
@@ -39,6 +39,12 @@ verification work without relaxing those contracts.
   example's code. The harness builds every example before rerunning earlier ones, exercising this isolation.
 - Corrected the CI fixture invocation: the process fixture requires a verb, so its old no-argument smoke check
   returned 64. CI now invokes `emit`, verifies formatting and runs the implemented-example harness on each OS.
+- Added owned teardown when process-ID lookup, stream acquisition or exit-observer creation fails after successful
+  launch, including asynchronous exit-observer faults. Partially initialized readers are retained for bounded
+  cleanup; delayed settlement transfers ownership to the reaper. Fourteen synthetic regressions cover capture and
+  streaming, original failure preservation, reader settlement and eventual disposal after late drainage. Review
+  also exposed cancellation winning while the exit observer fails: teardown now verifies actual child exit before
+  releasing ownership, including when the original observer faults or is cancelled.
 
 ## Local verification
 
@@ -48,7 +54,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 173 passed, zero failed or skipped |
+| Solution tests | 187 passed, zero failed or skipped, including 14 observer-failure regressions |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed; 58 runtime documents mapped |
@@ -73,10 +79,10 @@ transitions internally but has no live execution observer. Rich properties curre
 representation with color. These are implementation gaps, not missing checkmarks, and must be implemented before
 claiming the presentation gates. No new syntax or weakened requirement is proposed here.
 
-The Phase 7 adapter seam exists, but its existing synthetic test covers a late kill/drain transfer only. In particular,
-failure while acquiring streams or establishing the exit observer after successful start requires an owned teardown
-audit. `DrainAccumulator` is segmented, but the planned allocator-slack and materialization envelope has not been
-measured. Do not mark these gates complete based on ordinary successful child processes.
+The Phase 7 adapter seam now covers post-start observer failures and late kill/drain transfer. The broader matrix
+of start, cancellation, timeout, exit-verification, kill and disposal failures remains open. `DrainAccumulator` is
+segmented, but the planned allocator-slack and materialization envelope has not been measured. Do not mark these
+gates complete based on ordinary successful child processes or the focused regressions.
 
 ## Cross-platform evidence
 
@@ -103,8 +109,21 @@ close the intermittent-hang investigation or the Phase 7 stress/race gates.
 | [Package integrity](https://github.com/ghidello/rafter/actions/runs/35471171229/job/105972804165) | Matching packaged DLL/PDB, Source Link for 58 documents, both fresh-cache external consumers, 29 canonical references and unchanged example sources passed |
 
 This establishes the repository-quality baseline for the implementation commit above. It does not establish the
-unimplemented contracts or exhaustive phase matrices. CI 11 was still stalled when this evidence was recorded;
-its cause remains open. Historical Phase 4 results are not used as evidence for this implementation.
+unimplemented contracts or exhaustive phase matrices. Historical Phase 4 results are not used as evidence for this
+implementation.
+
+CI 11 and [CI 13](https://github.com/ghidello/rafter/actions/runs/35471565195) ultimately reported that the macOS
+hosted runner lost communication with GitHub. CI 13's second attempt remained stuck beyond both configured
+deadlines and was force-cancelled on 2026-09-20. The disconnected jobs did not provide a retrievable log archive;
+the available evidence does not identify a failing test or establish a runtime root cause.
+
+[CI 14](https://github.com/ghidello/rafter/actions/runs/35493840813) passed with the 23 Phase 7 process-test methods
+(28 cases) run in individual macOS steps, alongside the other 145 tests. This diagnostic split preserves every
+test but does not reproduce the original shared-process execution. Its success is not proof that the underlying
+runner-loss issue is fixed. [CI 15](https://github.com/ghidello/rafter/actions/runs/35494118283), for `d6e66f8`, also
+passed all three OS jobs and package verification. It pins Linux jobs to the validated `ubuntu-24.04` image ahead
+of the announced `ubuntu-latest` migration. These runs precede the 14 new observer-failure regressions; their local
+verification is recorded above, and the corresponding pushed revision requires its own CI result.
 
 ## Next implementation order
 
