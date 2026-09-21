@@ -5,16 +5,44 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
-if (args.Length != 1)
+if (args.Length is < 1 or > 2
+    || args.Length == 2 && !string.Equals(args[1], "--console-signals", StringComparison.Ordinal))
 {
-    throw new ArgumentException("Expected the process fixture executable path.", nameof(args));
+    throw new ArgumentException("Expected the fixture executable path and optional --console-signals.", nameof(args));
 }
 
 string fixturePath = Path.GetFullPath(args[0]);
+bool consoleSignals = args.Length == 2;
 Console.WriteLine($"Runtime: {RuntimeInformation.FrameworkDescription}; {RuntimeInformation.OSDescription}");
 Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}; probe PID: {Environment.ProcessId}");
+Console.WriteLine($"Console signal subscription: {consoleSignals}");
 
 for (int iteration = 1; iteration <= 5; iteration++)
+{
+    // Exercise subscription lifetime without suppressing a real user/runner cancellation signal.
+    ConsoleCancelEventHandler handler = static (_, _) => { };
+    try
+    {
+        if (consoleSignals)
+        {
+            Console.WriteLine($"Iteration {iteration}: subscribing console signals");
+            Console.CancelKeyPress += handler;
+        }
+
+        await RunIterationAsync(fixturePath, iteration).ConfigureAwait(false);
+    }
+    finally
+    {
+        if (consoleSignals)
+        {
+            Console.WriteLine($"Iteration {iteration}: unsubscribing console signals");
+            Console.CancelKeyPress -= handler;
+            Console.WriteLine($"Iteration {iteration}: console signal unsubscription settled");
+        }
+    }
+}
+
+static async Task RunIterationAsync(string fixturePath, int iteration)
 {
     string controlDirectory = Path.GetFullPath(Path.Combine("artifacts", "process-tree-probe", Guid.NewGuid().ToString("N")));
     Directory.CreateDirectory(controlDirectory);
@@ -54,29 +82,34 @@ for (int iteration = 1; iteration <= 5; iteration++)
     }
     finally
     {
-        // Keep cleanup independent of the API under investigation, using only fixture-reported PIDs.
-        foreach (string metadataPath in Directory.EnumerateFiles(controlDirectory, "*.json"))
-        {
-            using JsonDocument metadata = JsonDocument.Parse(
-                await File.ReadAllTextAsync(metadataPath).ConfigureAwait(false));
-            int processId = metadata.RootElement.GetProperty("processId").GetInt32();
-            Console.WriteLine($"Iteration {iteration}: checking fixture PID {processId}");
-            try
-            {
-                using Process remaining = Process.GetProcessById(processId);
-                Console.WriteLine($"Iteration {iteration}: PID {processId} still has a process-table entry; killing it");
-                remaining.Kill();
-                using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(5));
-                await remaining.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
-            }
-            catch (ArgumentException)
-            {
-            }
-            catch (InvalidOperationException)
-            {
-            }
-        }
-
-        Console.WriteLine($"Iteration {iteration}: cleanup settled");
+        await CleanupAsync(controlDirectory, iteration).ConfigureAwait(false);
     }
+}
+
+static async Task CleanupAsync(string controlDirectory, int iteration)
+{
+    // Keep cleanup independent of the API under investigation, using only fixture-reported PIDs.
+    foreach (string metadataPath in Directory.EnumerateFiles(controlDirectory, "*.json"))
+    {
+        using JsonDocument metadata = JsonDocument.Parse(
+            await File.ReadAllTextAsync(metadataPath).ConfigureAwait(false));
+        int processId = metadata.RootElement.GetProperty("processId").GetInt32();
+        Console.WriteLine($"Iteration {iteration}: checking fixture PID {processId}");
+        try
+        {
+            using Process remaining = Process.GetProcessById(processId);
+            Console.WriteLine($"Iteration {iteration}: PID {processId} still has a process-table entry; killing it");
+            remaining.Kill();
+            using CancellationTokenSource deadline = new(TimeSpan.FromSeconds(5));
+            await remaining.WaitForExitAsync(deadline.Token).ConfigureAwait(false);
+        }
+        catch (ArgumentException)
+        {
+        }
+        catch (InvalidOperationException)
+        {
+        }
+    }
+
+    Console.WriteLine($"Iteration {iteration}: cleanup settled");
 }

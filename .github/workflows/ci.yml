@@ -217,6 +217,13 @@ jobs:
           dotnet run eng/diagnose-process-tree.cs --configuration Release --
           artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture
 
+      - name: macOS runtime-only process-tree diagnostic with console signals
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 3
+        run: >-
+          dotnet run eng/diagnose-process-tree.cs --configuration Release --no-build --
+          artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture --console-signals
+
       - name: macOS process test - AuthoredTimeoutTerminatesAReportedProcessTree
         if: matrix.os == 'macos-latest'
         timeout-minutes: 2

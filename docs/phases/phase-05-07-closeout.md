@@ -232,11 +232,18 @@ Further appearance review remains deferred; the accepted presentation fixtures a
 
 [CI 21](https://github.com/ghidello/rafter/actions/runs/35648783274), for `392aa32`, passed Windows and Ubuntu,
 but again stalled in the same macOS test beyond its deadlines. Individual-PID cleanup did not resolve the stall.
-Cancellation was requested. A standalone diagnostic now precedes the affected macOS test and exercises five
+The run was force-cancelled. A standalone diagnostic now precedes the affected macOS test and exercises five
 fixture trees with `System.Diagnostics.Process` only, using the same 750 ms delay, redirected streams and dedicated
 kill thread. It logs tree-kill return, direct exit/drain completion and independent cleanup separately, without
-referencing Rafter or xUnit. All five iterations pass locally on Windows; macOS evidence is still pending.
+referencing Rafter or xUnit. All five iterations pass locally on Windows.
 
 Run it after building the solution with `dotnet run eng/diagnose-process-tree.cs --configuration Release --
 artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture` (append `.exe` on Windows).
 This is a diagnostic isolation step, not additional proof that the Phase 7 cancellation gate is closed.
+
+[CI 22](https://github.com/ghidello/rafter/actions/runs/35650207429), for `a541640`, passed all three OS jobs and
+package integrity. The macOS probe ran on .NET 10.0.12, macOS 26.6.2 arm64: its five tree-kill calls returned in
+28–50 ms; every exit, drain and cleanup completed. The original tree-timeout test also passed (991 ms). This does
+not resolve the intermittent failure from the preceding two runs. The next diagnostic mode, `--console-signals`,
+adds a `Console.CancelKeyPress` subscription around each iteration and logs unsubscription separately, matching
+the runtime signal registration used by Rafter while still omitting Rafter and xUnit entirely.
