@@ -9,11 +9,11 @@ and concurrent real-process cleanup.
 The solution has 722 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
 example scenarios pass without changing canonical example sources.
 
-Phases 5–7 are complete at `10cd98599048275c3f9f0dd631ae4bd5b455b608`, verified by
+Phases 5–7 passed at `10cd98599048275c3f9f0dd631ae4bd5b455b608`, verified by
 [CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) on its first attempt. Windows, Ubuntu, macOS and
 package integrity all pass. The user authorized the final push and CI step on 2026-09-21. The older intermittent
-macOS runner stall remains unexplained; this passing run is not claimed as a root-cause fix. Older test counts below
-identify historical checkpoints, not the current baseline.
+macOS runner stall recurred in CI 20 on the documentation-only closeout commit, so Phase 7 gates R5, R8 and R11
+are reopened. Older test counts below identify historical checkpoints, not the current baseline.
 
 ## Repairs made during verification
 
@@ -129,7 +129,7 @@ The full list and its limits are in the development guide. Artifacts are generat
 | --- | --- | --- |
 | 5 | Reachable graph preflight, exactly-once scheduling, measured sync/async bounds at 1/2/8, 25 repeated outcome runs, all condition families, cleanup/cancellation boundaries, signal and invocation-overlap races | G0–G9 closed with local evidence and CI 19 |
 | 6 | All 99 accepted documents and live frames; independent profiles/newlines; serialized managed, console, host and report publication; bounded property snapshots; fail-closed boundaries; chunk-reference redaction; six overlapping replacement cases; sink/observer/sealing failures | O0–O9 closed with local evidence and CI 19 |
-| 7 | Argument/policy/handle/path matrices; capture and strict UTF-8; 120 start races; observer/kill/close/dispose failure combinations; tracked late teardown with bounded failure history; measured allocation envelope; 8/24 real-child stress and timer ownership | R1–R11 closed with local evidence and CI 19; historical runner stall remains an explicitly unresolved observation |
+| 7 | Argument/policy/handle/path matrices; capture and strict UTF-8; 120 start races; observer/kill/close/dispose failure combinations; tracked late teardown with bounded failure history; measured allocation envelope; 8/24 real-child stress and timer ownership | CI 19 passed; R5, R8 and R11 reopened after the CI 20 macOS recurrence |
 
 The phase evidence documents map the local gates to named tests. Completion-gate checkboxes reflect that distinction;
 the original detailed implementation lists remain the contract history and are not a substitute for the gate evidence.
@@ -208,5 +208,24 @@ The macOS process-tree timeout and retained-pipe cases passed on this runner. Th
 still unknown; investigate any recurrence without treating retries as a repair. The diagnostic method split remains
 in place and does not claim to reproduce the older all-in-one test-process conditions.
 
-The agreed scope through Phase 7 is complete. Phase 8 typed tools and Phase 9 conformance remain future work.
+## Reopened macOS investigation
+
+[CI 20](https://github.com/ghidello/rafter/actions/runs/35647010649), for documentation-only commit `f08459a`,
+passed Windows and Ubuntu but stalled at macOS `AuthoredTimeoutTerminatesAReportedProcessTree`, starting at
+19:49:37 UTC on 2026-09-21 and remaining in progress beyond the 45-second test and two-minute step deadlines.
+The job had no downloadable log archive when inspected. The run was cancelled after confirming the stall.
+This reproduces CI 17's last reported method; it does not identify which call inside the test stalled.
+
+Review found that independent fixture cleanup called `Kill(entireProcessTree: true)` synchronously for each known
+PID before entering its bounded exit wait. Cleanup now uses individual `Kill()` calls, since every fixture reports
+its own PID. The actual Rafter tree-kill assertion remains unchanged. The workflow records `dotnet --info` to
+preserve the selected SDK, runtime and architecture for future investigations.
+The cleanup change passes all 29 real-process cases and formatting verification locally on Windows.
+
+[dotnet/runtime#131944](https://github.com/dotnet/runtime/issues/131944) reports an upstream macOS arm64 tree-kill
+hang in .NET 11. CI 19 installed .NET 10.0.12 on macOS 26 arm64; the upstream report is a lead, not a confirmed
+explanation of this failure. The .NET 10.0.12 Unix implementation still stops and kills each node recursively,
+whereas the linked issue concerns a later two-phase algorithm. No runtime workaround is justified by this evidence.
+
+The agreed scope through Phase 7 remains open at R5, R8 and R11. Phase 8 typed tools and Phase 9 conformance remain future work.
 Further appearance review remains deferred; the accepted presentation fixtures are still the contract.

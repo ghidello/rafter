@@ -14,12 +14,13 @@ The agreed implementation sequence and acceptance criteria are recorded in the
 
 ## Current status
 
-Phases 1–7 have completed evidence. Windows, Ubuntu and macOS CI pass with 722 tests, 24 compiled examples and
-14 example scenarios; package integrity and both external package consumers pass. Phase 6 includes the accepted
-rich properties, live lifecycle surfaces, continuation markers and serialized publication. Unresolved sensitive
+Phases 1–6 have completed evidence. The Phase 7 implementation passed CI 19 on Windows, Ubuntu and macOS with
+722 tests, 24 compiled examples, 14 example scenarios and package integrity. CI 20 reproduced the macOS stall in
+the process-tree timeout test, reopening Phase 7 cancellation, cross-platform and repository-quality gates.
+Phase 6 includes the accepted rich properties, live lifecycle surfaces, continuation markers and serialized
+publication. Unresolved sensitive
 prefixes fail closed at ordering barriers. Phase 7 includes measured capture allocations, concurrent-process stress
-and startup/resource-failure matrices. Phase 8 typed builders are next. The earlier intermittent macOS runner stall
-remains unexplained; the passing completion run does not establish its root cause.
+and startup/resource-failure matrices. The macOS stall remains under investigation before Phase 8 typed builders.
 See the [closeout audit](docs/phases/phase-05-07-closeout.md) for verified behavior and outstanding work.
 
 The package version is `0.1.0-dev.1`. The initial scope is source execution; published, self-contained, and Native AOT

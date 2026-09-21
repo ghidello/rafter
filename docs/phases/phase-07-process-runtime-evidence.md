@@ -3,8 +3,11 @@
 ## Status
 
 Generic process execution, failure/race matrices, capture allocation measurements and concurrent-resource checks
-pass in the 722-test supported-OS baseline. Phase 7 is complete at `10cd985`, verified by CI 19 on its first attempt.
-The earlier macOS runner stall remains an unexplained historical observation; it did not recur in this run.
+passed in the 722-test supported-OS baseline at `10cd985`, verified by CI 19 on its first attempt.
+CI 20 reproduced the macOS stall in `AuthoredTimeoutTerminatesAReportedProcessTree`, beyond both configured
+deadlines. Gates R5, R8 and R11 are reopened; CI 19 remains valid historical evidence, not a repair of the stall.
+Fixture cleanup now kills individually reported PIDs without another unbounded tree traversal. This removes a
+cleanup weakness but is not yet established as the cause of the stall. CI also records the selected runtime details.
 See the [closeout audit](phase-05-07-closeout.md#completion-verification) for exact jobs and verification limits.
 
 ## Completion and failure matrix

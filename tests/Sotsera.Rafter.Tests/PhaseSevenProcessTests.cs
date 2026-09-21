@@ -663,7 +663,8 @@ public sealed class PhaseSevenProcessTests
             try
             {
                 using Process process = Process.GetProcessById(processId);
-                process.Kill(entireProcessTree: true);
+                // Each fixture reports its own PID. Cleanup must not repeat the tree traversal under test.
+                process.Kill();
                 using CancellationTokenSource deadline = CancellationTokenSource.CreateLinkedTokenSource(
                     TestContext.Current.CancellationToken);
                 deadline.CancelAfter(TimeSpan.FromSeconds(5));

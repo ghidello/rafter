@@ -29,6 +29,9 @@ jobs:
       - name: Restore
         run: dotnet restore Rafter.slnx --configfile nuget.config
 
+      - name: Record runtime environment
+        run: dotnet --info
+
       - name: Build
         run: dotnet build Rafter.slnx --configuration Release --no-restore
 

@@ -4,8 +4,10 @@ Each phase document is an executable checklist and completion contract. Work pro
 phase explicitly leaves an integration seam for a later one.
 
 The [closeout audit](phase-05-07-closeout.md) distinguishes local evidence from CI requirements.
-Phases 1–7 are closed. [CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) verifies the Phase 5–7
-completion revision on Windows, Ubuntu and macOS, including package integrity. Phases 8–9 remain planned.
+Phases 1–6 are closed. [CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) passed the Phase 5–7
+implementation on Windows, Ubuntu and macOS, including package integrity. The process-tree timeout stall recurred
+in [CI 20](https://github.com/ghidello/rafter/actions/runs/35647010649), reopening Phase 7 gates R5, R8 and R11.
+Phases 8–9 remain planned.
 
 | Phase | Plan | Outcome |
 | --- | --- | --- |
