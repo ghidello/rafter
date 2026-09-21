@@ -6,7 +6,7 @@ The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. The local compl
 implemented at `7586f38`, with subsequent output-boundary repairs at `479288b`. It includes the accepted rich/live
 presentation, the user-approved fail-closed redaction boundaries, graph and process matrices, measured capture memory,
 and concurrent real-process cleanup.
-The solution has 739 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
+The solution has 741 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
 example scenarios pass without changing canonical example sources.
 
 Phases 5–7 passed at `10cd98599048275c3f9f0dd631ae4bd5b455b608`, verified by
@@ -306,3 +306,9 @@ its owned process group on that path as well. A fourth watchdog integration case
 a surviving descendant; it requires POSIX and runs in macOS CI. The three portable checks pass locally on Windows.
 The cancelled CI 21 macOS log was requested again and still returns `BlobNotFound`; no stack evidence was recovered.
 Supported-OS verification of these follow-up fixes remains pending.
+
+Two further cases complete stderr before stdout during forced teardown and reproduce nondeterministic aggregate
+ordering. Teardown now waits for both drains and assembles their failures in stdout-then-stderr order, preserving
+the plan's lifecycle-order contract. All 741 local tests pass, with formatting and an analyzer-clean Release build.
+The macOS watchdog's new exited-launcher case passes in CI 28; the full CI result and verification of the ordering
+repair remain pending.

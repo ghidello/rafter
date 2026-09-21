@@ -200,3 +200,9 @@ The POSIX watchdog now cleans its owned process group even after the launcher ex
 descendants after an early test-host exit. Its new integration case requires POSIX; the three portable watchdog
 checks continue to pass on Windows. This repairs test containment and does not establish a cause for the earlier
 macOS stall. The cancelled CI 21 job still has no downloadable log blob.
+
+Two reverse-completion rows additionally verify the required stdout-then-stderr failure order during forced
+teardown. They failed against the first aggregation repair because the non-generic combined task retained failures
+in completion order. Teardown now collects each settled drain's exceptions explicitly in stream order. The expanded
+741-test local suite passes, with clean formatting and Release build. The new POSIX watchdog containment case also
+passes in macOS CI 28; final supported-OS results for the ordering repair remain pending.

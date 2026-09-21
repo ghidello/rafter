@@ -516,7 +516,8 @@ internal static class ProcessRuntime
             "Direct-child termination could not be confirmed.",
             failures).ConfigureAwait(false);
 
-        DrainClosure closure = await CloseDrainsAsync(ownership, Task.WhenAll(stdout, stderr), policy).ConfigureAwait(false);
+        DrainClosure closure = await CloseDrainsAsync(ownership, ObserveDrainsAsync(stdout, stderr), policy)
+            .ConfigureAwait(false);
         failures.AddRange(closure.Failures);
         List<Task> lateOperations = [.. closure.Pending];
         if (!killObserved)
@@ -581,6 +582,32 @@ internal static class ProcessRuntime
             failures.Add(task.Exception is { InnerExceptions.Count: > 1 } aggregate ? aggregate : exception);
         }
         return true;
+    }
+
+    private static async Task ObserveDrainsAsync(Task stdout, Task stderr)
+    {
+        try
+        {
+            await Task.WhenAll(stdout, stderr).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Non-generic WhenAll retains faults in completion order; the process contract orders stdout first.
+            List<Exception> failures = [];
+            if (stdout.Exception is { } outputFailure)
+            {
+                failures.AddRange(outputFailure.InnerExceptions);
+            }
+            if (stderr.Exception is { } errorFailure)
+            {
+                failures.AddRange(errorFailure.InnerExceptions);
+            }
+            if (failures.Count > 1)
+            {
+                throw new AggregateException(failures);
+            }
+            throw;
+        }
     }
 
     private static async Task<DrainResult> DrainAsync(DrainRequest request)

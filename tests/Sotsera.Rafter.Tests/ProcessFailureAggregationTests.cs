@@ -6,13 +6,15 @@ namespace Sotsera.Rafter.Tests;
 public sealed class ProcessFailureAggregationTests
 {
     [Theory]
-    [InlineData(false, false)]
-    [InlineData(false, true)]
-    [InlineData(true, false)]
-    [InlineData(true, true)]
-    public async Task BothDrainFailuresRemainAvailable(bool timeout, bool capture)
+    [InlineData(false, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(true, false, false)]
+    [InlineData(true, true, false)]
+    [InlineData(true, false, true)]
+    [InlineData(true, true, true)]
+    public async Task BothDrainFailuresRemainAvailable(bool timeout, bool capture, bool reverseCompletion)
     {
-        FaultingProcess process = new(timeout);
+        FaultingProcess process = new(timeout, reverseCompletion);
         IProcessAdapterFactory original = ProcessRuntime.AdapterFactory;
         ProcessRuntime.AdapterFactory = new Factory(process);
         try
@@ -20,7 +22,11 @@ public sealed class ProcessFailureAggregationTests
             Command command = PhaseFiveTestSupport.CreateCommand();
             Target work = command.Target("work").Description("Drain both streams.").Run(async context =>
             {
-                ProcessBuilder builder = context.Process("synthetic").Timeout(TimeSpan.FromMilliseconds(30));
+                ProcessBuilder builder = context.Process("synthetic");
+                if (timeout)
+                {
+                    builder = builder.Timeout(TimeSpan.FromMilliseconds(30));
+                }
                 if (capture)
                 {
                     await builder.Capture().ConfigureAwait(false);
@@ -31,8 +37,14 @@ public sealed class ProcessFailureAggregationTests
                 }
             });
 
-            int exitCode = await command.RunAsync(work, [], TestContext.Current.CancellationToken)
-                .WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
+            Task<int> run = command.RunAsync(work, [], TestContext.Current.CancellationToken);
+            if (reverseCompletion)
+            {
+                await process.CloseRequested.Task.WaitAsync(TimeSpan.FromSeconds(5),
+                    TestContext.Current.CancellationToken);
+                process.FailDrains();
+            }
+            int exitCode = await run.WaitAsync(TimeSpan.FromSeconds(5), TestContext.Current.CancellationToken);
 
             exitCode.Should().Be(1);
             Exception failure = command.LastExecutionOutcome!.Targets.Single().PrimaryException!;
@@ -43,6 +55,7 @@ public sealed class ProcessFailureAggregationTests
         }
         finally
         {
+            process.FailDrains();
             ProcessRuntime.AdapterFactory = original;
         }
     }
@@ -89,10 +102,10 @@ public sealed class ProcessFailureAggregationTests
     {
         private readonly TaskCompletionSource _exit = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-        internal FaultingProcess(bool timeout)
+        internal FaultingProcess(bool timeout, bool deferred)
         {
-            StandardOutput = new FaultingStream(OutputFailure);
-            StandardError = new FaultingStream(ErrorFailure);
+            StandardOutput = new FaultingStream(OutputFailure, deferred);
+            StandardError = new FaultingStream(ErrorFailure, deferred);
             if (!timeout)
             {
                 _exit.SetResult();
@@ -115,6 +128,8 @@ public sealed class ProcessFailureAggregationTests
 
         internal int DisposeCount { get; private set; }
 
+        internal TaskCompletionSource CloseRequested { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
         public bool Start() => true;
 
         public Task WaitForExitAsync() => _exit.Task;
@@ -123,20 +138,37 @@ public sealed class ProcessFailureAggregationTests
 
         public void CloseOutput()
         {
-            StandardOutput.Dispose();
-            StandardError.Dispose();
+            CloseRequested.TrySetResult();
         }
 
         public void Dispose()
         {
             DisposeCount++;
-            CloseOutput();
+            StandardOutput.Dispose();
+            StandardError.Dispose();
+        }
+
+        internal void FailDrains()
+        {
+            ((FaultingStream)StandardError).Fail();
+            ((FaultingStream)StandardOutput).Fail();
         }
     }
 
-    private sealed class FaultingStream(Exception failure) : MemoryStream
+    private sealed class FaultingStream(Exception failure, bool deferred) : MemoryStream
     {
+        // Inline drain continuations make stderr settle before stdout without relying on a scheduling delay.
+        private readonly TaskCompletionSource<int> _read = new();
+
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
-            => ValueTask.FromException<int>(failure);
+            => deferred ? new ValueTask<int>(_read.Task) : ValueTask.FromException<int>(failure);
+
+        internal void Fail()
+        {
+            if (deferred)
+            {
+                _read.TrySetException(failure);
+            }
+        }
     }
 }
