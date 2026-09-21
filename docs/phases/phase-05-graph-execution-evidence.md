@@ -4,11 +4,12 @@
 
 Phase 5 implements reachable graph planning, deterministic bounded scheduling, conditions, failure isolation,
 cooperative cancellation, target cleanup, command cleanup, and the minimal deterministic execution-failure report.
-The local repository baseline passes. Historical CI jobs and the earlier macOS stall are recorded in the
+Phase 5 is complete at `10cd985`; CI 19 passes on Windows, Ubuntu and macOS, including package integrity.
+Historical CI jobs and the earlier macOS stall are recorded in the
 [closeout audit](phase-05-07-closeout.md#cross-platform-evidence).
 
-The [closeout audit](phase-05-07-closeout.md) records the current baseline and remaining CI gates.
-The original 118-test record below is historical; the current baseline has 721 passing local solution tests.
+The [closeout audit](phase-05-07-closeout.md#completion-verification) records the completed gates and exact CI jobs.
+The original 118-test record below is historical; the current baseline has 722 passing tests on each supported OS.
 
 ## Invocation and planning
 
@@ -77,8 +78,8 @@ Observed locally on Windows x64 with .NET SDK `10.0.400`:
 - all 29 canonical examples retained their project-mode references;
 - `git diff --check` passed.
 
-The remaining repository-quality gate requires the new revision's Windows, Ubuntu and macOS CI results.
-Historical results are recorded separately in the closeout audit and do not certify these changes.
+The repository-quality gate is satisfied by CI 19 at `10cd985`. Historical results are recorded separately in the
+closeout audit and are not substituted for this revision's evidence.
 
 ## State, cleanup, and exit tables
 
@@ -135,4 +136,4 @@ handled decision. Existing process-isolated integration tests continue to exerci
 | G6 | Cleanup qualification/context/order cases in `PhaseFiveExecutionTests`, terminal-path overlap in `InvocationBoundaryTests`, callback ownership in `ProcessCallbackScopeTests` |
 | G7 | Pre-cancellation, queued/running cancellation, condition/path boundaries, distinct cleanup tokens, `ConsoleCancellationCoordinatorTests`, subscription races and production-signal integration fixture |
 | G8 | State, cleanup and exit tables above, with the completion-pass results |
-| G9 | Local baseline passes; new supported-OS CI and package job pending permission to push |
+| G9 | Local baseline and CI 19 pass: all three OS jobs and package integrity at `10cd985` |

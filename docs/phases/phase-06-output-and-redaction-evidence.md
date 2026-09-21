@@ -2,10 +2,10 @@
 
 ## Status
 
-The accepted presentation and fail-closed boundary behavior are implemented and locally verified as of 2026-09-20.
+The accepted presentation and fail-closed boundary behavior are complete at `10cd985`, verified by CI 19 on 2026-09-21.
 All 99 accepted stdout/stderr pairs and all four live-profile frame sequences have executable comparisons.
 The [closeout audit](phase-05-07-closeout.md) distinguishes the 722-test local baseline from historical CI.
-The new supported-OS CI and package job remain required before formal phase closure.
+All three supported-OS jobs and package integrity pass; every completion gate is now satisfied.
 
 ## Routing and redaction coverage
 
@@ -250,7 +250,7 @@ CRLF, CR or a custom separator. Cursor display is limited to LF/CRLF profiles; o
 | O6 | Console overload/host-failure/restoration tests and the six overlapping replacement cases |
 | O7 | Routing table, accepted fixtures, redaction and completion matrices in this document |
 | O8 | Synthetic and real raw-capture re-entry; exact raw bytes become redacted only at managed output ingress |
-| O9 | 722 local tests pass; the new supported-OS CI and package job are authorized and pending |
+| O9 | 722 tests on each supported OS, examples and package integrity pass in CI 19 at `10cd985` |
 
 ## Review follow-up: text and writer boundaries (2026-09-21)
 
@@ -278,3 +278,11 @@ now mark the writer's line boundary uncertain, including failures during live fr
 verifies that redraws remain suspended until a successful newline-bearing write, then resume without erasing the
 partial output. The full local suite passes 722 cases; formatting and the analyzer-clean Release build pass.
 The user authorized pushing the reviewed branch and running the supported-OS CI matrix on 2026-09-21.
+
+## Completion verification
+
+[CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) passes on its first attempt at `10cd985`.
+Windows and Ubuntu each run all 722 tests together; macOS runs 693 main cases and all 29 isolated process cases.
+All profiles, redaction boundaries, renderer failures and golden documents pass on all three platforms, together
+with 24 compiled/help examples and 14 execution scenarios. The package job verifies 63 Source Link documents and
+both fresh-cache external consumers. Exact jobs and historical failures are retained in the closeout audit.

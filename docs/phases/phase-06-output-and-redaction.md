@@ -1,6 +1,6 @@
 # Phase 6: output, console attribution, and redaction
 
-Status: accepted presentation and local verification complete; repository-quality gate awaits new supported-OS CI.
+Status: complete at `10cd985`, with accepted presentation and supported-OS/package verification in CI 19.
 See the [evidence](phase-06-output-and-redaction-evidence.md) and [gate audit](phase-05-07-closeout.md).
 The completion gates and named evidence are authoritative; detailed work packages retain their original checklist.
 
@@ -553,7 +553,7 @@ the Phase 6 API. It must explicitly list examples deferred to process-runtime an
 - [x] **O8 — Future raw-data ingress:** an internal synthetic raw payload can re-enter every Phase 6 managed channel
       and is redacted there; public `ProcessCapture`, invalid-exit capture, and child-process wiring remain explicit
       Phase 7/8 completion work.
-- [ ] **O9 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
+- [x] **O9 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
       public API checks, Phase 6 examples, and the supported-OS CI matrix pass with committed evidence.
 
 ## Phase 7 and Phase 8 handoff

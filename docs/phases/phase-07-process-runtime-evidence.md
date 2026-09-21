@@ -3,8 +3,9 @@
 ## Status
 
 Generic process execution, failure/race matrices, capture allocation measurements and concurrent-resource checks
-pass locally in the 721-test solution suite. Supported-OS CI predates these changes. The phase remains open for that
-final validation and the unresolved earlier macOS runner stall. See the [closeout audit](phase-05-07-closeout.md).
+pass in the 722-test supported-OS baseline. Phase 7 is complete at `10cd985`, verified by CI 19 on its first attempt.
+The earlier macOS runner stall remains an unexplained historical observation; it did not recur in this run.
+See the [closeout audit](phase-05-07-closeout.md#completion-verification) for exact jobs and verification limits.
 
 ## Completion and failure matrix
 
@@ -101,7 +102,7 @@ pipes. They verify exact text, independent process-handle exit confirmation, exa
 empty reaper. Every observed child is independently cleaned in a finally block, including after assertion failure.
 The complete 537-test suite passes locally; supported-OS CI remains deferred.
 
-## Cross-platform limitations
+## Historical cross-platform limitations
 
 The capture component now has measured local allocation evidence; current three-OS evidence predates this change.
 The new failure combinations, repeated races, disposal and concurrent captures have the focused local checks recorded
@@ -147,3 +148,15 @@ Phase 4 policy rejects that namespace only on Windows. On Unix the same characte
 filename, so specification validation succeeds and pre-cancellation or adapter creation follows normally.
 The two rows now verify those native outcomes explicitly, including normalized Unix executable text and factory
 invocation counts. They remain required tests on every OS; no runtime validation or assertion was disabled.
+
+## Completion verification
+
+[CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) at `10cd985` passes Windows, Ubuntu 24.04,
+macOS and package integrity without retries. Each OS verifies all 722 cases: macOS runs 693 in its main step and
+29 real-process cases in 23 isolated method steps. The tree-timeout, retained-pipe, memory, concurrent-launch,
+start-race and late-ownership cases all pass. The native-path correction above passes both cancellation rows on
+every platform. Every implemented example compiles and renders help; all 14 deterministic execution scenarios pass.
+Package verification confirms 63 Source Link documents and fresh-cache project/file-app consumption.
+
+R1–R11 are closed with this evidence. The historical runner disconnect is not claimed fixed; the method split remains
+documented, and a recurrence still requires investigation. The approved descendant guarantee remains best effort.

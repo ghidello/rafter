@@ -1,6 +1,6 @@
 # Phase 7: .NET 10 process runtime
 
-Status: generic runtime and local verification complete; supported-OS gates await new CI results.
+Status: complete at `10cd985`, with generic runtime and supported-OS/package verification in CI 19.
 See the [evidence](phase-07-process-runtime-evidence.md) and [gate audit](phase-05-07-closeout.md), including the
 startup/teardown matrices, measured allocations, concurrent stress and earlier unexplained macOS test stall.
 The completion gates and named evidence are authoritative; detailed work packages retain their original checklist.
@@ -833,11 +833,11 @@ examples as Phase 8 work rather than weakening Phase 7's generic runtime gate.
 
 - [x] **R1 — Argument safety:** hostile-token fixtures receive the exact authored argument vector without shell
       interpretation.
-- [ ] **R2 — Deadlock resistance:** simultaneous output beyond both pipe capacities completes on all supported OSes.
+- [x] **R2 — Deadlock resistance:** simultaneous output beyond both pipe capacities completes on all supported OSes.
 - [x] **R3 — Bounded capture:** retained input bytes follow per-stream limits, managed-memory overhead matches the
       documented segmented/materialization envelope, and fixtures prove pipes continue draining.
-- [ ] **R4 — Retained-handle bound:** descendant-held pipes fail within the two-second direct-exit drain deadline.
-- [ ] **R5 — Cancellation bound:** direct-child and process-tree scenarios meet the two-second tree-kill-request,
+- [x] **R4 — Retained-handle bound:** descendant-held pipes fail within the two-second direct-exit drain deadline.
+- [x] **R5 — Cancellation bound:** direct-child and process-tree scenarios meet the two-second tree-kill-request,
       five-second kill-verification, and two-second forced-close-drain deadlines for cancellation and authored
       timeout.
 - [x] **R6 — Race determinism:** repeated start/exit/cancel races produce only documented outcomes and no unobserved
@@ -846,12 +846,12 @@ examples as Phase 8 work rather than weakening Phase 7's generic runtime gate.
       after independently cleaning best-effort descendants, no fixture process, reaper entry, registration, or
       undisposed process resource remains detectable by the harness. The synthetic late-operation tests prove
       tracked handoff and eventual reaper cleanup.
-- [ ] **R8 — Cross-platform contract:** platform-specific differences are documented and CI-tested, not retry-hidden.
+- [x] **R8 — Cross-platform contract:** platform-specific differences are documented and CI-tested, not retry-hidden.
 - [x] **R9 — Evidence recorded:** process state machine, timeout values, fixture protocol, and matrix results are
       committed with the phase completion record.
-- [ ] **R10 — Retained-handle decision:** retained pipes fail within the documented deadline with no partial capture;
+- [x] **R10 — Retained-handle decision:** retained pipes fail within the documented deadline with no partial capture;
       direct-child termination is verified and best-effort descendant results are recorded per platform.
-- [ ] **R11 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
+- [x] **R11 — Repository quality:** formatting, analyzer-clean Release build, all tests, package creation and integrity,
       public API checks, the five Phase 7 generic process examples, and the supported-OS CI matrix pass with committed
       evidence.
 

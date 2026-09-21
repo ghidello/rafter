@@ -4,8 +4,8 @@ Each phase document is an executable checklist and completion contract. Work pro
 phase explicitly leaves an integration seam for a later one.
 
 The [closeout audit](phase-05-07-closeout.md) distinguishes local evidence from CI requirements.
-Phases 1–4 are closed; Phases 5–7 have completed local implementation and verification, with formal closure pending
-the new supported-OS CI and package job. Phases 8–9 remain planned.
+Phases 1–7 are closed. [CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) verifies the Phase 5–7
+completion revision on Windows, Ubuntu and macOS, including package integrity. Phases 8–9 remain planned.
 
 | Phase | Plan | Outcome |
 | --- | --- | --- |

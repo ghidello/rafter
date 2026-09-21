@@ -9,9 +9,11 @@ and concurrent real-process cleanup.
 The solution has 722 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
 example scenarios pass without changing canonical example sources.
 
-Phases 5–7 remain formally open for the new revision's supported-OS CI and package job. The user authorized the
-final push and CI step on 2026-09-21 following local review and verification. The older intermittent macOS runner
-stall remains unexplained. Older test counts below identify historical checkpoints, not the current baseline.
+Phases 5–7 are complete at `10cd98599048275c3f9f0dd631ae4bd5b455b608`, verified by
+[CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) on its first attempt. Windows, Ubuntu, macOS and
+package integrity all pass. The user authorized the final push and CI step on 2026-09-21. The older intermittent
+macOS runner stall remains unexplained; this passing run is not claimed as a root-cause fix. Older test counts below
+identify historical checkpoints, not the current baseline.
 
 ## Repairs made during verification
 
@@ -112,7 +114,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | Solution tests | 722 passed, zero failed or skipped |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
-| Packaged PDB identity and canonical Source Link map | Passed for `479288b`; 63 runtime documents mapped |
+| Packaged PDB identity and canonical Source Link map | Passed locally for `5a5ba58`; 63 runtime documents mapped |
 | Fresh-cache external project and file-app consumers | Passed; both bind and execute the public command API |
 | Canonical reference check | All 29 examples retain their original project reference |
 | Implemented-example compilation and plain help | All 24 classified examples passed |
@@ -123,11 +125,11 @@ The full list and its limits are in the development guide. Artifacts are generat
 
 ## Gate reconciliation
 
-| Phase | Established evidence | Still required before phase completion |
+| Phase | Established evidence | Completion record |
 | --- | --- | --- |
-| 5 | Reachable graph preflight, exactly-once scheduling, measured sync/async bounds at 1/2/8, 25 repeated outcome runs, all condition families, cleanup/cancellation boundaries, signal and invocation-overlap races | G9: supported-OS CI and package job for the completion revision |
-| 6 | All 99 accepted documents and live frames; independent profiles/newlines; serialized managed, console, host and report publication; bounded property snapshots; fail-closed boundaries; chunk-reference redaction; six overlapping replacement cases; sink/observer/sealing failures | O9: supported-OS CI and package job for the completion revision |
-| 7 | Argument/policy/handle/path matrices; capture and strict UTF-8; 120 start races; observer/kill/close/dispose failure combinations; tracked late teardown with bounded failure history; measured allocation envelope; 8/24 real-child stress and timer ownership | R2/R4/R5/R8/R10/R11: new supported-OS execution and package results; investigate any recurrence of the historical macOS stall |
+| 5 | Reachable graph preflight, exactly-once scheduling, measured sync/async bounds at 1/2/8, 25 repeated outcome runs, all condition families, cleanup/cancellation boundaries, signal and invocation-overlap races | G0–G9 closed with local evidence and CI 19 |
+| 6 | All 99 accepted documents and live frames; independent profiles/newlines; serialized managed, console, host and report publication; bounded property snapshots; fail-closed boundaries; chunk-reference redaction; six overlapping replacement cases; sink/observer/sealing failures | O0–O9 closed with local evidence and CI 19 |
+| 7 | Argument/policy/handle/path matrices; capture and strict UTF-8; 120 start races; observer/kill/close/dispose failure combinations; tracked late teardown with bounded failure history; measured allocation envelope; 8/24 real-child stress and timer ownership | R1–R11 closed with local evidence and CI 19; historical runner stall remains an explicitly unresolved observation |
 
 The phase evidence documents map the local gates to named tests. Completion-gate checkboxes reflect that distinction;
 the original detailed implementation lists remain the contract history and are not a substitute for the gate evidence.
@@ -183,13 +185,28 @@ package verification with 187 tests, including the 14 observer-failure regressio
 with 213 tests, including the initial 26 capability cases, all examples and package verification for 59 source
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
-That package result refers to `d873080`. The local table above records the later `479288b` package; its additional
-tests and examples have not yet run on the GitHub-hosted matrix. The final push and CI step is now authorized.
+That package result refers to `d873080`. The local table above records the later `5a5ba58` package.
 
-## Remaining closeout steps
+[CI 18](https://github.com/ghidello/rafter/actions/runs/35645601955), for `5a5ba58`, passed the Windows job with
+722 tests and all implemented examples. Ubuntu and macOS each failed the two new device-path diagnostic rows;
+the package job was consequently skipped. The fixture incorrectly applied Windows device-namespace restrictions
+to Unix filenames. Commit `10cd985` corrects the test to assert native normalization, cancellation and launch behavior
+on each OS without skipping either row. This was a test portability error, not a recurrence of the runner stall.
 
-1. Push the reviewed commits and run the full CI matrix, as authorized on 2026-09-21.
-2. Record Windows, Ubuntu, macOS and package results for that revision. If macOS stalls again, retain diagnostics and
-   investigate it; do not describe a successful retry as a root-cause fix.
-3. Close the remaining CI-dependent gates only after that evidence passes. Keep Phase 8 typed builders deferred.
-4. Reconsider appearance separately when the user chooses; the accepted fixtures remain the current contract.
+## Completion verification
+
+[CI 19](https://github.com/ghidello/rafter/actions/runs/35646084394) passed on 2026-09-21 for `10cd985` with no retries:
+
+| Job | Verified result |
+| --- | --- |
+| [Windows](https://github.com/ghidello/rafter/actions/runs/35646084394/job/106486766424) | Audited restore, analyzer-clean build, formatting, 722 tests, 24 compiled/help examples and 14 execution scenarios |
+| [Ubuntu 24.04](https://github.com/ghidello/rafter/actions/runs/35646084394/job/106486766235) | Same checks; 722 passed, zero failed or skipped |
+| [macOS](https://github.com/ghidello/rafter/actions/runs/35646084394/job/106486766402) | Same checks; 693 tests in the main step plus 29 process cases in 23 isolated method steps; all passed |
+| [Package integrity](https://github.com/ghidello/rafter/actions/runs/35646084394/job/106488179862) | Matching DLL/PDB, 63 Source Link documents for `10cd985`, both fresh-cache external consumers, canonical-reference and unchanged-example checks |
+
+The macOS process-tree timeout and retained-pipe cases passed on this runner. The historical runner-loss cause is
+still unknown; investigate any recurrence without treating retries as a repair. The diagnostic method split remains
+in place and does not claim to reproduce the older all-in-one test-process conditions.
+
+The agreed scope through Phase 7 is complete. Phase 8 typed tools and Phase 9 conformance remain future work.
+Further appearance review remains deferred; the accepted presentation fixtures are still the contract.
