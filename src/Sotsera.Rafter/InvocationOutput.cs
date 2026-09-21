@@ -85,7 +85,7 @@ internal sealed class InvocationOutput
         {
             FlushConsoleForOrdering(standardError: false);
             FlushConsoleForOrdering(standardError: true);
-            TerminalPublication.UpdateLive(this, _standardOutput, _live.Update(notification));
+            TerminalPublication.UpdateLive(this, _standardOutput, _standardError, _live.Update(notification));
         }
     }
 
@@ -584,6 +584,7 @@ internal sealed class InvocationOutput
         private readonly bool _standardError;
         private readonly StreamingTextRedactor _redactor;
         private bool _pendingInputCarriageReturn;
+        private bool _skipInputLineFeed;
         private bool _pendingCarriageReturn;
         private bool _continued;
         private string? _pendingInputScope;
@@ -600,6 +601,14 @@ internal sealed class InvocationOutput
             List<OutputEvent> events = [];
             foreach (char character in text)
             {
+                if (_skipInputLineFeed)
+                {
+                    _skipInputLineFeed = false;
+                    if (character == '\n')
+                    {
+                        continue;
+                    }
+                }
                 if (_pendingInputCarriageReturn)
                 {
                     AppendNormalized(_pendingInputScope!, '\n', events);
@@ -633,6 +642,8 @@ internal sealed class InvocationOutput
                 AppendNormalized(_pendingInputScope!, '\n', events);
                 _pendingInputCarriageReturn = false;
                 _pendingInputScope = null;
+                // Publishing a pending CR must not turn a later LF into a second source newline.
+                _skipInputLineFeed = true;
             }
 
             if (final)

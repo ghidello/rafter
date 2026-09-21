@@ -35,6 +35,44 @@ internal sealed record OutputProperty(string Name, string CanonicalValue)
         return new OutputProperty(RedactText(Name, redactor), RedactValue(document.RootElement, redactor));
     }
 
+    internal static string DecodeString(JsonElement value)
+    {
+        // Our canonical JSON escapes every surrogate code unit. GetString rejects unpaired surrogates,
+        // but property snapshots must preserve the original UTF-16 for redaction and visible escaping.
+        string literal = value.GetRawText();
+        StringBuilder decoded = new(literal.Length - 2);
+        for (int index = 1; index < literal.Length - 1; index++)
+        {
+            char character = literal[index];
+            if (character != '\\')
+            {
+                decoded.Append(character);
+                continue;
+            }
+
+            character = literal[++index];
+            if (character == 'u')
+            {
+                decoded.Append((char)int.Parse(literal.AsSpan(index + 1, 4), NumberStyles.HexNumber,
+                    CultureInfo.InvariantCulture));
+                index += 4;
+                continue;
+            }
+
+            decoded.Append(character switch
+            {
+                '"' or '\\' or '/' => character,
+                'b' => '\b',
+                'f' => '\f',
+                'n' => '\n',
+                'r' => '\r',
+                't' => '\t',
+                _ => throw new InvalidOperationException("Invalid canonical property escape."),
+            });
+        }
+        return decoded.ToString();
+    }
+
     private static string RedactValue(JsonElement value, TextRedactor redactor)
     {
         if (value.ValueKind == JsonValueKind.Array)
@@ -43,7 +81,7 @@ internal sealed record OutputProperty(string Name, string CanonicalValue)
         }
         if (value.ValueKind == JsonValueKind.String)
         {
-            return Quote(RedactText(value.GetString()!, redactor));
+            return Quote(RedactText(DecodeString(value), redactor));
         }
         string original = value.GetRawText();
         string safe = RedactText(original, redactor);

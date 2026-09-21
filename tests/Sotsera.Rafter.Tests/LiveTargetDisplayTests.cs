@@ -96,6 +96,34 @@ public sealed class LiveTargetDisplayTests
         {
             Console.SetOut(original);
         }
+
+        TerminalSurfaceWriter next = new();
+        Command following = CreateLiveCommand(next);
+        Target entry = following.Target("next").Description("Next.")
+            .Run(() => next.ToString().Should().Contain("[next] Running"));
+        (await following.RunAsync(entry, [], TestContext.Current.CancellationToken)).Should().Be(0);
+    }
+
+    [Fact]
+    public async Task SeparateStderrNewlineCannotResumeLiveFramesInsideAHostStdoutFragment()
+    {
+        TerminalSurfaceWriter terminal = new();
+        StringWriter error = new();
+        OutputCapabilities live = new(false, true, true, false, true, true, 80);
+        Command command = PhaseFiveTestSupport.CreateCommand();
+        command.InvocationServicesFactory = () => new InvocationServices(_ => null, terminal, error,
+            live, OutputCapabilities.Plain, "test");
+        Target work = command.Target("work").Description("Mixed streams.").Run(context =>
+        {
+            TerminalPublication.WriteHost(terminal, "host fragment");
+            context.Output.Warning("separate warning");
+            terminal.ToString().Should().Be("host fragment");
+        });
+
+        (await command.RunAsync(work, [], TestContext.Current.CancellationToken)).Should().Be(0);
+
+        terminal.ToString().Should().Be("host fragment\nCommand succeeded\n  ✓ [work] Succeeded\n");
+        error.ToString().Should().Be("[work] warning: separate warning\n");
     }
 
     [Fact]

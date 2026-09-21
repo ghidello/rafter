@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using System.Globalization;
 using System.Text;
@@ -90,9 +91,10 @@ internal static class OutputPresentation
     {
         using JsonDocument document = JsonDocument.Parse(property.CanonicalValue);
         JsonElement value = document.RootElement;
-        if (value.ValueKind == JsonValueKind.String && value.GetString()!.IndexOfAny(['\r', '\n']) >= 0)
+        string? decoded = value.ValueKind == JsonValueKind.String ? OutputProperty.DecodeString(value) : null;
+        if (decoded?.IndexOfAny(['\r', '\n']) >= 0)
         {
-            return new[] { property.Name + ":" }.Concat(NormalizeLines(value.GetString()!).Select(line => "  " + line));
+            return new[] { property.Name + ":" }.Concat(NormalizeLines(decoded).Select(line => "  " + line));
         }
         if (value.ValueKind == JsonValueKind.Array)
         {
@@ -108,8 +110,17 @@ internal static class OutputPresentation
     private static string EscapeText(string text)
     {
         StringBuilder safe = new(text.Length);
-        foreach (Rune rune in text.EnumerateRunes())
+        ReadOnlySpan<char> remaining = text.AsSpan();
+        while (!remaining.IsEmpty)
         {
+            if (Rune.DecodeFromUtf16(remaining, out Rune rune, out int consumed) != OperationStatus.Done)
+            {
+                safe.Append("\\u");
+                safe.Append(((int)remaining[0]).ToString("x4", CultureInfo.InvariantCulture));
+                remaining = remaining[1..];
+                continue;
+            }
+            remaining = remaining[consumed..];
             UnicodeCategory category = Rune.GetUnicodeCategory(rune);
             if (category is UnicodeCategory.Control or UnicodeCategory.Format
                 or UnicodeCategory.LineSeparator or UnicodeCategory.ParagraphSeparator)

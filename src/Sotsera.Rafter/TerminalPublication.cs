@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Sotsera.Rafter;
 
 internal static class TerminalPublication
@@ -5,8 +7,8 @@ internal static class TerminalPublication
     private static readonly AsyncLocal<PublicationScope?> CurrentPublication = new();
     private static readonly Lock Sync = new();
     private static readonly Dictionary<InvocationOutput, LiveSurface> Surfaces = [];
+    private static readonly ConditionalWeakTable<TextWriter, object> IncompleteLines = new();
     private static long _sequence;
-    private static bool _atLineBoundary = true;
 
     internal static bool IsPublishing => FindActivePublication() is not null;
 
@@ -14,14 +16,14 @@ internal static class TerminalPublication
 
     internal static long NextSequence() => Interlocked.Increment(ref _sequence);
 
-    internal static void UpdateLive(InvocationOutput invocation, TextWriter writer, string frame)
+    internal static void UpdateLive(InvocationOutput invocation, TextWriter writer, TextWriter error, string frame)
     {
         lock (Sync)
         {
             ClearLive();
             if (invocation.Failure is null)
             {
-                Surfaces[invocation] = new LiveSurface(writer, frame);
+                Surfaces[invocation] = new LiveSurface(writer, error, frame);
             }
             DrawLive();
         }
@@ -103,7 +105,14 @@ internal static class TerminalPublication
             WriteCore(writer, text, invocation);
             if (text.Length != 0)
             {
-                _atLineBoundary = text.EndsWith('\n');
+                if (text.EndsWith('\n'))
+                {
+                    IncompleteLines.Remove(writer);
+                }
+                else
+                {
+                    _ = IncompleteLines.GetValue(writer, static _ => new object());
+                }
             }
         }
         finally
@@ -138,7 +147,13 @@ internal static class TerminalPublication
 
     private static void DrawLive()
     {
-        if (!_atLineBoundary)
+        // Either captured stream can share the terminal with a live surface. Another writer's newline
+        // cannot close its partial line. Ignore retired/unrelated sinks, and do not retain them strongly.
+        (TextWriter Output, TextWriter Error)? host = ConsoleOutputCoordinator.TryGetHostWriters();
+        if (host is not null && (IncompleteLines.TryGetValue(host.Value.Output, out _)
+                || IncompleteLines.TryGetValue(host.Value.Error, out _))
+            || Surfaces.Values.Any(surface => IncompleteLines.TryGetValue(surface.Writer, out _)
+                || IncompleteLines.TryGetValue(surface.Error, out _)))
         {
             return;
         }
@@ -215,9 +230,11 @@ internal static class TerminalPublication
         internal void Close() => Volatile.Write(ref _active, 0);
     }
 
-    private sealed class LiveSurface(TextWriter writer, string frame)
+    private sealed class LiveSurface(TextWriter writer, TextWriter error, string frame)
     {
         internal TextWriter Writer { get; } = writer;
+
+        internal TextWriter Error { get; } = error;
 
         internal string Frame { get; } = frame;
 
