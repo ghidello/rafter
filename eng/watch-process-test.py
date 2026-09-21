@@ -68,14 +68,15 @@ def capture_stacks(directory, process_id, launcher_id, deadline):
 
 
 def terminate_tree(process):
-    if process.poll() is not None:
-        return
     # The POSIX group was created by this wrapper, so it cannot include the Actions runner.
     if os.name == "nt":
+        if process.poll() is not None:
+            return
         subprocess.run(
             ["taskkill", "/PID", str(process.pid), "/T", "/F"], timeout=10, check=False,
         )
     else:
+        # Descendants can retain the group after its leader exits or the test host crashes.
         try:
             os.killpg(process.pid, signal.SIGKILL)
         except ProcessLookupError:

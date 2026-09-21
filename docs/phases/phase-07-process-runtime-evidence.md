@@ -187,3 +187,16 @@ first attempt: 734 cases on each OS (705 plus 29 isolated cases on macOS), all 2
 scenarios, and package integrity. macOS also passes all five consecutive tree-timeout executions and the native
 stack-capture watchdog checks. The reproduced closure defect is not established as the root cause of the earlier
 macOS stall; R5, R8 and R11 remain open.
+
+## Follow-up review: combined failures and watchdog cleanup
+
+Five `ProcessFailureAggregationTests` cases reproduce lost exceptions in combined drain and late-operation tasks.
+Natural-exit and timeout handling now retain the full task aggregate when more than one exception is present,
+while preserving the existing single-failure shape. The reaper does the same without increasing its history beyond
+32 samples or changing exactly-once disposal. Local verification passes all 739 tests, formatting and the Release
+build with no analyzer warnings. Supported-OS verification is pending.
+
+The POSIX watchdog now cleans its owned process group even after the launcher exits, covering surviving fixture
+descendants after an early test-host exit. Its new integration case requires POSIX; the three portable watchdog
+checks continue to pass on Windows. This repairs test containment and does not establish a cause for the earlier
+macOS stall. The cancelled CI 21 job still has no downloadable log blob.

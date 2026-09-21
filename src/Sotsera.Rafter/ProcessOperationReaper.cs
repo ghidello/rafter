@@ -64,7 +64,7 @@ internal static class ProcessOperationReaper
         }
         catch (Exception exception)
         {
-            RecordFailure(exception);
+            RecordFailure(task.Exception is { InnerExceptions.Count: > 1 } aggregate ? aggregate : exception);
         }
         finally
         {

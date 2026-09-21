@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -72,6 +73,31 @@ time.sleep(15)
             samples = list(self.work.glob("artifacts/test-results/process-tree/*/sample.txt"))
             self.assertEqual(1, len(samples), result.stdout)
             self.assertIn("Call graph:", samples[0].read_text(encoding="utf-8"), result.stdout)
+        self.assert_reported_processes_stopped()
+
+    @unittest.skipIf(os.name == "nt", "Requires the watchdog's owned POSIX process group.")
+    def test_launcher_exit_still_cleans_up_descendants(self):
+        try:
+            result = self.run_watchdog("""
+import json, os, subprocess, sys
+from pathlib import Path
+child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(15)"],
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+Path("pids.json").write_text(json.dumps([os.getpid(), child.pid]), encoding="utf-8")
+""")
+            self.assertEqual(0, result.returncode, result.stdout)
+            self.assert_reported_processes_stopped()
+        finally:
+            # The script's launcher is the leader of the session created by the watchdog.
+            path = self.work / "pids.json"
+            if path.exists():
+                launcher_id = json.loads(path.read_text(encoding="utf-8"))[0]
+                try:
+                    os.killpg(launcher_id, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+
+    def assert_reported_processes_stopped(self):
         for process_id in json.loads((self.work / "pids.json").read_text(encoding="utf-8")):
             if os.name == "nt":
                 listing = subprocess.run(

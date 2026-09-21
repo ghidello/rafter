@@ -6,7 +6,7 @@ The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. The local compl
 implemented at `7586f38`, with subsequent output-boundary repairs at `479288b`. It includes the accepted rich/live
 presentation, the user-approved fail-closed redaction boundaries, graph and process matrices, measured capture memory,
 and concurrent real-process cleanup.
-The solution has 734 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
+The solution has 739 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
 example scenarios pass without changing canonical example sources.
 
 Phases 5–7 passed at `10cd98599048275c3f9f0dd631ae4bd5b455b608`, verified by
@@ -294,3 +294,15 @@ first attempt. Windows and Ubuntu each pass all 734 tests; macOS passes 705 in i
 process cases, including five consecutive executions of the tree-timeout case. Every OS compiles all 24 examples
 and passes the 14 deterministic scenarios. Package integrity also passes. This is supported-OS evidence for the
 closure repair, not proof of the earlier stall's root cause.
+
+Follow-up review reproduced loss of secondary exceptions when both drains, or multiple reaper-owned tasks, fail.
+Awaiting `Task.WhenAll` surfaces one exception even though its task retains the full aggregate. Five regression
+cases now verify both original failures remain available through natural-exit, timeout and late-reaper paths, with
+the existing public classification and exactly-once disposal. All five failed before the repair; all 739 local
+tests now pass, together with formatting and an analyzer-clean Release build.
+
+The independent watchdog also skipped POSIX descendant cleanup when its launcher had already exited. It now kills
+its owned process group on that path as well. A fourth watchdog integration case exercises an exited launcher with
+a surviving descendant; it requires POSIX and runs in macOS CI. The three portable checks pass locally on Windows.
+The cancelled CI 21 macOS log was requested again and still returns `BlobNotFound`; no stack evidence was recovered.
+Supported-OS verification of these follow-up fixes remains pending.

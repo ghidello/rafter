@@ -459,6 +459,10 @@ internal static class ProcessRuntime
         if (await CompletesWithinAsync(both, policy.DirectExitDrainCompletion, policy.TimeProvider)
             .ConfigureAwait(false))
         {
+            if (both.Exception is { InnerExceptions.Count: > 1 } failures)
+            {
+                throw failures;
+            }
             await both.ConfigureAwait(false);
             return;
         }
@@ -574,7 +578,7 @@ internal static class ProcessRuntime
         }
         catch (Exception exception)
         {
-            failures.Add(exception);
+            failures.Add(task.Exception is { InnerExceptions.Count: > 1 } aggregate ? aggregate : exception);
         }
         return true;
     }
