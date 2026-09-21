@@ -425,6 +425,6 @@ dotnet_diagnostic.MA0047.severity = none
 [examples/presentation.cs]
 dotnet_diagnostic.CA1861.severity = none
 
-# This engineering file-app also synthesizes Program from top-level statements.
-[eng/verify-package-symbols.cs]
+# These engineering file-apps also synthesize Program from top-level statements.
+[eng/{verify-package-symbols,diagnose-process-tree}.cs]
 dotnet_diagnostic.MA0048.severity = none

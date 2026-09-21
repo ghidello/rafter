@@ -210,6 +210,13 @@ jobs:
           --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AuthoredTimeoutTerminatesTheDirectChild
           --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
 
+      - name: macOS runtime-only process-tree diagnostic
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 3
+        run: >-
+          dotnet run eng/diagnose-process-tree.cs --configuration Release --
+          artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture
+
       - name: macOS process test - AuthoredTimeoutTerminatesAReportedProcessTree
         if: matrix.os == 'macos-latest'
         timeout-minutes: 2
@@ -278,6 +285,7 @@ jobs:
           path: |
             artifacts/test-results/
             artifacts/example-verification/
+            artifacts/process-tree-probe/
           if-no-files-found: ignore
 
   package:

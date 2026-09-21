@@ -229,3 +229,14 @@ whereas the linked issue concerns a later two-phase algorithm. No runtime workar
 
 The agreed scope through Phase 7 remains open at R5, R8 and R11. Phase 8 typed tools and Phase 9 conformance remain future work.
 Further appearance review remains deferred; the accepted presentation fixtures are still the contract.
+
+[CI 21](https://github.com/ghidello/rafter/actions/runs/35648783274), for `392aa32`, passed Windows and Ubuntu,
+but again stalled in the same macOS test beyond its deadlines. Individual-PID cleanup did not resolve the stall.
+Cancellation was requested. A standalone diagnostic now precedes the affected macOS test and exercises five
+fixture trees with `System.Diagnostics.Process` only, using the same 750 ms delay, redirected streams and dedicated
+kill thread. It logs tree-kill return, direct exit/drain completion and independent cleanup separately, without
+referencing Rafter or xUnit. All five iterations pass locally on Windows; macOS evidence is still pending.
+
+Run it after building the solution with `dotnet run eng/diagnose-process-tree.cs --configuration Release --
+artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture` (append `.exe` on Windows).
+This is a diagnostic isolation step, not additional proof that the Phase 7 cancellation gate is closed.
