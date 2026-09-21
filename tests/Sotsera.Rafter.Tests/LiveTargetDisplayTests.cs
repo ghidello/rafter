@@ -164,6 +164,25 @@ public sealed class LiveTargetDisplayTests
     }
 
     [Fact]
+    public async Task APartialPhysicalWriteFailureSuspendsRedrawUntilThatWriterRecovers()
+    {
+        PartialFailureWriter writer = new();
+        Command command = CreateLiveCommand(writer);
+        Target work = command.Target("work").Description("Recover host output.").Run(context =>
+        {
+            Action hostWrite = () => TerminalPublication.WriteHost(writer, "fault-injection");
+            hostWrite.Should().Throw<IOException>().Which.Should().BeSameAs(writer.Failure);
+            writer.ToString().Should().Be("partial failure");
+            context.Output.Line("recovered");
+            writer.ToString().Should().Contain("[work] Running");
+        });
+
+        (await command.RunAsync(work, [], TestContext.Current.CancellationToken)).Should().Be(0);
+
+        writer.ToString().Should().Be("partial failure[work] recovered\n\nCommand succeeded\n  ✓ [work] Succeeded\n");
+    }
+
+    [Fact]
     public async Task LiveSinkFailurePreservesExecutionAndCleanupAndReleasesTheDisplay()
     {
         int calls = 0;
@@ -191,6 +210,25 @@ public sealed class LiveTargetDisplayTests
         command.InvocationServicesFactory = () => new InvocationServices(_ => null, writer, writer,
             capabilities, capabilities, "test");
         return command;
+    }
+
+    private sealed class PartialFailureWriter : StringWriter
+    {
+        private readonly TerminalSurfaceWriter _terminal = new();
+
+        internal IOException Failure { get; } = new("partial write failed");
+
+        public override void Write(string? value)
+        {
+            if (string.Equals(value, "fault-injection", StringComparison.Ordinal))
+            {
+                _terminal.Write("partial failure");
+                throw Failure;
+            }
+            _terminal.Write(value);
+        }
+
+        public override string ToString() => _terminal.ToString();
     }
 
     private sealed class FailOnceWriter : StringWriter

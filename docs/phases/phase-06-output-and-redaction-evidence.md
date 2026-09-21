@@ -4,7 +4,7 @@
 
 The accepted presentation and fail-closed boundary behavior are implemented and locally verified as of 2026-09-20.
 All 99 accepted stdout/stderr pairs and all four live-profile frame sequences have executable comparisons.
-The [closeout audit](phase-05-07-closeout.md) distinguishes the 721-test local baseline from historical CI.
+The [closeout audit](phase-05-07-closeout.md) distinguishes the 722-test local baseline from historical CI.
 The new supported-OS CI and package job remain required before formal phase closure.
 
 ## Routing and redaction coverage
@@ -250,7 +250,7 @@ CRLF, CR or a custom separator. Cursor display is limited to LF/CRLF profiles; o
 | O6 | Console overload/host-failure/restoration tests and the six overlapping replacement cases |
 | O7 | Routing table, accepted fixtures, redaction and completion matrices in this document |
 | O8 | Synthetic and real raw-capture re-entry; exact raw bytes become redacted only at managed output ingress |
-| O9 | 721 local tests, examples and package checks pass; supported-OS CI for the new revision is pending |
+| O9 | 722 local tests pass; the new supported-OS CI and package job are authorized and pending |
 
 ## Review follow-up: text and writer boundaries (2026-09-21)
 
@@ -272,3 +272,9 @@ The analyzer-clean Release build, formatting, all 24 example compilation/help ch
 scenarios pass. Package verification at `479288b` confirms 63 Source Link documents and successful fresh-cache
 conventional-project and file-app consumers. Canonical example sources and public APIs are unchanged.
 These are local results; supported-OS CI remains pending the user's release of the no-push hold.
+
+The next review also reproduced a writer emitting a partial line before throwing. All physical writer exceptions
+now mark the writer's line boundary uncertain, including failures during live frames or erasure. A new regression
+verifies that redraws remain suspended until a successful newline-bearing write, then resume without erasing the
+partial output. The full local suite passes 722 cases; formatting and the analyzer-clean Release build pass.
+The user authorized pushing the reviewed branch and running the supported-OS CI matrix on 2026-09-21.

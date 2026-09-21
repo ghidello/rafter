@@ -6,11 +6,11 @@ The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. The local compl
 implemented at `7586f38`, with subsequent output-boundary repairs at `479288b`. It includes the accepted rich/live
 presentation, the user-approved fail-closed redaction boundaries, graph and process matrices, measured capture memory,
 and concurrent real-process cleanup.
-The solution has 721 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
+The solution has 722 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
 example scenarios pass without changing canonical example sources.
 
-Phases 5–7 remain formally open for the new revision's supported-OS CI and package job. The user has explicitly held
-pushes until final verification; no CI was started for this completion pass. The older intermittent macOS runner
+Phases 5–7 remain formally open for the new revision's supported-OS CI and package job. The user authorized the
+final push and CI step on 2026-09-21 following local review and verification. The older intermittent macOS runner
 stall remains unexplained. Older test counts below identify historical checkpoints, not the current baseline.
 
 ## Repairs made during verification
@@ -109,7 +109,7 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 721 passed, zero failed or skipped |
+| Solution tests | 722 passed, zero failed or skipped |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
 | Packaged PDB identity and canonical Source Link map | Passed for `479288b`; 63 runtime documents mapped |
@@ -184,11 +184,11 @@ with 213 tests, including the initial 26 capability cases, all examples and pack
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
 That package result refers to `d873080`. The local table above records the later `479288b` package; its additional
-tests and examples have not yet run on the GitHub-hosted matrix. Pushing remains deferred.
+tests and examples have not yet run on the GitHub-hosted matrix. The final push and CI step is now authorized.
 
 ## Remaining closeout steps
 
-1. Obtain the user's release of the existing no-push hold, then push the reviewed commits and run the full CI matrix.
+1. Push the reviewed commits and run the full CI matrix, as authorized on 2026-09-21.
 2. Record Windows, Ubuntu, macOS and package results for that revision. If macOS stalls again, retain diagnostics and
    investigate it; do not describe a successful retry as a root-cause fix.
 3. Close the remaining CI-dependent gates only after that evidence passes. Keep Phase 8 typed builders deferred.

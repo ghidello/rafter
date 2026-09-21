@@ -194,6 +194,8 @@ internal static class TerminalPublication
         }
         catch (Exception exception)
         {
+            // A throwing writer may already have emitted an arbitrary prefix, including during a live frame.
+            _ = IncompleteLines.GetValue(writer, static _ => new object());
             // Mark failure before another publication can enter and observe this invocation as healthy.
             invocation?.Fail(exception);
             throw;
