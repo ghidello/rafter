@@ -15,7 +15,7 @@ The agreed implementation sequence and acceptance criteria are recorded in the
 ## Current status
 
 Phases 1–4 have completed evidence. The local implementation and verification pass through Phase 7 is complete:
-709 tests, 24 compiled examples, 14 example scenarios and package-consumer checks pass. Phase 6 includes the accepted
+721 tests, 24 compiled examples, 14 example scenarios and package-consumer checks pass. Phase 6 includes the accepted
 rich properties, live lifecycle surfaces, continuation markers and serialized publication. Unresolved sensitive
 prefixes fail closed at ordering barriers. Phase 7 includes measured capture allocations, concurrent-process stress
 and startup/resource-failure matrices. Formal phase closure still requires CI on the new revision; pushes remain on

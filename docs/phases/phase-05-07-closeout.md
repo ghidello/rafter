@@ -1,11 +1,12 @@
 # Phase 5–7 closeout audit
 
-## Status as of 2026-09-20
+## Status as of 2026-09-21
 
 The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. The local completion pass through Phase 7 is
-implemented and verified at `7586f38`. It includes the accepted rich/live presentation, the user-approved fail-closed
-redaction boundaries, graph and process matrices, measured capture memory, and concurrent real-process cleanup.
-The solution has 709 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
+implemented at `7586f38`, with subsequent output-boundary repairs at `479288b`. It includes the accepted rich/live
+presentation, the user-approved fail-closed redaction boundaries, graph and process matrices, measured capture memory,
+and concurrent real-process cleanup.
+The solution has 721 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
 example scenarios pass without changing canonical example sources.
 
 Phases 5–7 remain formally open for the new revision's supported-OS CI and package job. The user has explicitly held
@@ -95,6 +96,10 @@ stall remains unexplained. Older test counts below identify historical checkpoin
   callback-scope authority, foreign-handle/path/policy matrices and combined resource-failure classification.
 - Captured each destination's newline in its immutable output profile. Nine cases cover LF, CRLF, CR, custom
   newlines, profile fallback and independent stdout/stderr capture; raw process capture remains exact.
+- Preserved split CRLF state through repeated publication barriers, decoded unpaired UTF-16 surrogates before
+  property redaction and visibly escaped them in semantic text. Eleven new text cases cover these boundaries and
+  round-trip all UTF-16 code units. A mixed-stream live regression also prevents a separate writer's newline from
+  resuming display inside an unfinished host line; retired writers cannot suppress later displays.
 
 ## Local verification
 
@@ -104,10 +109,10 @@ Environment: Windows x64, .NET SDK 10.0.401 selected through `global.json` patch
 | --- | --- |
 | Normal restore, with auditing and warnings-as-errors | Passed after removing the obsolete override |
 | Release solution build | Passed, zero warnings and errors |
-| Solution tests | 709 passed, zero failed or skipped |
+| Solution tests | 721 passed, zero failed or skipped |
 | Formatting verification | Passed |
 | Runtime and symbol package layout | Passed |
-| Packaged PDB identity and canonical Source Link map | Passed for `7586f38`; 63 runtime documents mapped |
+| Packaged PDB identity and canonical Source Link map | Passed for `479288b`; 63 runtime documents mapped |
 | Fresh-cache external project and file-app consumers | Passed; both bind and execute the public command API |
 | Canonical reference check | All 29 examples retain their original project reference |
 | Implemented-example compilation and plain help | All 24 classified examples passed |
@@ -178,7 +183,7 @@ package verification with 187 tests, including the 14 observer-failure regressio
 with 213 tests, including the initial 26 capability cases, all examples and package verification for 59 source
 documents. Its first macOS attempt stalled in `AuthoredTimeoutTerminatesAReportedProcessTree` beyond the test and
 step deadlines and was force-cancelled. The fresh runner passed that test; the intermittent cause remains open.
-That package result refers to `d873080`. The local table above records the later `7586f38` package; its additional
+That package result refers to `d873080`. The local table above records the later `479288b` package; its additional
 tests and examples have not yet run on the GitHub-hosted matrix. Pushing remains deferred.
 
 ## Remaining closeout steps

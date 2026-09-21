@@ -8,7 +8,7 @@ The local repository baseline passes. Historical CI jobs and the earlier macOS s
 [closeout audit](phase-05-07-closeout.md#cross-platform-evidence).
 
 The [closeout audit](phase-05-07-closeout.md) records the current baseline and remaining CI gates.
-The original 118-test record below is historical; the completion pass has 709 passing local solution tests.
+The original 118-test record below is historical; the current baseline has 721 passing local solution tests.
 
 ## Invocation and planning
 

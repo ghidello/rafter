@@ -4,7 +4,7 @@
 
 The accepted presentation and fail-closed boundary behavior are implemented and locally verified as of 2026-09-20.
 All 99 accepted stdout/stderr pairs and all four live-profile frame sequences have executable comparisons.
-The [closeout audit](phase-05-07-closeout.md) distinguishes the 709-test local baseline from historical CI.
+The [closeout audit](phase-05-07-closeout.md) distinguishes the 721-test local baseline from historical CI.
 The new supported-OS CI and package job remain required before formal phase closure.
 
 ## Routing and redaction coverage
@@ -250,4 +250,25 @@ CRLF, CR or a custom separator. Cursor display is limited to LF/CRLF profiles; o
 | O6 | Console overload/host-failure/restoration tests and the six overlapping replacement cases |
 | O7 | Routing table, accepted fixtures, redaction and completion matrices in this document |
 | O8 | Synthetic and real raw-capture re-entry; exact raw bytes become redacted only at managed output ingress |
-| O9 | 709 local tests, examples and package checks pass; supported-OS CI for the new revision is pending |
+| O9 | 721 local tests, examples and package checks pass; supported-OS CI for the new revision is pending |
+
+## Review follow-up: text and writer boundaries (2026-09-21)
+
+Review at `479288b` fixes three output defects with twelve additional cases, bringing the solution to 721 passing
+tests. The first ten text regressions failed before their fixes:
+
+- A pending CR flushed by semantic publication or explicit flush lost its CRLF state. A later LF therefore emitted
+  a spurious blank line. Four cases cover both streams, repeated barriers, empty writes and subsequent non-LF input.
+- Property snapshots escaped unpaired UTF-16 surrogates, but JSON `GetString()` rejected them during redaction.
+  Canonical string decoding now preserves UTF-16 code units before redaction; renderers visibly escape unpaired
+  surrogates instead of replacing them. Six cases cover scalar/array/multiline properties, surrogate-containing
+  secrets and plain/rich semantic text. A separate round-trip case covers all 65,536 UTF-16 code units.
+- One process-wide line-boundary flag allowed a newline on independent stderr to resume live frames inside a partial
+  stdout line. Partial lines are now tracked by writer using weak keys. Both live destinations and current host
+  writers must be at a known boundary; retired unrelated writers do not suppress later displays. The mixed-stream
+  regression failed before the fix, and the host-restoration test also verifies a following invocation's live frame.
+
+The analyzer-clean Release build, formatting, all 24 example compilation/help checks and all 14 example execution
+scenarios pass. Package verification at `479288b` confirms 63 Source Link documents and successful fresh-cache
+conventional-project and file-app consumers. Canonical example sources and public APIs are unchanged.
+These are local results; supported-OS CI remains pending the user's release of the no-push hold.

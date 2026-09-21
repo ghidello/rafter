@@ -3,7 +3,7 @@
 ## Status
 
 Generic process execution, failure/race matrices, capture allocation measurements and concurrent-resource checks
-pass locally in the 709-test solution suite. Supported-OS CI predates these changes. The phase remains open for that
+pass locally in the 721-test solution suite. Supported-OS CI predates these changes. The phase remains open for that
 final validation and the unresolved earlier macOS runner stall. See the [closeout audit](phase-05-07-closeout.md).
 
 ## Completion and failure matrix
