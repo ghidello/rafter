@@ -63,7 +63,7 @@ cancellation/timeout/failure matrix.
 | Drain after natural exit | 2 seconds | Real descendant-retained-pipe tests, each bounded to 6 seconds including launch/cleanup overhead |
 | Synchronous tree-kill request | 2 seconds | Internal policy plus shortened synthetic late-teardown test |
 | Direct-child verification after kill | 5 seconds | Policy plus real timeout/tree tests; complete adversarial matrix still open |
-| Drain settlement after forced close | 2 seconds | Policy plus synthetic tracked-reaper test |
+| Forced-close request and drain settlement | 2 seconds, observed concurrently | Twelve blocked cancellation/closure cases plus existing tracked-reaper tests |
 
 These are separate deadlines, not one combined process timeout. Synchronous `Process.Start()` is not preemptible.
 Descendant termination remains best effort. Real fixture tests with descendants independently clean reported PIDs.
@@ -164,5 +164,21 @@ start-race and late-ownership cases all pass. The native-path correction above p
 every platform. Every implemented example compiles and renders help; all 14 deterministic execution scenarios pass.
 Package verification confirms 63 Source Link documents and fresh-cache project/file-app consumption.
 
-R1–R11 are closed with this evidence. The historical runner disconnect is not claimed fixed; the method split remains
-documented, and a recurrence still requires investigation. The approved descendant guarantee remains best effort.
+R1–R11 were closed at that checkpoint; the subsequent CI 20/21 stalls reopened R5, R8 and R11 as recorded above.
+The historical runner disconnect is not claimed fixed. The approved descendant guarantee remains best effort.
+
+## Follow-up review: bounded stream closure
+
+`ProcessDrainClosureTests` adds twelve cases spanning natural exit with retained output, authored timeout and
+external cancellation, each in capture and streaming mode, with either stream closure or a cancellation callback
+blocked. All twelve reproduced unbounded terminal settlement before the fix. Closure now runs on an owned worker
+and shares the forced-close budget with concurrent drain observation. The original lifecycle failure remains
+primary; pending closure/drain work transfers to the reaper with the adapter and cancellation source. Streaming
+leases release invocation output admission at bounded return. The tests verify return before releasing the blocked
+worker, retained cancellation-source lifetime, late-failure recording, eventual source disposal and exactly-once
+adapter disposal. Tasks that miss a kill/exit deadline remain owned even if they finish before handoff is assembled.
+
+All 734 local tests pass with formatting and an analyzer-clean Release build. The preceding diagnostic revision
+`cc533a0` passes [CI 26](https://github.com/ghidello/rafter/actions/runs/35654075216), including macOS native stack
+capture, ten runtime-only probe trees and five consecutive tree-timeout tests. CI for the runtime repair is pending;
+the reproduced closure defect is not established as the root cause of the earlier macOS stall.

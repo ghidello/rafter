@@ -187,7 +187,7 @@ internal static class ProcessRuntime
         ProcessOwnership ownership,
         StartedExecution execution)
     {
-        using ProcessObservers observers = new();
+        using ProcessObservers observers = new(ownership.DrainCancellation);
         try
         {
             observers.Initialize(ownership.Process, execution);
@@ -217,7 +217,6 @@ internal static class ProcessRuntime
                 observers.Exit!,
                 observers.StandardOutput!,
                 observers.StandardError!,
-                observers.DrainCancellation,
                 execution.Prepared,
                 execution.Policy).ConfigureAwait(false);
         }
@@ -227,7 +226,6 @@ internal static class ProcessRuntime
             observers.Exit!,
             observers.StandardOutput!,
             observers.StandardError!,
-            observers.DrainCancellation,
             execution.Policy).ConfigureAwait(false);
         ThrowLifecycleOutcome(
             outcome,
@@ -252,27 +250,12 @@ internal static class ProcessRuntime
             verification,
             observers.StandardOutput ?? Task.CompletedTask,
             observers.StandardError ?? Task.CompletedTask,
-            observers.DrainCancellation,
             policy).ConfigureAwait(false);
         return new ProcessException("The process exit or stream observers failed.",
             teardownFailure is null
                 ? observationFailure
                 : new AggregateException(observationFailure, teardownFailure));
     }
-
-    private static Task<DrainResult> StartDrain(
-        Stream stream,
-        ProcessOutputStream outputStream,
-        StartedExecution execution,
-        CancellationToken cancellationToken)
-        => DrainAsync(new DrainRequest(
-            stream,
-            outputStream,
-            execution.Context,
-            execution.Prepared.StreamingRedactor,
-            execution.Prepared.CaptureLimitBytes,
-            execution.Capture,
-            cancellationToken));
 
     private static async Task ObserveDirectExitAsync(
         IProcessAdapter process,
@@ -305,7 +288,6 @@ internal static class ProcessRuntime
         Task exit,
         Task<DrainResult> stdout,
         Task<DrainResult> stderr,
-        CancellationTokenSource drainCancellation,
         PreparedProcess prepared,
         ProcessRuntimePolicy policy)
     {
@@ -315,7 +297,6 @@ internal static class ProcessRuntime
             ownership,
             stdout,
             stderr,
-            drainCancellation,
             policy).ConfigureAwait(false);
         DrainResult stdoutResult = await stdout.ConfigureAwait(false);
         DrainResult stderrResult = await stderr.ConfigureAwait(false);
@@ -472,10 +453,8 @@ internal static class ProcessRuntime
         ProcessOwnership ownership,
         Task<DrainResult> stdout,
         Task<DrainResult> stderr,
-        CancellationTokenSource drainCancellation,
         ProcessRuntimePolicy policy)
     {
-        IProcessAdapter process = ownership.Process;
         Task both = Task.WhenAll(stdout, stderr);
         if (await CompletesWithinAsync(both, policy.DirectExitDrainCompletion, policy.TimeProvider)
             .ConfigureAwait(false))
@@ -485,31 +464,16 @@ internal static class ProcessRuntime
         }
 
         ProcessOutputStream retainedStream = GetIncompleteStreams(stdout, stderr);
-        List<Exception> failures = [];
-        CloseDrains(process, drainCancellation, failures);
-        bool settled = await CompletesWithinAsync(both, policy.ForcedCloseDrainSettlement, policy.TimeProvider)
-            .ConfigureAwait(false);
-        if (!settled)
+        DrainClosure closure = await CloseDrainsAsync(ownership, both, policy).ConfigureAwait(false);
+        if (closure.Pending.Length != 0)
         {
-            failures.Add(new IOException("Redirected process streams did not settle after closure."));
-            ownership.Transfer(both);
-        }
-        else
-        {
-            try
-            {
-                await both.ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                failures.Add(exception);
-            }
+            ownership.Transfer(Task.WhenAll(closure.Pending));
         }
 
         throw new ProcessOutputException(
             ProcessOutputReason.RetainedPipe,
             retainedStream,
-            innerException: Combine(failures));
+            innerException: Combine(closure.Failures));
     }
 
     private static ProcessOutputStream GetIncompleteStreams(Task stdout, Task stderr)
@@ -525,7 +489,6 @@ internal static class ProcessRuntime
         Task exit,
         Task stdout,
         Task stderr,
-        CancellationTokenSource drainCancellation,
         ProcessRuntimePolicy policy)
     {
         IProcessAdapter process = ownership.Process;
@@ -536,30 +499,31 @@ internal static class ProcessRuntime
             CancellationToken.None,
             TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
             TaskScheduler.Default);
-        await ObserveBoundedAsync(
+        bool killObserved = await ObserveBoundedAsync(
             kill,
             policy.TreeKillRequest,
             policy.TimeProvider,
             "The process-tree termination request did not settle.",
             failures).ConfigureAwait(false);
-        await ObserveBoundedAsync(
+        bool exitObserved = await ObserveBoundedAsync(
             verifiedExit,
             policy.ForcedKillVerification,
             policy.TimeProvider,
             "Direct-child termination could not be confirmed.",
             failures).ConfigureAwait(false);
 
-        CloseDrains(process, drainCancellation, failures);
-        Task drains = Task.WhenAll(stdout, stderr);
-        await ObserveBoundedAsync(
-            drains,
-            policy.ForcedCloseDrainSettlement,
-            policy.TimeProvider,
-            "Redirected process streams did not settle after closure.",
-            failures).ConfigureAwait(false);
-
-        Task[] lateOperations = new[] { kill, verifiedExit, drains }.Where(static task => !task.IsCompleted).ToArray();
-        if (lateOperations.Length != 0)
+        DrainClosure closure = await CloseDrainsAsync(ownership, Task.WhenAll(stdout, stderr), policy).ConfigureAwait(false);
+        failures.AddRange(closure.Failures);
+        List<Task> lateOperations = [.. closure.Pending];
+        if (!killObserved)
+        {
+            lateOperations.Add(kill);
+        }
+        if (!exitObserved)
+        {
+            lateOperations.Add(verifiedExit);
+        }
+        if (lateOperations.Count != 0)
         {
             ownership.Transfer(Task.WhenAll(lateOperations));
         }
@@ -572,7 +536,7 @@ internal static class ProcessRuntime
         };
     }
 
-    private static Exception? Combine(List<Exception> failures)
+    private static Exception? Combine(IReadOnlyList<Exception> failures)
         => failures.Count switch
         {
             0 => null,
@@ -591,7 +555,7 @@ internal static class ProcessRuntime
         }
     }
 
-    private static async Task ObserveBoundedAsync(
+    private static async Task<bool> ObserveBoundedAsync(
         Task task,
         TimeSpan timeout,
         TimeProvider timeProvider,
@@ -601,7 +565,7 @@ internal static class ProcessRuntime
         if (!await CompletesWithinAsync(task, timeout, timeProvider).ConfigureAwait(false))
         {
             failures.Add(new IOException(timeoutMessage));
-            return;
+            return false;
         }
 
         try
@@ -612,13 +576,12 @@ internal static class ProcessRuntime
         {
             failures.Add(exception);
         }
+        return true;
     }
 
     private static async Task<DrainResult> DrainAsync(DrainRequest request)
     {
-        using ProcessOutputLease? output = request.Capture
-            ? null
-            : new ProcessOutputLease(request.Context, request.OutputStream);
+        using ProcessOutputLease? output = request.Output;
         using CancellationTokenRegistration cancellationRegistration = output is null
             ? default
             : request.CancellationToken.Register(static state => ((ProcessOutputLease)state!).Dispose(), output);
@@ -744,11 +707,41 @@ internal static class ProcessRuntime
         }
     }
 
-    private static void CloseDrains(
-        IProcessAdapter process,
-        CancellationTokenSource cancellation,
-        List<Exception> failures)
+    private static async Task<DrainClosure> CloseDrainsAsync(
+        ProcessOwnership ownership, Task drains, ProcessRuntimePolicy policy)
     {
+        IProcessAdapter process = ownership.Process;
+        CancellationTokenSource cancellation = ownership.DrainCancellation;
+        // Native stream closure and cancellation callbacks can block independently of the asynchronous reads.
+        Task close = Task.Factory.StartNew(
+            () => CloseDrains(process, cancellation),
+            CancellationToken.None,
+            TaskCreationOptions.LongRunning | TaskCreationOptions.DenyChildAttach,
+            TaskScheduler.Default);
+        List<Exception> closeFailures = [];
+        List<Exception> drainFailures = [];
+        Task<bool> closeObservation = ObserveBoundedAsync(close, policy.ForcedCloseDrainSettlement,
+            policy.TimeProvider, "Redirected process stream closure did not settle.", closeFailures);
+        Task<bool> drainObservation = ObserveBoundedAsync(drains, policy.ForcedCloseDrainSettlement,
+            policy.TimeProvider, "Redirected process streams did not settle after closure.", drainFailures);
+        bool closeObserved = await closeObservation.ConfigureAwait(false);
+        bool drainsObserved = await drainObservation.ConfigureAwait(false);
+        // Preserve timeout ownership even if a late operation completes before the transfer is assembled.
+        ImmutableArray<Task>.Builder pending = ImmutableArray.CreateBuilder<Task>();
+        if (!closeObserved)
+        {
+            pending.Add(close);
+        }
+        if (!drainsObserved)
+        {
+            pending.Add(drains);
+        }
+        return new DrainClosure(pending.ToImmutable(), [.. closeFailures, .. drainFailures]);
+    }
+
+    private static void CloseDrains(IProcessAdapter process, CancellationTokenSource cancellation)
+    {
+        List<Exception> failures = [];
         try
         {
             cancellation.Cancel();
@@ -766,7 +759,13 @@ internal static class ProcessRuntime
         {
             failures.Add(exception);
         }
+        if (Combine(failures) is { } failure)
+        {
+            throw failure;
+        }
     }
+
+    private sealed record DrainClosure(ImmutableArray<Task> Pending, ImmutableArray<Exception> Failures);
 
     private sealed record PreparedProcess(
         ProcessStartInfo StartInfo,
@@ -785,7 +784,7 @@ internal static class ProcessRuntime
     private sealed record DrainRequest(
         Stream Stream,
         ProcessOutputStream OutputStream,
-        RafterContext Context,
+        ProcessOutputLease? Output,
         TextRedactor? Redactor,
         long? CaptureLimitBytes,
         bool Capture,
@@ -799,9 +798,10 @@ internal static class ProcessRuntime
         bool InvalidUtf8,
         string? CapturedText);
 
-    private sealed class ProcessObservers : IDisposable
+    private sealed class ProcessObservers(CancellationTokenSource drainCancellation) : IDisposable
     {
-        internal CancellationTokenSource DrainCancellation { get; } = new();
+        private ProcessOutputLease? _standardOutputLease;
+        private ProcessOutputLease? _standardErrorLease;
 
         internal Task<DrainResult>? StandardOutput { get; private set; }
 
@@ -809,39 +809,63 @@ internal static class ProcessRuntime
 
         internal Task? Exit { get; private set; }
 
-        public void Dispose() => DrainCancellation.Dispose();
+        public void Dispose()
+        {
+            // A blocked cancellation callback must not retain invocation output admission after bounded teardown.
+            _standardOutputLease?.Dispose();
+            _standardErrorLease?.Dispose();
+        }
 
         internal void Initialize(IProcessAdapter process, StartedExecution execution)
         {
             _ = process.Id;
             // Retain each task before acquiring the next resource, which may fail independently.
             StandardOutput = StartDrain(process.StandardOutput, ProcessOutputStream.StandardOutput,
-                execution, DrainCancellation.Token);
+                execution);
             StandardError = StartDrain(process.StandardError, ProcessOutputStream.StandardError,
-                execution, DrainCancellation.Token);
+                execution);
             Exit = process.WaitForExitAsync();
+        }
+
+        private Task<DrainResult> StartDrain(Stream stream, ProcessOutputStream outputStream, StartedExecution execution)
+        {
+            ProcessOutputLease? output = execution.Capture ? null : new(execution.Context, outputStream);
+            if (outputStream == ProcessOutputStream.StandardOutput)
+            {
+                _standardOutputLease = output;
+            }
+            else
+            {
+                _standardErrorLease = output;
+            }
+            return DrainAsync(new DrainRequest(stream, outputStream, output, execution.Prepared.StreamingRedactor,
+                execution.Prepared.CaptureLimitBytes, execution.Capture, drainCancellation.Token));
         }
     }
 
     private sealed class ProcessOwnership : IDisposable
     {
-        private IProcessAdapter? _process;
+        private ProcessResources? _resources;
 
         internal ProcessOwnership(IProcessAdapter process)
         {
-            _process = process;
+            _resources = new ProcessResources(process);
         }
 
-        internal IProcessAdapter Process => _process
-            ?? throw new InvalidOperationException("Process ownership has been transferred.");
+        internal IProcessAdapter Process => Resources.Process;
+
+        internal CancellationTokenSource DrainCancellation => Resources.DrainCancellation;
 
         internal Exception? DisposalFailure { get; private set; }
+
+        private ProcessResources Resources => _resources
+            ?? throw new InvalidOperationException("Process ownership has been transferred.");
 
         public void Dispose()
         {
             try
             {
-                Interlocked.Exchange(ref _process, null)?.Dispose();
+                Interlocked.Exchange(ref _resources, null)?.Dispose();
             }
             catch (Exception exception)
             {
@@ -851,11 +875,29 @@ internal static class ProcessRuntime
 
         internal void Transfer(Task completion)
         {
-            IProcessAdapter process = Interlocked.Exchange(ref _process, null)
+            ProcessResources resources = Interlocked.Exchange(ref _resources, null)
                 ?? throw new InvalidOperationException("Process ownership was transferred more than once.");
-            ProcessOperationReaper.Observe(completion, process);
+            ProcessOperationReaper.Observe(completion, resources);
         }
+    }
 
+    private sealed class ProcessResources(IProcessAdapter process) : IDisposable
+    {
+        internal IProcessAdapter Process { get; } = process;
+
+        internal CancellationTokenSource DrainCancellation { get; } = new();
+
+        public void Dispose()
+        {
+            try
+            {
+                Process.Dispose();
+            }
+            finally
+            {
+                DrainCancellation.Dispose();
+            }
+        }
     }
 
     private sealed class DrainAccumulator

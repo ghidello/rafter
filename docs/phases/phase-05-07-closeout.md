@@ -6,7 +6,7 @@ The audit started at `a9e39198a24855bfcb244c74f0c1230e89471638`. The local compl
 implemented at `7586f38`, with subsequent output-boundary repairs at `479288b`. It includes the accepted rich/live
 presentation, the user-approved fail-closed redaction boundaries, graph and process matrices, measured capture memory,
 and concurrent real-process cleanup.
-The solution has 722 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
+The solution has 734 passing local tests. All 24 implemented examples compile and render help, and all 14 deterministic
 example scenarios pass without changing canonical example sources.
 
 Phases 5–7 passed at `10cd98599048275c3f9f0dd631ae4bd5b455b608`, verified by
@@ -274,3 +274,18 @@ remain open pending evidence from the macOS investigation.
 The watchdog also wraps both standalone probes, which report their PID before starting a fixture. CI runs the
 affected tree-timeout test five consecutive times, stopping at the first failure. These are additional stress
 executions of an existing case, not retries that discard a failed result or additional unique contract cases.
+
+[CI 26](https://github.com/ghidello/rafter/actions/runs/35654075216), for `cc533a0`, passes Windows, Ubuntu,
+macOS and package integrity. The macOS watchdog self-test produced a native call graph, both five-tree probes
+passed, and all five consecutive executions of the affected timeout test passed. This validates the diagnostic
+path but does not identify the earlier intermittent stall.
+
+Review then reproduced a distinct runtime deadline defect: drain cancellation and stream closure ran synchronously
+before the forced-close settlement deadline. Twelve new cases, covering retained pipes, timeout and cancellation in
+capture and streaming modes, all exceeded their terminal-return bound before the repair. Closure now runs on an
+owned worker; closure and drainage have concurrent bounded observation. The reaper retains both the adapter and
+drain cancellation source until late work settles, records late failures and disposes once. Output admission is
+released on bounded return even when a cancellation callback blocks. Timed-out kill/exit tasks also retain ownership
+if they finish between the deadline and handoff. All 734 local tests, formatting and the analyzer-clean Release
+build pass after this repair; supported-OS verification of the repair is pending. It is not yet established as the
+cause of the macOS stall, so R5, R8 and R11 remain open.
