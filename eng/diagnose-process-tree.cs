@@ -31,6 +31,12 @@ static async Task RunAsync(string[] arguments)
     Console.WriteLine($"Runtime: {RuntimeInformation.FrameworkDescription}; {RuntimeInformation.OSDescription}");
     Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}; probe PID: {Environment.ProcessId}");
     Console.WriteLine($"Console signal subscription: {consoleSignals}");
+    string? tracePath = Environment.GetEnvironmentVariable("RAFTER_PROCESS_TREE_TRACE");
+    if (!string.IsNullOrEmpty(tracePath))
+    {
+        string trace = FormattableString.Invariant($"{{\"processId\":{Environment.ProcessId},\"stage\":\"runtime-probe\"}}\n");
+        await File.AppendAllTextAsync(tracePath, trace).ConfigureAwait(false);
+    }
 
     for (int iteration = 1; iteration <= 5; iteration++)
     {

@@ -210,10 +210,16 @@ jobs:
           --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AuthoredTimeoutTerminatesTheDirectChild
           --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
 
+      - name: Verify independent process-test watchdog
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 1
+        run: python3 eng/test-watch-process-test.py
+
       - name: macOS runtime-only process-tree diagnostic
         if: matrix.os == 'macos-latest'
         timeout-minutes: 3
         run: >-
+          python3 eng/watch-process-test.py --
           dotnet run eng/diagnose-process-tree.cs --configuration Release --
           artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture
 
@@ -221,23 +227,24 @@ jobs:
         if: matrix.os == 'macos-latest'
         timeout-minutes: 3
         run: >-
+          python3 eng/watch-process-test.py --
           dotnet run eng/diagnose-process-tree.cs --configuration Release --no-build --
           artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture --console-signals
 
-      - name: Verify independent process-test watchdog
-        if: matrix.os == 'macos-latest'
-        timeout-minutes: 1
-        run: python3 eng/test-watch-process-test.py
-
       - name: macOS process test - AuthoredTimeoutTerminatesAReportedProcessTree
         if: matrix.os == 'macos-latest'
-        timeout-minutes: 2
-        run: >-
-          python3 eng/watch-process-test.py --
-          dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
-          --configuration Release --no-build
-          --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AuthoredTimeoutTerminatesAReportedProcessTree
-          --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+        timeout-minutes: 7
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            echo "Process-tree timeout verification $attempt of 5"
+            python3 eng/watch-process-test.py -- \
+              dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj \
+              --configuration Release --no-build \
+              --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AuthoredTimeoutTerminatesAReportedProcessTree \
+              --timeout 45s --minimum-expected-tests 1 --output Detailed --report-xunit-trx
+          done
 
       - name: macOS process test - InvocationCancellationPreservesStandardCancellationClassification
         if: matrix.os == 'macos-latest'

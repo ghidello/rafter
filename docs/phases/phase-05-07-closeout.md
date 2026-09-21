@@ -269,3 +269,7 @@ Three watchdog integration checks cover exit-code preservation, partial trace wr
 They pass on Windows with process-termination permission and run on macOS before the affected test. The unchanged
 722-test solution, optional test breadcrumbs and complete-tree probe checks also pass locally. R5, R8 and R11
 remain open pending evidence from the macOS investigation.
+
+The watchdog also wraps both standalone probes, which report their PID before starting a fixture. CI runs the
+affected tree-timeout test five consecutive times, stopping at the first failure. These are additional stress
+executions of an existing case, not retries that discard a failed result or additional unique contract cases.
