@@ -5,39 +5,55 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 
-if (args.Length is < 1 or > 2
-    || args.Length == 2 && !string.Equals(args[1], "--console-signals", StringComparison.Ordinal))
+try
 {
-    throw new ArgumentException("Expected the fixture executable path and optional --console-signals.", nameof(args));
+    await RunAsync(args).ConfigureAwait(false);
+    return 0;
+}
+catch (Exception exception)
+{
+    // A diagnostic failure should return promptly, without entering OS crash-report collection.
+    await Console.Error.WriteLineAsync(exception.ToString()).ConfigureAwait(false);
+    return 1;
 }
 
-string fixturePath = Path.GetFullPath(args[0]);
-bool consoleSignals = args.Length == 2;
-Console.WriteLine($"Runtime: {RuntimeInformation.FrameworkDescription}; {RuntimeInformation.OSDescription}");
-Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}; probe PID: {Environment.ProcessId}");
-Console.WriteLine($"Console signal subscription: {consoleSignals}");
-
-for (int iteration = 1; iteration <= 5; iteration++)
+static async Task RunAsync(string[] arguments)
 {
-    // Exercise subscription lifetime without suppressing a real user/runner cancellation signal.
-    ConsoleCancelEventHandler handler = static (_, _) => { };
-    try
+    if (arguments.Length is < 1 or > 2
+        || arguments.Length == 2 && !string.Equals(arguments[1], "--console-signals", StringComparison.Ordinal))
     {
-        if (consoleSignals)
-        {
-            Console.WriteLine($"Iteration {iteration}: subscribing console signals");
-            Console.CancelKeyPress += handler;
-        }
-
-        await RunIterationAsync(fixturePath, iteration).ConfigureAwait(false);
+        throw new ArgumentException(
+            "Expected the fixture executable path and optional --console-signals.", nameof(arguments));
     }
-    finally
+
+    string fixturePath = Path.GetFullPath(arguments[0]);
+    bool consoleSignals = arguments.Length == 2;
+    Console.WriteLine($"Runtime: {RuntimeInformation.FrameworkDescription}; {RuntimeInformation.OSDescription}");
+    Console.WriteLine($"Architecture: {RuntimeInformation.ProcessArchitecture}; probe PID: {Environment.ProcessId}");
+    Console.WriteLine($"Console signal subscription: {consoleSignals}");
+
+    for (int iteration = 1; iteration <= 5; iteration++)
     {
-        if (consoleSignals)
+        // Exercise subscription lifetime without suppressing a real user/runner cancellation signal.
+        ConsoleCancelEventHandler handler = static (_, _) => { };
+        try
         {
-            Console.WriteLine($"Iteration {iteration}: unsubscribing console signals");
-            Console.CancelKeyPress -= handler;
-            Console.WriteLine($"Iteration {iteration}: console signal unsubscription settled");
+            if (consoleSignals)
+            {
+                Console.WriteLine($"Iteration {iteration}: subscribing console signals");
+                Console.CancelKeyPress += handler;
+            }
+
+            await RunIterationAsync(fixturePath, iteration).ConfigureAwait(false);
+        }
+        finally
+        {
+            if (consoleSignals)
+            {
+                Console.WriteLine($"Iteration {iteration}: unsubscribing console signals");
+                Console.CancelKeyPress -= handler;
+                Console.WriteLine($"Iteration {iteration}: console signal unsubscription settled");
+            }
         }
     }
 }
@@ -79,11 +95,40 @@ static async Task RunIterationAsync(string fixturePath, int iteration)
         Console.WriteLine($"Iteration {iteration}: tree kill returned after {duration.Elapsed}");
         await Task.WhenAll(exit, output, error).WaitAsync(TimeSpan.FromSeconds(10)).ConfigureAwait(false);
         Console.WriteLine($"Iteration {iteration}: exit and both drains settled");
+        await VerifyTreeAsync(controlDirectory, process.Id).ConfigureAwait(false);
     }
     finally
     {
         await CleanupAsync(controlDirectory, iteration).ConfigureAwait(false);
     }
+}
+
+static async Task VerifyTreeAsync(string controlDirectory, int rootProcessId)
+{
+    Dictionary<int, int> parents = [];
+    foreach (string path in Directory.EnumerateFiles(controlDirectory, "*.json"))
+    {
+        using JsonDocument document = JsonDocument.Parse(await File.ReadAllTextAsync(path).ConfigureAwait(false));
+        JsonElement metadata = document.RootElement;
+        parents.Add(metadata.GetProperty("processId").GetInt32(), metadata.GetProperty("parentProcessId").GetInt32());
+    }
+
+    if (parents.Count != 3
+        || !parents.TryGetValue(rootProcessId, out int parent)
+        || parent != Environment.ProcessId
+        || parents.Values.Count(value => value == rootProcessId) != 1
+        || parents.Values.Count(parents.ContainsKey) != 2)
+    {
+        throw new InvalidDataException("Expected three reported fixture processes in the requested tree.");
+    }
+
+    int childProcessId = parents.Single(pair => pair.Value == rootProcessId).Key;
+    if (parents.Values.Count(value => value == childProcessId) != 1)
+    {
+        throw new InvalidDataException("Expected the reported child to own exactly one grandchild.");
+    }
+
+    Console.WriteLine("Verified all three fixture processes reported their parent relationships.");
 }
 
 static async Task CleanupAsync(string controlDirectory, int iteration)

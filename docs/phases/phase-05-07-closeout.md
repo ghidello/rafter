@@ -247,3 +247,25 @@ package integrity. The macOS probe ran on .NET 10.0.12, macOS 26.6.2 arm64: its 
 not resolve the intermittent failure from the preceding two runs. The next diagnostic mode, `--console-signals`,
 adds a `Console.CancelKeyPress` subscription around each iteration and logs unsubscription separately, matching
 the runtime signal registration used by Rafter while still omitting Rafter and xUnit entirely.
+
+[CI 23](https://github.com/ghidello/rafter/actions/runs/35651063932), for `c3e5b94`, also passed all three OS jobs,
+examples and package integrity. Both five-iteration macOS probes passed, including signal unsubscription; the
+original tree-timeout test passed in 1.116 seconds. This comparison did not reproduce or identify the stall.
+
+Further review found that the standalone probe never checked whether all three fixture processes had reported
+their metadata. It now requires the root, child and grandchild relationships before reporting success. A temporary
+single-process fixture reproduces the previous false-positive shape and is now rejected. Expected diagnostic
+failures return exit code 1 after cleanup instead of escaping into OS unhandled-exception reporting.
+
+The exact macOS test now runs under `eng/watch-process-test.py`, an independent Python watchdog. Optional async
+test breadcrumbs identify entry/return from the command, process assertions and independent cleanup. After 12
+seconds the watchdog saves the process table and samples the reported test PID only after checking its ancestry;
+after 60 seconds it kills its own isolated process group without using .NET's tree traversal. Native diagnostic
+commands share that deadline. This can bound a .NET deadlock while the OS remains responsive; it cannot recover
+a frozen VM or guarantee uploads from a disconnected runner. Trace and sample files live under the existing
+failure-artifact directory, `artifacts/test-results/process-tree`.
+
+Three watchdog integration checks cover exit-code preservation, partial trace writes and actual tree termination.
+They pass on Windows with process-termination permission and run on macOS before the affected test. The unchanged
+722-test solution, optional test breadcrumbs and complete-tree probe checks also pass locally. R5, R8 and R11
+remain open pending evidence from the macOS investigation.

@@ -487,9 +487,11 @@ public sealed class PhaseSevenProcessTests
                     .Timeout(TimeSpan.FromMilliseconds(750))
                     .Run());
 
+            await WriteTreeDiagnosticStageAsync("before-command", controlDirectory).ConfigureAwait(true);
             int exitCode = await command.RunAsync(target, [], TestContext.Current.CancellationToken)
                 .ConfigureAwait(true);
 
+            await WriteTreeDiagnosticStageAsync("after-command", controlDirectory).ConfigureAwait(true);
             exitCode.Should().Be(1);
             command.LastExecutionOutcome!.Targets.Single().PrimaryException
                 .Should().BeOfType<ProcessTimeoutException>();
@@ -503,12 +505,15 @@ public sealed class PhaseSevenProcessTests
                 .Should().Be(1);
             metadata.Count(item => processIds.Contains(item.GetProperty("parentProcessId").GetInt32()))
                 .Should().Be(2);
+            await WriteTreeDiagnosticStageAsync("before-process-checks", controlDirectory).ConfigureAwait(true);
             processIds.Should().OnlyContain(processId => !IsProcessRunning(processId));
             ProcessOperationReaper.Count.Should().Be(0);
         }
         finally
         {
+            await WriteTreeDiagnosticStageAsync("before-cleanup", controlDirectory).ConfigureAwait(true);
             await TerminateFixtureProcessesAsync(controlDirectory).ConfigureAwait(true);
+            await WriteTreeDiagnosticStageAsync("after-cleanup", controlDirectory).ConfigureAwait(true);
             Directory.Delete(controlDirectory, recursive: true);
         }
     }
@@ -652,6 +657,33 @@ public sealed class PhaseSevenProcessTests
             "Sotsera.Rafter.ProcessFixture",
             "release",
             executable));
+    }
+
+    private static async Task WriteTreeDiagnosticStageAsync(string stage, string controlDirectory)
+    {
+        string? path = Environment.GetEnvironmentVariable("RAFTER_PROCESS_TREE_TRACE");
+        if (string.IsNullOrEmpty(path))
+        {
+            return;
+        }
+
+        try
+        {
+            await File.AppendAllTextAsync(path, JsonSerializer.Serialize(new
+            {
+                processId = Environment.ProcessId,
+                stage,
+                controlDirectory = Path.GetFullPath(controlDirectory),
+                timestamp = DateTimeOffset.UtcNow,
+            }) + "\n").ConfigureAwait(false);
+        }
+        catch (IOException)
+        {
+            // Optional diagnostics must not prevent fixture cleanup when the destination is unavailable.
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     private static async Task TerminateFixtureProcessesAsync(string controlDirectory)

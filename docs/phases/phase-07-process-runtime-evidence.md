@@ -8,6 +8,9 @@ CI 20 reproduced the macOS stall in `AuthoredTimeoutTerminatesAReportedProcessTr
 deadlines. Gates R5, R8 and R11 are reopened; CI 19 remains valid historical evidence, not a repair of the stall.
 Fixture cleanup now kills individually reported PIDs without another unbounded tree traversal. This removes a
 cleanup weakness but is not yet established as the cause of the stall. CI also records the selected runtime details.
+CI 22 and CI 23 pass, including runtime-only tree probes with and without console signal registration. The exact
+test now has an independent watchdog, stage traces and delayed macOS stack sampling; passing retries do not close
+the unresolved gates. Probe success also requires all three fixture processes and their parent relationships.
 See the [closeout audit](phase-05-07-closeout.md#completion-verification) for exact jobs and verification limits.
 
 ## Completion and failure matrix

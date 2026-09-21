@@ -224,10 +224,16 @@ jobs:
           dotnet run eng/diagnose-process-tree.cs --configuration Release --no-build --
           artifacts/bin/Sotsera.Rafter.ProcessFixture/release/Sotsera.Rafter.ProcessFixture --console-signals
 
+      - name: Verify independent process-test watchdog
+        if: matrix.os == 'macos-latest'
+        timeout-minutes: 1
+        run: python3 eng/test-watch-process-test.py
+
       - name: macOS process test - AuthoredTimeoutTerminatesAReportedProcessTree
         if: matrix.os == 'macos-latest'
         timeout-minutes: 2
         run: >-
+          python3 eng/watch-process-test.py --
           dotnet test --project tests/Sotsera.Rafter.Tests/Sotsera.Rafter.Tests.csproj
           --configuration Release --no-build
           --filter-method Sotsera.Rafter.Tests.PhaseSevenProcessTests.AuthoredTimeoutTerminatesAReportedProcessTree
