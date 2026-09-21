@@ -64,10 +64,14 @@ Path("pids.json").write_text(json.dumps([os.getpid(), child.pid]), encoding="utf
 Path(os.environ["RAFTER_PROCESS_TREE_TRACE"]).write_text(
     json.dumps({"processId": os.getpid(), "stage": "waiting"}) + "\\n", encoding="utf-8")
 time.sleep(15)
-""", timeout="2", sample_after="0.5")
+""", timeout="8", sample_after="2")
         self.assertEqual(124, result.returncode, result.stdout)
-        self.assertLess(time.monotonic() - started, 8, result.stdout)
+        self.assertLess(time.monotonic() - started, 12, result.stdout)
         self.assertIn("Independent process-test deadline exceeded", result.stdout)
+        if sys.platform == "darwin":
+            samples = list(self.work.glob("artifacts/test-results/process-tree/*/sample.txt"))
+            self.assertEqual(1, len(samples), result.stdout)
+            self.assertIn("Call graph:", samples[0].read_text(encoding="utf-8"), result.stdout)
         for process_id in json.loads((self.work / "pids.json").read_text(encoding="utf-8")):
             if os.name == "nt":
                 listing = subprocess.run(

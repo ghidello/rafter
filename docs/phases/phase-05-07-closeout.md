@@ -266,6 +266,7 @@ a frozen VM or guarantee uploads from a disconnected runner. Trace and sample fi
 failure-artifact directory, `artifacts/test-results/process-tree`.
 
 Three watchdog integration checks cover exit-code preservation, partial trace writes and actual tree termination.
+The timeout check also requires a native stack report containing a call graph on macOS before accepting cleanup.
 They pass on Windows with process-termination permission and run on macOS before the affected test. The unchanged
 722-test solution, optional test breadcrumbs and complete-tree probe checks also pass locally. R5, R8 and R11
 remain open pending evidence from the macOS investigation.
