@@ -122,7 +122,7 @@ The full local suite after this pass contains 586 passing tests. Cross-platform 
 
 | Matrix | Cases and observed result |
 | --- | --- |
-| `ProcessSpecificationMatrixTests` | 34 malformed-builder/pre-cancellation rows cover RAFTER1501–1513 and duplicate policies without adapter creation; five timeout rows include the supported upper bound |
+| `ProcessSpecificationMatrixTests` | 32 portable malformed-builder/pre-cancellation rows, two native device-namespace rows, and five timeout-boundary rows cover the applicable RAFTER1501–1513 diagnostics and duplicate policies |
 | `ProcessHandleAndPathTests` | Sixteen foreign-handle operations rejected, eight bare/relative/parent-relative/absolute path cases with target/process directory selection, and inactive string/flag omissions without consuming a policy |
 | `ProcessStartRaceTests` | 12 combinations repeated ten times: start true/false/throw, cancellation/timeout during synchronous start, capture/streaming; fixed primary classification, exactly-once disposal and no reaper entries |
 | `ProcessCallbackScopeTests` | Independent condition/execution/target-cleanup/command-cleanup authority, expired builder rejection, concurrent independent launches, completed discarded tasks, and four active-discard/false-condition/callback-failure rows |
@@ -138,3 +138,12 @@ example scenarios. Package and symbol checks at `7586f38` pass for 63 source doc
 R3, R6, R7 and R9 have local evidence recorded here. R2, R4, R5, R8, R10 and R11 retain their supported-OS requirements;
 the historical passing matrix does not certify this revision. `dotnet`, `extensibility`, `git`, `node` and `repository`
 remain the explicitly deferred Phase 8/9 examples.
+
+## Supported-OS review: native executable path rules
+
+[CI 18](https://github.com/ghidello/rafter/actions/runs/35645601955) exposed a test-only portability assumption:
+the new RAFTER1502 fixture expected `\\?\C:\tool` to be an unsupported device namespace on every OS. The existing
+Phase 4 policy rejects that namespace only on Windows. On Unix the same characters form an ordinary relative
+filename, so specification validation succeeds and pre-cancellation or adapter creation follows normally.
+The two rows now verify those native outcomes explicitly, including normalized Unix executable text and factory
+invocation counts. They remain required tests on every OS; no runtime validation or assertion was disabled.

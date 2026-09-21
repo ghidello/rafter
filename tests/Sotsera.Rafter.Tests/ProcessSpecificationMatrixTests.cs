@@ -9,7 +9,7 @@ public sealed class ProcessSpecificationMatrixTests
     {
         foreach ((string scenario, string code) in new[]
         {
-            ("executable", "RAFTER1501"), ("path", "RAFTER1502"), ("argument", "RAFTER1503"),
+            ("executable", "RAFTER1501"), ("argument", "RAFTER1503"),
             ("name", "RAFTER1504"), ("environment-key", "RAFTER1505"), ("environment-value", "RAFTER1506"),
             ("directory", "RAFTER1507"), ("timeout", "RAFTER1508"), ("limit", "RAFTER1509"),
             ("exits", "RAFTER1510"), ("duplicate-timeout", "RAFTER1511"), ("stream-limit", "RAFTER1512"),
@@ -48,6 +48,55 @@ public sealed class ProcessSpecificationMatrixTests
             command.LastExecutionOutcome!.Targets.Single().PrimaryException.Should().BeOfType<ProcessException>()
                 .Which.Message.Should().Contain(code);
             factory.Calls.Should().Be(0);
+            ProcessOperationReaper.Count.Should().Be(0);
+        }
+        finally
+        {
+            ProcessRuntime.AdapterFactory = original;
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task DeviceExecutablePathsFollowTheHostNamespaceRulesBeforeCancellation(bool cancel)
+    {
+        const string executable = "\\\\?\\C:\\tool";
+        CountingFactory factory = new();
+        IProcessAdapterFactory original = ProcessRuntime.AdapterFactory;
+        ProcessRuntime.AdapterFactory = factory;
+        using CancellationTokenSource cancellation = new();
+        try
+        {
+            string? expectedExecutable = null;
+            Command command = PhaseFiveTestSupport.CreateCommand();
+            Target work = command.Target("work").Description("Validate native path rules.").Run(context =>
+            {
+                expectedExecutable = OperatingSystem.IsWindows()
+                    ? null
+                    : Path.GetFullPath(executable, context.WorkingDirectory);
+                ProcessBuilder builder = context.Process(executable);
+                if (cancel)
+                {
+                    cancellation.Cancel();
+                }
+                return builder.Capture();
+            });
+
+            (await command.RunAsync(work, [], cancellation.Token)).Should().Be(
+                !OperatingSystem.IsWindows() && cancel ? 130 : 1);
+            Exception failure = command.LastExecutionOutcome!.Targets.Single().PrimaryException!;
+            if (OperatingSystem.IsWindows())
+            {
+                failure.Should().BeOfType<ProcessException>().Which.Message.Should().Contain("RAFTER1502");
+            }
+            else
+            {
+                // Backslashes and a colon are ordinary Unix filename characters, not a device namespace.
+                failure.Should().BeOfType(cancel ? typeof(OperationCanceledException) : typeof(ProcessStartException));
+                factory.Executable.Should().Be(cancel ? null : expectedExecutable);
+            }
+            factory.Calls.Should().Be(!OperatingSystem.IsWindows() && !cancel ? 1 : 0);
             ProcessOperationReaper.Count.Should().Be(0);
         }
         finally
@@ -99,7 +148,6 @@ public sealed class ProcessSpecificationMatrixTests
         return scenario switch
         {
             "executable" => context.Process(" "),
-            "path" => context.Process("\\\\?\\C:\\tool"),
             "argument" => builder.Argument("\0"),
             "name" => builder.Flag(" "),
             "environment-key" => builder.Environment(environment => environment.Set("=", "value")),
@@ -131,9 +179,12 @@ public sealed class ProcessSpecificationMatrixTests
     {
         internal int Calls { get; private set; }
 
+        internal string? Executable { get; private set; }
+
         public IProcessAdapter Create(ProcessStartInfo startInfo)
         {
             Calls++;
+            Executable = startInfo.FileName;
             throw new IOException("Synthetic launch failure.");
         }
     }
