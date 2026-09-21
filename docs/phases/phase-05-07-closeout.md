@@ -287,5 +287,10 @@ owned worker; closure and drainage have concurrent bounded observation. The reap
 drain cancellation source until late work settles, records late failures and disposes once. Output admission is
 released on bounded return even when a cancellation callback blocks. Timed-out kill/exit tasks also retain ownership
 if they finish between the deadline and handoff. All 734 local tests, formatting and the analyzer-clean Release
-build pass after this repair; supported-OS verification of the repair is pending. It is not yet established as the
-cause of the macOS stall, so R5, R8 and R11 remain open.
+build pass after this repair. It is not yet established as the cause of the macOS stall, so R5, R8 and R11 remain open.
+
+[CI 27](https://github.com/ghidello/rafter/actions/runs/35655455518), for runtime repair `bd99f3a`, passes on its
+first attempt. Windows and Ubuntu each pass all 734 tests; macOS passes 705 in its main step and all 29 isolated
+process cases, including five consecutive executions of the tree-timeout case. Every OS compiles all 24 examples
+and passes the 14 deterministic scenarios. Package integrity also passes. This is supported-OS evidence for the
+closure repair, not proof of the earlier stall's root cause.

@@ -180,5 +180,10 @@ adapter disposal. Tasks that miss a kill/exit deadline remain owned even if they
 
 All 734 local tests pass with formatting and an analyzer-clean Release build. The preceding diagnostic revision
 `cc533a0` passes [CI 26](https://github.com/ghidello/rafter/actions/runs/35654075216), including macOS native stack
-capture, ten runtime-only probe trees and five consecutive tree-timeout tests. CI for the runtime repair is pending;
-the reproduced closure defect is not established as the root cause of the earlier macOS stall.
+capture, ten runtime-only probe trees and five consecutive tree-timeout tests.
+
+The runtime repair `bd99f3a` passes [CI 27](https://github.com/ghidello/rafter/actions/runs/35655455518) on its
+first attempt: 734 cases on each OS (705 plus 29 isolated cases on macOS), all 24 examples and 14 execution
+scenarios, and package integrity. macOS also passes all five consecutive tree-timeout executions and the native
+stack-capture watchdog checks. The reproduced closure defect is not established as the root cause of the earlier
+macOS stall; R5, R8 and R11 remain open.
