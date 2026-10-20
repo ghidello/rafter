@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rafter · output design review</title>
+  <style>
+    :root { color-scheme: light; font: 15px/1.5 system-ui, sans-serif; color: #243b3c; background: #f3f5f1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1440px; margin: auto; padding: 36px 26px 54px; }
+    .eyebrow { color: #486b61; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { font-size: clamp(27px, 4vw, 40px); font-weight: 650; letter-spacing: -.035em; margin: 6px 0 14px; }
+    h2 { font-size: 20px; margin: 0 0 5px; }
+    p { margin: 0 0 12px; }
+    .intro { max-width: 900px; color: #526464; }
+    a { color: #256550; }
+    .controls { display: grid; grid-template-columns: 2fr repeat(4, 1fr); gap: 12px; margin: 24px 0 14px; }
+    label { font-size: 12px; font-weight: 650; }
+    select { display: block; width: 100%; margin-top: 5px; padding: 9px; border: 1px solid #bdcdc4; border-radius: 6px;
+      background: #fff; color: #243b3c; font: inherit; font-size: 14px; }
+    select:focus-visible, a:focus-visible, button:focus-visible { outline: 3px solid #2e806c; outline-offset: 3px; }
+    .toolbar { display: flex; gap: 20px; flex-wrap: wrap; align-items: center; margin: 0 0 20px; }
+    .toolbar label { display: flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 400; }
+    input { accent-color: #256550; }
+    .scenario-note { border-left: 3px solid #abc3ad; padding: 10px 14px; background: #e8eee6; font-size: 14px; }
+    .scenario-note code { font-family: ui-monospace, Consolas, monospace; }
+    .comparison { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin: 22px 0; }
+    article { min-width: 0; }
+    .description { color: #526464; font-size: 14px; min-height: 44px; margin-bottom: 12px; }
+    .terminal { background: #172125; color: #e5eaed; border-radius: 9px; overflow: hidden; border: 1px solid #26363b; }
+    .terminal-bar { background: #243036; color: #b5c4c8; padding: 10px 15px; font-size: 12px;
+      display: flex; justify-content: space-between; gap: 12px; }
+    .transcript { padding: 20px; overflow-x: auto; min-height: 235px; }
+    .line { font: 13px/1.65 Consolas, "Cascadia Mono", ui-monospace, monospace; white-space: pre; min-height: 1.65em; }
+    .heading { color: #83d0d1; font-weight: 700; }
+    .target { color: #e5eaed; font-weight: 700; }
+    .muted { color: #9cacb3; }
+    .ok { color: #9cdbb2; font-weight: 650; }
+    .warning, .stack { color: #ead48a; }
+    .error { color: #ffa5a7; }
+    .strong { font-weight: 700; }
+    .plain .line, .no-color .line { color: #e5eaed; }
+    .plain .line { font-weight: 400; }
+    .summary { padding-top: 2px; }
+    .legend { color: #5b6c69; font-size: 13px; margin-top: 10px; }
+    .review-notes { border-top: 1px solid #cad7ce; margin-top: 28px; padding-top: 20px; max-width: 1000px; }
+    .review-notes ul { padding-left: 20px; }
+    .review-notes li { margin-bottom: 6px; }
+    .button { padding: 8px 13px; border: 1px solid #bdcdc4; border-radius: 6px; background: #fff;
+      color: #243b3c; cursor: pointer; font: inherit; font-size: 13px; }
+    .copied { font-size: 13px; color: #526464; }
+    @media (max-width: 1150px) { .comparison { grid-template-columns: 1fr; } .description { min-height: 0; } }
+    @media (max-width: 800px) { .controls { grid-template-columns: repeat(2, 1fr); } .controls label:first-child { grid-column: 1 / -1; }
+      main { padding: 24px 16px; } .transcript { padding: 14px; } }
+    @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Rafter · design review · October 2026</div>
+  <h1>A clear start. A named result.</h1>
+  <p class="intro">Two proposals for the same execution. Compare a greeting, a longer workflow, cleanup, and failures.
+    Switch between colored, plain, narrow, and live views. Proposal A is selected and implemented; these remain illustrative designs.
+    <a href="output-review.md">Actual file-app captures</a> document runtime output.</p>
+  <p class="intro">Results remain literal on stdout. Lifecycle and diagnostics remain on stderr. A combined view illustrates
+    one possible terminal order; independently redirected streams do not guarantee that order.</p>
+
+  <div class="controls">
+    <label>Scenario<select id="scenario"></select></label>
+    <label>Appearance<select id="appearance">
+      <option value="color">Colored terminal</option><option value="plain">Plain / redirected</option>
+      <option value="no-color">NO_COLOR terminal</option>
+    </select></label>
+    <label>Terminal width<select id="width"><option value="80">80 columns</option><option value="40">40 columns</option>
+      <option value="100">100 columns</option></select></label>
+    <label>Streams<select id="stream"><option value="both">Combined</option><option value="out">stdout only</option>
+      <option value="err">stderr only</option></select></label>
+    <label>Moment<select id="moment"><option value="done">Completed</option><option value="running">While running</option></select></label>
+  </div>
+  <div class="toolbar">
+    <label><input id="verbose" type="checkbox"> Verbose: descriptions and process details</label>
+    <label><input id="quiet" type="checkbox"> Quiet: results, warnings, failures</label>
+    <button class="button" id="copy-a" type="button">Copy A as text</button>
+    <button class="button" id="copy-b" type="button">Copy B as text</button>
+    <span id="copy-status" class="copied" role="status"></span>
+  </div>
+  <div class="scenario-note" id="scenario-note"></div>
+
+  <div class="comparison">
+    <article>
+      <h2>A · compact markers · selected</h2>
+      <p class="description">A small command marker and a simple target start. Space and emphasis separate the phases.
+        The selected layout, now used by the renderer.</p>
+      <div class="terminal" id="terminal-a">
+        <div class="terminal-bar"><span>Proposal A</span><span class="terminal-settings"></span></div>
+        <div class="transcript" id="output-a" aria-label="Proposal A terminal preview"></div>
+      </div>
+    </article>
+    <article>
+      <h2>B · section separators</h2>
+      <p class="description">An explicit command title and ruled target sections. Stronger boundaries between noisy phases,
+        at the cost of more visual structure.</p>
+      <div class="terminal" id="terminal-b">
+        <div class="terminal-bar"><span>Proposal B</span><span class="terminal-settings"></span></div>
+        <div class="transcript" id="output-b" aria-label="Proposal B terminal preview"></div>
+      </div>
+    </article>
+  </div>
+  <p class="legend">Timing values, tool logs, and stack frames are illustrative. Hover a line to identify its stream.
+    Shared dependencies appear once; grouping and skipped targets stay compact in both designs.</p>
+
+  <div class="review-notes">
+    <h2>What to review</h2>
+    <ul>
+      <li>Can you immediately find the command and the current target, including in plain text?</li>
+      <li>Does the start/completion repetition help when the tool prints many lines?</li>
+      <li>Is target cleanup clearly subordinate, with command cleanup a distinct final phase?</li>
+      <li>Do failure labels tell you which scope failed without hiding the exception or later failures?</li>
+      <li>At 40 columns, does wrapping remain useful without changing authored output?</li>
+    </ul>
+    <p>Live snapshots never show a completed result before work settles. Plain/redirected views have no spinner.
+      Quiet hides successful lifecycle and live status; warnings, failures, and unsuccessful summaries remain.</p>
+    <p>Help and argument-error structure are retained. <a href="output-review.md">Current output captures</a> and
+      <a href="output.md">current contracts</a> remain the baseline; neither proposal is production output yet.</p>
+  </div>
+</main>
+<script>
+  const row = (text, style = '', stream = 'err', visibility = 'always') => ({ text, style, stream, visibility });
+  const result = text => row(text, '', 'out');
+  const diagnostic = (text, style = 'muted') => row(text, style);
+  const lifecycle = (text, style = 'muted') => row(text, style, 'err', 'normal');
+  const verbose = text => row(text, 'muted', 'err', 'verbose');
+  const target = (name, description, events, status = 'OK', duration = '24 ms', extra = {}) =>
+    ({ name, description, events, status, duration, ...extra });
+  const cleanup = (description, events = [], status = 'OK', duration = '12 ms') =>
+    ({ description, events, status, duration });
+
+  const scenarios = [
+    {
+      id: 'greeting', title: 'Greeting', command: 'minimal.cs', description: 'Run the smallest useful Rafter command.',
+      note: 'Canonical minimal.cs shape. No description under the target unless verbose is selected.',
+      targets: [target('hello', 'Print a greeting.', [result('Hello from Rafter.')])],
+      summary: 'Succeeded | 1 target | 24 ms', exit: 0, liveTarget: 0
+    },
+    {
+      id: 'workflow', title: 'Build, test, and package', command: 'rafter.cs',
+      description: 'Build and test Rafter, optionally creating and verifying a local package.',
+      note: 'Rafter’s real five-target workflow. Logs and timings illustrate a successful package run, not a new verification.',
+      targets: [
+        target('build', 'Restore and build the solution, including analyzers and linked examples.', [
+          lifecycle('  Process | Build the solution.'), verbose('  $ dotnet build Rafter.slnx --configuration Release'),
+          verbose('  Directory: <repository>'), result('Build succeeded.'), result('    0 Warning(s)'), result('    0 Error(s)')
+        ], 'OK', '16.3 s'),
+        target('test', 'Run the complete test suite using the freshly built binaries.', [
+          lifecycle('  Process | Run the test suite.'), verbose('  $ dotnet test --solution Rafter.slnx --no-build --no-restore'),
+          result('Test run summary: Passed!'), result('  total: 871'), result('  failed: 0'), result('  skipped: 0')
+        ], 'OK', '4m 15s'),
+        target('package', 'Create a private-use package from the verified build without uploading it.', [
+          lifecycle('  Process | Create the local package.'), result('Local packages: .artifacts/packages (relative to the repository if not absolute).')
+        ], 'OK', '450 ms'),
+        target('verify-package', 'Verify isolated package consumers, analyzers, symbols, and reproducible package contents.', [
+          lifecycle('  Process | Verify the local package.'), result('Verified isolated file-app and project consumers.'),
+          result('Verified reproducible package contents.')
+        ], 'OK', '1m 13s'),
+        target('verify', 'Complete the workflow.', [], 'OK', '0 ms', { group: true })
+      ], summary: 'Succeeded | 5 targets | 5m 46s', exit: 0, liveTarget: 1, liveSeconds: 134
+    },
+    {
+      id: 'dependencies', title: 'Shared dependencies', command: 'dependencies.cs',
+      description: 'Run dependent targets sequentially, sharing common work.',
+      note: 'prepare is shared by build and test. It executes once; all is a grouping target, not another body.',
+      targets: [target('prepare', 'Prepare inputs once for both branches.', [result('Inputs prepared.')]),
+        target('build', 'Build the prepared inputs.', [result('Build completed.')], 'OK', '120 ms'),
+        target('test', 'Test the prepared inputs.', [result('Tests completed.')], 'OK', '90 ms'),
+        target('all', 'Run both branches in declaration order.', [], 'OK', '0 ms', { group: true })],
+      summary: 'Succeeded | 4 targets | 234 ms', exit: 0, liveTarget: 1
+    },
+    {
+      id: 'skip', title: 'Intentional skip', command: 'conditions.cs',
+      description: 'Skip optional work while allowing dependent targets to continue.',
+      note: 'A skipped dependency permits finish. A skip has one result line, without an empty target section.',
+      targets: [target('prepare', 'Prepare inputs.', [result('Inputs prepared.')]),
+        target('publish', 'Publish an optional release.', [], 'SKIPPED', '',
+          { group: true, reason: 'Condition not met: Run when release is requested.' }),
+        target('finish', 'Finish the workflow.', [result('Workflow completed.')])],
+      summary: 'Succeeded | 3 targets | 2 succeeded | 1 skipped | 58 ms', exit: 0, liveTarget: 2
+    },
+    {
+      id: 'noisy', title: 'Noisy tool and long target name', command: 'build-demo.cs',
+      description: 'Build the application and verify isolated package consumers.',
+      note: 'Illustrative process fixture. Child stdout is untouched; try 40 columns and stream filtering.',
+      targets: [target('build', 'Build the application.', [
+        lifecycle('  Process | Build the application.'), verbose('  $ dotnet build Application.slnx --configuration Release'),
+        ...Array.from({ length: 10 }, (_, index) => result(`  Component.${index + 1} -> bin/Release/net10.0/Component.${index + 1}.dll`)),
+        result('Build succeeded.')
+      ], 'OK', '7.8 s'), target('verify-isolated-package-consumers', 'Verify the generated package in isolated hosts.', [
+        lifecycle('  Process | Verify isolated package consumers.'), result('Isolated consumers passed.')
+      ], 'OK', '3.2 s')], summary: 'Succeeded | 2 targets | 11.0 s', exit: 0, liveTarget: 1
+    },
+    {
+      id: 'cleanup', title: 'Target and command cleanup', command: 'cleanup.cs',
+      description: 'Release target resources immediately and shared resources when the command finishes.',
+      note: 'The target’s completion comes after its cleanup. Command cleanup is final and does not count as a target.',
+      targets: [target('prepare', 'Create temporary and shared inputs.', [result('Inputs prepared.')], 'OK', '41 ms',
+          { cleanup: cleanup('Delete preparation resources before the next target starts.', [result('Preparation resources released.')]) }),
+        target('finish', 'Read shared input and finish the workflow.', [result('Read: prepared inputs'), result('Workflow completed.')])],
+      commandCleanup: cleanup('Delete the shared input file after all entered work settles.', [result('Shared resources released.')]),
+      summary: 'Succeeded | 2 targets | 77 ms', exit: 0, liveTarget: 0, livePhase: 'cleanup'
+    },
+    {
+      id: 'exceptions', title: 'Body plus two cleanup exceptions', command: 'failure-demo.cs',
+      description: 'Demonstrate retained callback failures across cleanup scopes.',
+      note: 'Illustrative composite fixture. All three exception details remain; target completion waits for its cleanup.',
+      targets: [target('work', 'Perform work and release local resources.', [
+        result('Body entered.'), diagnostic('Error [target: work / callback]', 'error strong'),
+        diagnostic('System.IO.IOException: Body fault.', 'error'),
+        diagnostic('   at Program.<<Main>$>b__0_0(RafterContext context) in failure-demo.cs:line 18', 'stack'),
+        diagnostic('   at Program.RunWork(RafterContext context)', 'stack')
+      ], 'FAILED', '36 ms', { cleanup: cleanup('Release local resources.', [
+        diagnostic('Error [target: work / cleanup / callback]', 'error strong'),
+        diagnostic('System.InvalidOperationException: Target cleanup fault.', 'error'),
+        diagnostic('   at Program.<<Main>$>b__0_1(RafterContext context) in failure-demo.cs:line 25', 'stack'),
+        diagnostic('   at Program.ReleaseLocalResources(RafterContext context)', 'stack')
+      ], 'FAILED', '8 ms') })],
+      commandCleanup: cleanup('Release shared resources.', [
+        diagnostic('Error [command cleanup / callback]', 'error strong'),
+        diagnostic('System.ArgumentException: Command cleanup fault.', 'error'),
+        diagnostic('   at Program.<<Main>$>b__0_2(RafterContext context) in failure-demo.cs:line 32', 'stack'),
+        diagnostic('   at Program.ReleaseSharedResources(RafterContext context)', 'stack')
+      ], 'FAILED', '9 ms'),
+      summary: 'Failed | 1 failed | 1 not run | Target: work | 45 ms', exit: 1, liveTarget: 0
+    },
+    {
+      id: 'expected', title: 'Expected failure and warning', command: 'diagnostics.cs',
+      description: 'Report useful diagnostics without throwing for expected failures.',
+      note: 'Use Quiet to keep the warning, expected failure, failed target result, and unsuccessful summary. No stack is invented.',
+      targets: [target('work', 'Produce the result.', [
+        diagnostic('Warning [target: work]: This is a demonstration warning; work can continue.', 'warning'),
+        diagnostic('Error [target: work]: The result could not be produced.', 'error')
+      ], 'FAILED', '18 ms')],
+      summary: 'Failed | 1 failed | 1 not run | Target: work | 18 ms', exit: 1, liveTarget: 0
+    },
+    {
+      id: 'process', title: 'External process failure', command: 'process-demo.cs',
+      description: 'Run a build tool and handle its explicit failure result.',
+      note: 'Illustrative fixture. Process context is retained even without verbose output; child stderr remains its own text.',
+      targets: [target('build', 'Compile the application.', [
+        lifecycle('  Process | Build the application.'), result('Determining projects to restore...'),
+        row('Build error: a required input file is missing.'),
+        diagnostic('Error [target: build / process]', 'error strong'),
+        diagnostic('Process exited with code 1; expected 0.', 'error'),
+        diagnostic('  Executable: dotnet'), diagnostic('  Directory: <repository>'),
+        diagnostic('  Command: dotnet build Application.slnx')
+      ], 'FAILED', '1.4 s')], summary: 'Failed | 1 failed | 1 not run | Target: build | 1.4 s', exit: 1, liveTarget: 0
+    },
+    {
+      id: 'framework', title: 'Framework failure', command: 'framework-demo.cs',
+      description: 'Keep framework failures distinct from user callback exceptions.',
+      note: 'Illustrative recoverable timer-setup failure. No callback stack is fabricated; eligible command cleanup still runs.',
+      targets: [target('work', 'Perform bounded work.', [
+        diagnostic('Error [target: work / framework]', 'error strong'), diagnostic('Timer setup could not complete.', 'error')
+      ], 'FAILED', '3 ms')],
+      commandCleanup: cleanup('Release shared resources.', [result('Shared resources released.')]),
+      summary: 'Failed | 1 failed | Target: work | 15 ms', exit: 1, liveTarget: 0
+    },
+    {
+      id: 'cancel', title: 'Cooperative cancellation', command: 'cancellation-demo.cs',
+      description: 'Cancel work cooperatively and await cleanup before returning.',
+      note: 'Running view shows the cancellation request, not a completed result. Completed view shows settled cleanup and exit 130.',
+      targets: [target('work', 'Perform cancellable work.', [
+        result('Work started.'), diagnostic('Cancellation [target: work]: Stop requested; awaiting completion.', 'warning')
+      ], 'CANCELLED', '2.1 s', { cleanup: cleanup('Release local resources.', [result('Local resources released.')]) })],
+      commandCleanup: cleanup('Release shared resources.', [result('Shared resources released.')]),
+      summary: 'Cancelled | 1 cancelled | 1 not run | Target: work | 2.2 s', exit: 130, liveTarget: 0, liveSeconds: 2
+    },
+    {
+      id: 'timeout', title: 'Timeout: requesting stop vs settled', command: 'managed-timeout.cs',
+      description: 'Await cooperative work and cleanup after a target deadline.',
+      note: 'Expiry requests cancellation while work may still run. The final timeout result appears only after work and cleanup settle.',
+      targets: [target('work', 'Perform bounded work.', [
+        result('Target work started.'), diagnostic('Timeout [target: work]: Deadline elapsed after 100ms; cancellation requested, awaiting completion.', 'warning'),
+        result('Target work settled.')
+      ], 'TIMED OUT', '1.0 s', { cleanup: cleanup('Release local resources.', [result('Target cleanup completed.')]) })],
+      commandCleanup: cleanup('Release shared resources.', [result('Command cleanup completed.')]),
+      summary: 'Failed | 1 failed | 1 not run | Target: work | 1.1 s', exit: 1, liveTarget: 0, liveSeconds: 1
+    },
+    {
+      id: 'help', title: 'Help · existing structure',
+      note: 'Both proposals retain the existing help layout. Narrow rows stack descriptions; help ignores verbose/quiet and never executes work.',
+      exit: 0, help: true
+    },
+    {
+      id: 'validation', title: 'Argument errors · existing structure',
+      note: 'Both proposals retain grouped errors, short usage, and a help hint. No target header, execution summary, or live status.',
+      exit: 2, lines: [diagnostic('Invalid arguments', 'error strong'),
+        diagnostic('  --name is required.', ''), diagnostic("  --repeat expects an integer; received 'two'.", ''), row(''),
+        row('Usage: dotnet run examples/options.cs -- --name <string> [options]', ''), row(''),
+        diagnostic('Run with --help to see all options.')]
+    }
+  ];
+
+  const controls = Object.fromEntries(['scenario', 'appearance', 'width', 'stream', 'moment', 'verbose', 'quiet']
+    .map(id => [id, document.getElementById(id)]));
+  const views = ['a', 'b'];
+  let transcripts = {};
+  let liveSpinners = [];
+  let spinIndex = 0;
+
+  for (const scenario of scenarios) {
+    const option = document.createElement('option');
+    option.value = scenario.id;
+    option.textContent = scenario.title;
+    controls.scenario.append(option);
+  }
+
+  function heading(layout, name, kind, columns) {
+    if (layout === 'a') {
+      return kind === 'command' ? `> ${name}` : `:: ${name}`;
+    }
+    const label = kind === 'command' ? `Command: ${name}` : `Target: ${name}`;
+    const text = `--- ${label} `;
+    return text + '-'.repeat(Math.max(3, Math.min(columns, 74) - text.length));
+  }
+
+  function helpRows(columns) {
+    const options = [
+      ['-n, --name <string>', 'The name to greet. [required]'],
+      ['-r, --repeat <int>', 'How many greetings to print. Rule: Must be zero or greater. [default: 1]'],
+      ['-u, --uppercase [bool]', 'Print the greeting in uppercase. [default: false]']
+    ];
+    const rafter = [['-h, --help', 'Show help.'], ['    --plain', 'Disable styling and live status.'],
+      ['    --verbose', 'Show process command lines and working directories.'],
+      ['-q, --quiet', 'Hide lifecycle and informational messages; keep results, warnings, and failures.']];
+    const usage = 'dotnet run examples/options.cs -- --name <string> [options]';
+    const usageLines = columns < usage.length + 7
+      ? [row('Usage:', '', 'out'), row('  ' + usage, '', 'out')]
+      : [row('Usage: ' + usage, '', 'out')];
+    const lines = [row('Print a greeting using typed command-line options.', '', 'out'), row('', '', 'out'),
+      ...usageLines, row('', '', 'out'), row('Command options:', 'heading', 'out')];
+    const appendOptions = entries => {
+      for (const [name, description] of entries) {
+        if (columns < 60) {
+          lines.push(row('  ' + name, 'strong', 'out'), row('    ' + description, '', 'out'));
+        } else {
+          lines.push(row('  ' + name.padEnd(24) + description, '', 'out'));
+        }
+      }
+    };
+    appendOptions(options);
+    lines.push(row('', '', 'out'), row('Execution:', 'heading', 'out'),
+      row('  Target: hello - Print the requested greetings.', '', 'out'), row('  Root:   Invocation directory.', '', 'out'),
+      row('', '', 'out'), row('Rafter options:', 'heading', 'out'));
+    appendOptions(rafter);
+    return lines;
+  }
+
+  function buildTranscript(scenario, layout, settings) {
+    if (scenario.help) return helpRows(settings.columns);
+    if (scenario.lines) {
+      return scenario.lines.flatMap(line => line.text.startsWith('Usage: ') && line.text.length > settings.columns
+        ? [row('Usage:'), row('  ' + line.text.slice(7))] : [line]);
+    }
+    const lines = [];
+    const addCleanup = (scope, value, commandScope = false) => {
+      lines.push(lifecycle(commandScope ? 'Command cleanup' : '  Cleanup', commandScope ? 'target' : 'muted'));
+      lines.push(verbose((commandScope ? '  ' : '    ') + value.description));
+      lines.push(...value.events);
+      const unsuccessful = value.status !== 'OK';
+      lines.push(row(`${commandScope ? '' : '  '}[${value.status}] ${scope} | ${value.duration}`,
+        unsuccessful ? 'error strong' : 'ok', 'err', unsuccessful ? 'always' : 'normal'));
+    };
+    lines.push(lifecycle(heading(layout, scenario.command, 'command', settings.columns), 'heading'));
+    lines.push(lifecycle(scenario.description));
+    for (let index = 0; index < scenario.targets.length; index++) {
+      const value = scenario.targets[index];
+      if (!value.group) {
+        lines.push(lifecycle(''));
+        lines.push(lifecycle(heading(layout, value.name, 'target', settings.columns), 'target'));
+        lines.push(verbose('  ' + value.description));
+      }
+      const isRunning = settings.running && index === scenario.liveTarget;
+      let events = value.events;
+      if (isRunning) {
+        if (scenario.id === 'timeout') events = value.events.slice(0, 2);
+        else if (scenario.id === 'cancel') events = value.events;
+        else if (scenario.livePhase === 'cleanup') events = value.events;
+        else events = value.events.filter(event => event.visibility === 'verbose' || event.visibility === 'normal').slice(0, 3);
+      }
+      lines.push(...events);
+      if (isRunning) {
+        if (scenario.livePhase === 'cleanup') {
+          lines.push(lifecycle('  Cleanup'));
+          lines.push(verbose('    ' + value.cleanup.description));
+        }
+        if (!settings.quiet) {
+          const label = scenario.livePhase === 'cleanup' ? `${value.name} / cleanup` : value.name;
+          const elapsed = scenario.liveSeconds ?? 2;
+          const elapsedText = elapsed >= 60 ? `${Math.floor(elapsed / 60)}m ${elapsed % 60}s` : `${elapsed}.0 s`;
+          const labelBudget = Math.max(4, settings.columns - elapsedText.length - 5);
+          const clippedLabel = label.length > labelBudget ? label.slice(0, labelBudget - 3) + '...' : label;
+          if (settings.appearance !== 'plain') {
+            lines.push({ ...lifecycle(`| ${clippedLabel} | ${elapsedText}`), live: true });
+          }
+        }
+        return lines;
+      }
+      if (value.cleanup) addCleanup(`cleanup: ${value.name}`, value.cleanup);
+      const unsuccessful = ['FAILED', 'CANCELLED', 'TIMED OUT'].includes(value.status);
+      const style = value.status === 'OK' ? 'ok' : value.status === 'SKIPPED' ? 'warning' : 'error strong';
+      const duration = value.duration ? ` | ${value.duration}` : '';
+      const reason = value.reason ? ` | ${value.reason}` : '';
+      lines.push(row(`[${value.status}] ${value.name}${duration}${reason}`, style, 'err', unsuccessful ? 'always' : 'normal'));
+    }
+    if (scenario.commandCleanup) {
+      lines.push(lifecycle(''));
+      addCleanup('command cleanup', scenario.commandCleanup, true);
+    }
+    lines.push(row('', '', 'err', scenario.exit === 0 ? 'normal' : 'always'));
+    lines.push(row(scenario.summary, scenario.exit === 0 ? 'ok summary' : 'error strong summary', 'err',
+      scenario.exit === 0 ? 'normal' : 'always'));
+    return lines;
+  }
+
+  function wrapLine(text, columns) {
+    if (text.length <= columns) return [text];
+    const leading = text.match(/^\s*/)[0];
+    const indent = leading + '  ';
+    const lines = [];
+    let remaining = text;
+    while (remaining.length > columns) {
+      let split = remaining.lastIndexOf(' ', columns);
+      if (split <= indent.length) split = columns;
+      lines.push(remaining.slice(0, split));
+      remaining = indent + remaining.slice(split).trimStart();
+    }
+    lines.push(remaining);
+    return lines;
+  }
+
+  function render() {
+    const scenario = scenarios.find(item => item.id === controls.scenario.value);
+    const settings = { appearance: controls.appearance.value, columns: Number(controls.width.value),
+      stream: controls.stream.value, verbose: controls.verbose.checked, quiet: controls.quiet.checked,
+      running: controls.moment.value === 'running' && !scenario.help && !scenario.lines };
+    if (settings.quiet && settings.verbose) {
+      settings.running = false;
+      document.getElementById('scenario-note').textContent = 'Quiet and verbose cannot be combined. Rafter rejects this input before execution.';
+    } else {
+      document.getElementById('scenario-note').textContent = scenario.note;
+    }
+    controls.moment.disabled = Boolean(scenario.help || scenario.lines);
+    liveSpinners = [];
+    for (const view of views) {
+      const container = document.getElementById('output-' + view);
+      container.replaceChildren();
+      document.getElementById('terminal-' + view).className = 'terminal ' + settings.appearance;
+      let lines;
+      if (settings.quiet && settings.verbose) {
+        lines = [row('Invalid arguments', 'error strong'), row('  --quiet and --verbose cannot be combined.'), row(''),
+          row('Run with --help to see all options.', 'muted')];
+      } else {
+        lines = buildTranscript(scenario, view, settings).filter(line =>
+          (line.visibility !== 'normal' || !settings.quiet) &&
+          (line.visibility !== 'verbose' || settings.verbose && !settings.quiet));
+      }
+      lines = lines.filter(line => settings.stream === 'both' || line.stream === settings.stream);
+      transcripts[view] = lines.map(line => line.text).join('\n');
+      if (lines.every(line => line.text.length === 0)) {
+        const empty = document.createElement('div');
+        empty.className = 'line muted';
+        empty.textContent = '(no output on this stream)';
+        container.append(empty);
+      }
+      for (const line of lines) {
+        // Authored stdout is not rewritten or indented. Its long lines scroll instead of using owned wrapping.
+        const displayLines = line.stream === 'out' && !scenario.help ? [line.text] : wrapLine(line.text, settings.columns);
+        for (const text of displayLines) {
+          const element = document.createElement('div');
+          element.className = 'line ' + line.style;
+          element.textContent = text;
+          element.title = line.stream === 'out' ? 'stdout' : 'stderr';
+          container.append(element);
+          if (line.live && text === displayLines[0]) liveSpinners.push(element);
+        }
+      }
+      const footer = document.createElement('div');
+      footer.className = 'terminal-bar';
+      footer.textContent = settings.running ? 'Snapshot · work has not settled' : `Exit code ${settings.quiet && settings.verbose ? 2 : scenario.exit}`;
+      const previousFooter = document.getElementById('terminal-' + view).querySelector('[data-footer]');
+      if (previousFooter) previousFooter.remove();
+      footer.dataset.footer = '';
+      document.getElementById('terminal-' + view).append(footer);
+    }
+    const labels = `${settings.columns} cols · ${settings.stream === 'both' ? 'combined streams' : settings.stream === 'out' ? 'stdout' : 'stderr'}`;
+    document.querySelectorAll('.terminal-settings').forEach(element => { element.textContent = labels; });
+    document.getElementById('copy-status').textContent = '';
+  }
+
+  for (const control of Object.values(controls)) control.addEventListener('change', render);
+  for (const view of views) {
+    document.getElementById('copy-' + view).addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(transcripts[view] + '\n');
+        document.getElementById('copy-status').textContent = `Proposal ${view.toUpperCase()} copied.`;
+      } catch {
+        document.getElementById('copy-status').textContent = 'Copy unavailable; select the terminal text instead.';
+      }
+    });
+  }
+  setInterval(() => {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const character = ['|', '/', '-', '\\'][spinIndex++ % 4];
+    for (const element of liveSpinners) element.textContent = character + element.textContent.slice(1);
+  }, 300);
+  render();
+</script>
+</body>
+</html>

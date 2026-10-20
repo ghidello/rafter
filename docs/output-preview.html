@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rafter · output workshop</title>
+  <style>
+    :root { color-scheme: light; font: 15px/1.5 system-ui, sans-serif; color: #253b38; background: #f3f5f1; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1500px; margin: auto; padding: 36px 30px 48px; }
+    a { color: #21654e; text-underline-offset: 3px; }
+    .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .13em; text-transform: uppercase; color: #59726a; }
+    h1 { font-size: clamp(30px, 4vw, 44px); letter-spacing: -.045em; line-height: 1.15; margin: 10px 0 14px; font-weight: 650; }
+    h2 { font-size: 18px; margin: 0 0 6px; font-weight: 650; }
+    p { margin: 0 0 12px; }
+    .intro { max-width: 850px; color: #52675e; }
+    .top { display: flex; align-items: start; justify-content: space-between; gap: 30px; }
+    .badge { white-space: nowrap; border: 1px solid #b6c9be; background: #e6eee7; padding: 6px 12px; border-radius: 20px; font-size: 12px; }
+    .controls { display: grid; grid-template-columns: 2.5fr repeat(4, 1fr); gap: 16px; margin: 26px 0 18px; }
+    label { display: block; min-width: 0; font-size: 12px; font-weight: 650; color: #52675e; }
+    select { display: block; min-width: 0; width: 100%; margin-top: 7px; padding: 11px 10px; border: 1px solid #c3cec6; border-radius: 6px; background: #fff; color: #253b38; font: 14px system-ui; }
+    select:focus-visible, a:focus-visible, button:focus-visible { outline: 3px solid #267959; outline-offset: 3px; }
+    .scenario { background: #fff; border: 1px solid #d5ded6; border-left: 4px solid #357e61; border-radius: 6px; padding: 19px 22px; }
+    .scenario-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+    .exit { border: 1px solid #c3cec6; border-radius: 4px; font: 13px Consolas, monospace; padding: 4px 9px; white-space: nowrap; }
+    .exit.failure { border-color: #d9b2ac; background: #fcf0ed; color: #963d31; }
+    .exit.cancel { border-color: #ddca99; background: #fcf7e9; color: #775a1d; }
+    .context, .note, .caption { color: #52675e; font-size: 13px; }
+    .context { margin: 4px 0 0; }
+    .note { margin: 9px 0 0; }
+    .panels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px; margin-top: 25px; align-items: start; }
+    article { min-width: 0; }
+    .caption { margin-bottom: 12px; }
+    .terminal { background: #172420; color: #e2ece6; border-radius: 9px; overflow: hidden; border: 1px solid #2c4037; }
+    .terminal.plain { background: #fbfcf9; color: #253b38; border-color: #ccd7cd; }
+    .bar { display: flex; justify-content: space-between; gap: 12px; padding: 10px 15px; border-bottom: 1px solid #ffffff20; color: #adbbb3; font: 12px system-ui; }
+    .plain .bar { color: #63766b; border-color: #dae1d9; }
+    .viewport { overflow-x: auto; padding: 20px; }
+    .transcript { font: 13px/1.7 "Cascadia Mono", Consolas, ui-monospace, monospace; min-height: 240px; }
+    .narrow .transcript { width: 48ch; max-width: 100%; }
+    .line { min-height: 1.7em; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .line.literal { white-space: pre; overflow-wrap: normal; }
+    .heading, .target { color: #9ad6c1; font-weight: 650; }
+    .dependency { color: #b3c5ba; font-weight: 400; }
+    .description, .target-description, .verbose, .progress { color: #b3c5ba; }
+    .ok { color: #9fdbac; }
+    .error, .failure { color: #ffb4a8; }
+    .cancelled, .warning { color: #e8d49a; }
+    .summary { font-weight: 650; }
+    .help-title { font-weight: 650; }
+    .help-section { color: #9ad6c1; font-weight: 650; }
+    .help-name { color: #add6f0; font-weight: 600; }
+    .help-type { color: #dfc4ff; font-weight: 500; }
+    .help-separator { color: #b3c5ba; }
+    .plain .line, .plain .dependency { color: inherit; font-weight: 400; }
+    .empty { color: #9caea3; font-style: italic; font: 13px system-ui; }
+    .plain .empty { color: #63766b; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 22px; padding: 15px 0; font-size: 12px; color: #52675e; }
+    .legend code { color: #253b38; }
+    .review { border-top: 1px solid #cbd6cd; margin-top: 18px; padding-top: 22px; max-width: 950px; }
+    .review ul { padding-left: 20px; color: #52675e; }
+    .review li { margin: 8px 0; }
+    footer { font-size: 12px; color: #63766b; margin-top: 30px; }
+    code { font-family: Consolas, ui-monospace, monospace; }
+    @media (max-width: 1100px) {
+      .panels { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .controls label:first-child { grid-column: 1 / -1; }
+    }
+    @media (max-width: 650px) {
+      main { padding: 24px 16px; }
+      .top { display: block; }
+      .badge { display: inline-block; margin-bottom: 10px; }
+      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+      .controls label:first-child { grid-column: 1 / -1; }
+      .scenario { padding: 16px; }
+      .viewport { padding: 15px; }
+    }
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <div class="eyebrow">Sotsera / Rafter / Design workshop</div>
+      <h1>Small scripts. Clear outcomes.</h1>
+      <p class="intro">Compare the new project's output in a terminal and when redirected. Start with a successful run,
+        then inspect what changes when inputs, processes, or cleanup go wrong.</p>
+    </div>
+    <span class="badge">Illustrative · no runtime yet</span>
+  </div>
+  <div class="controls">
+    <label>Scenario<select id="scenario"></select></label>
+    <label>Layout<select id="layout"><option value="flat" selected>Flatter + plain</option><option value="compare">Compare with previous</option><option value="current">Previous + plain</option></select></label>
+    <label>Detail<select id="mode"><option value="normal">Normal</option><option value="quiet">Quiet</option><option value="verbose">Verbose</option></select></label>
+    <label>Destination<select id="stream"><option value="combined">Combined illustration</option><option value="stdout">stdout only</option><option value="stderr">stderr only</option></select></label>
+    <label>Width<select id="width"><option value="wide">Available width</option><option value="narrow">Narrow · 48 columns</option></select></label>
+  </div>
+  <section class="scenario" aria-labelledby="scenario-title">
+    <div class="scenario-head"><h2 id="scenario-title"></h2><span id="exit-code" class="exit"></span></div>
+    <p id="scenario-detail" class="context"></p>
+    <p class="context"><span id="source-label"></span> <a id="source-link"></a></p>
+    <p id="scenario-note" class="note"></p>
+  </section>
+  <p class="note" id="layout-note"></p>
+  <div class="panels" id="panels">
+    <article>
+      <h2 id="left-title">Flatter layout · terminal</h2>
+      <p class="caption" id="left-caption">Description at the left margin; one two-space content gutter.</p>
+      <div class="terminal">
+        <div class="bar"><span>rafter / illustrative output</span><span class="stream-label"></span></div>
+        <div class="viewport"><div id="terminal-output" class="transcript" role="region" aria-label="Terminal transcript" tabindex="0"></div></div>
+      </div>
+    </article>
+    <article>
+      <h2 id="right-title">Plain / redirected</h2>
+      <p class="caption" id="right-caption">Selected layout, with original script and child text and no output gutters.</p>
+      <div class="terminal plain" id="right-terminal">
+        <div class="bar"><span id="right-bar">no Rafter styling or output prefixes</span><span class="stream-label"></span></div>
+        <div class="viewport"><div id="plain-output" class="transcript" role="region" aria-label="Plain transcript" tabindex="0"></div></div>
+      </div>
+    </article>
+  </div>
+  <div class="legend"><span><code>|</code> script output</span><span><code>&gt;</code> child output</span><span>Lifecycle and diagnostics → stderr</span><span>Stderr does not imply failure</span></div>
+  <p class="note" id="view-note"></p>
+  <section class="review">
+    <h2>What we are reviewing</h2>
+    <ul>
+      <li>Fixed indentation, separate descriptions, and direct dependencies such as <code>[test] &lt;-- (build)</code>
+        follow the agreed direction. The three help layouts and Continue/caught-failure reporting are accepted for now.
+        Process diagnostics share the compact layout from scenario 18. Multiple-entry headings and summaries preserve requested order.</li>
+      <li>The flatter layout is the selected direction. It moves target descriptions to the
+        left margin and uses a two-space content gutter. Original child/script indentation and exception stack indentation
+        remain intact. Help and input-validation layouts are unchanged.</li>
+      <li>Combined output shows one readable ordering. Independent stdout and stderr do not guarantee that ordering.</li>
+      <li>Every transcript, timing, path, SDK version, and exception here is synthetic. These are design fixtures,
+        not evidence that Rafter or a particular .NET version has been implemented or tested.</li>
+      <li>Child lines keep their original whitespace; long literal lines scroll. Rafter descriptions and diagnostics wrap.
+        Narrow help wrapping here is illustrative, not a completed terminal wrapping algorithm.</li>
+    </ul>
+    <p><a href="output-design.md">Current design notes</a> · <a href="example-design-plan.md">API decisions</a> ·
+      <a href="../reference/output/output-design-refresh.html">Old output reference</a></p>
+  </section>
+  <footer>Rafter by Sotsera · current-project preview · 19 October 2026 · self-contained, no network requests</footer>
+  <noscript><p>This comparison requires JavaScript. The Markdown design notes contain static output examples.</p></noscript>
+</main>
+<script>
+  'use strict';
+  // Synthetic presentation fixtures only. This does not implement the Rafter runtime or output renderer.
+  const line = (text, kind = 'description', stream = 'stderr', visibility = 'always') => ({ text, kind, stream, visibility });
+  const routine = (text, kind = 'description') => line(text, kind, 'stderr', 'routine');
+  const verbose = text => line(text, 'verbose', 'stderr', 'verbose');
+  const script = text => line(text, 'script', 'stdout');
+  const child = (text, stream = 'stdout') => line(text, 'child', stream);
+  const gap = () => routine('');
+  const success = text => routine(text, 'ok summary');
+  const failure = text => line(text, 'failure summary');
+  const error = text => line(text, 'error');
+  const heading = (label, dependencies = []) => ({
+    ...routine(label + (dependencies.length ? ` <-- (${dependencies.join(', ')})` : ''), 'heading'),
+    label, dependencies
+  });
+  const process = () => routine('  Process | dotnet');
+  function helpLine(text, title = false) {
+    const item = line(text, 'help', 'stdout');
+    if (title) item.helpStyle = 'help-title';
+    if (['Command options', 'Execution', 'Rafter options'].includes(text)) item.helpStyle = 'help-section';
+    if (text.startsWith('  -')) {
+      item.helpParts = text.split(/(--?[a-z][a-z0-9-]*|<[^>]+>|\[bool\])/g).map(part => ({
+        text: part,
+        style: part.startsWith('-') ? 'help-name' : /^[<\[]/.test(part) ? 'help-type' : 'help-separator'
+      }));
+    }
+    const targetHeading = text.match(/^(  )(> [a-z][a-z0-9-]*|\[[a-z][a-z0-9-]*\])(.*)$/);
+    if (targetHeading) {
+      item.helpParts = [
+        { text: targetHeading[1], style: 'help-separator' },
+        { text: targetHeading[2], style: 'heading' },
+        { text: targetHeading[3], style: 'dependency' }
+      ];
+    }
+    return item;
+  }
+  const helpControls = [
+    'Rafter options',
+    '  --help', '    Show help without executing work.',
+    '  --quiet', '    Hide routine lifecycle output; keep results and errors.',
+    '  --verbose', '    Add execution context. Cannot combine with --quiet.',
+    '  --plain', '    Disable Rafter styling and presentation prefixes.'
+  ];
+  const body = description => [heading(description), gap()];
+  const target = (name, description, dependencies = []) => [heading(`[${name}]`, dependencies), routine(`  ${description}`, 'target-description')];
+  const build = [
+    ...target('build', 'Build the project.'), process(), verbose('    Working directory: C:\\work\\demo'),
+    child('Build succeeded.'), success('[OK] build | 8.9 s'), gap()
+  ];
+  const test = [
+    ...target('test', 'Run the tests after a successful build.', ['build']), process(),
+    verbose('    Working directory: C:\\work\\demo'), child('All tests passed.'), success('[OK] test | 2.1 s'), gap()
+  ];
+  const workflow = [heading('> verify', ['build', 'test']), routine('Build the project and run its tests.'), gap()];
+  const cancellation = [
+    ...workflow, ...target('build', 'Build the project.'), process(), child('Building project...'),
+    routine('  Cancellation requested.', 'cancelled progress'), routine('  Shutdown | requesting graceful termination', 'progress')
+  ];
+  const scenarios = [
+    {
+      id: 'minimal', title: '01 / Minimal greeting', source: 'minimal.cs', exit: 0,
+      detail: 'A body-only script: one description, one result, one final outcome.',
+      note: 'Quiet stdout still contains the greeting. Quiet stderr is empty on success.',
+      lines: [...body('Print a greeting.'), script('Hello from Rafter.'), gap(), success('[OK] Completed | 24 ms')]
+    },
+    {
+      id: 'options', title: '02 / Typed inputs', source: 'options.cs', exit: 0,
+      detail: 'Inputs: --name Ada --repeat 2 --uppercase. Aliases resolve to the same option.',
+      note: 'The preview does not automatically print input values or process arguments in lifecycle messages.',
+      lines: [...body('Print a personalized greeting.'), script('HELLO, ADA!'), script('HELLO, ADA!'), gap(), success('[OK] Completed | 18 ms')]
+    },
+    {
+      id: 'validation', title: '03 / Validation rejection', source: 'validation.cs', exit: 2,
+      detail: 'Both bounds violate their individual rules. No body executes; stdout is empty.',
+      note: 'Ordinary rule rejections aggregate. This example does not assume a parser can recover from every malformed input.',
+      lines: [error('Invalid arguments'), error('  --minimum: Must be zero or greater.'), error('  --maximum: Must not exceed one hundred.'),
+        line(''), line('Use --help to see options and rules.')]
+    },
+    {
+      id: 'process', title: '04 / Successful process', source: 'processes.cs', exit: 0,
+      detail: 'The child writes its SDK version, then the script writes its own completion message.',
+      note: 'The two gutters distinguish child output from script output; redirected stdout contains only their original text.',
+      lines: [...body('Display the installed .NET SDK version.'), process(), verbose('    Working directory: C:\\work\\demo'),
+        child('10.0.100'), script('SDK inspection completed.'), gap(), success('[OK] Completed | 180 ms')]
+    },
+    {
+      id: 'working-directory', title: '05 / Child working directory', source: 'process-working-directory.cs', exit: 0,
+      detail: 'The child builds inside src. Verbose adds its resolved working directory.',
+      note: 'The sample path is fictional. First-version policy: show the executable and verbose working directory; do not automatically print process arguments or environment values.',
+      lines: [...body('Build the project or solution in the src directory.'), process(),
+        verbose('    Working directory: C:\\work\\demo\\src'), child('Build succeeded.'),
+        script('Build completed.'), gap(), success('[OK] Completed | 8.9 s')]
+    },
+    {
+      id: 'targets', title: '06 / Dependency workflow', source: 'dependencies.cs', exit: 0,
+      detail: 'verify is a dependency-only group. Build and test each execute once.',
+      note: 'Headings show direct dependencies in declaration order: test depends on build; verify depends on build and test. The group gets no empty section or extra body count.',
+      lines: [...workflow, ...build, ...test, success('[OK] verify | 2 target bodies completed | 11.0 s')]
+    },
+    {
+      id: 'handled-fail', title: '07 / ProcessFailureAction.Fail', source: 'process-failure.cs', exit: 1,
+      detail: 'The failure handler returns Fail. The body receives the result and prints the exit code; invocation failure remains recorded.',
+      note: 'Accepted timing: record invocation failure and emit the red diagnostic after Fail is selected, before returning the result to the body. The body may continue; later targets do not start. The final summary does not repeat the diagnostic.',
+      lines: [...body('Build a project and inspect an unsuccessful result before leaving the body.'), process(),
+        child('Build failed.', 'stderr'), error('  Process failed | dotnet'), error('    Exit code: 1 | accepted: 0'),
+        script('Build exited with code 1.'), gap(), failure('[FAILED] Completed with errors | 1.2 s')]
+    },
+    {
+      id: 'help', title: '08 / Help', source: 'options.cs', exit: 0,
+      detail: '--help describes the command without executing its body. All content goes to stdout.',
+      note: 'Accepted help layout: primary name first, then aliases in declaration order, separated by commas. Lavender types, blue names, and muted commas remain readable in plain text without color.',
+      lines: [
+        'Print a personalized greeting.', '', 'Command options',
+        '  --name, -n, --recipient <string>', '    The person to greet. Required.',
+        '  --repeat, -r <int>', '    Number of greetings. Default: 1.',
+        '  --uppercase, -u [bool]', '    Use uppercase text. Default: false.', '    Bare flag means true; explicit true/false allowed.', '',
+        'Execution', '  Runs the supplied command body after input validation.', '', ...helpControls
+      ].map((text, index) => helpLine(text, index === 0))
+    },
+    {
+      id: 'help-validation', title: '08a / Help · validation rules', source: 'validation.cs', exit: 0,
+      detail: '--help describes individual and combined input rules without running their predicates or the command body.',
+      note: 'Accepted layout: list each option rule beneath its description and put combined input rules under Execution. Optional label rules apply only when a value is supplied.',
+      lines: [
+        'Describe a range after validating its bounds and optional label.', '', 'Command options',
+        '  --minimum <int>', '    The inclusive lower bound. Default: 1.',
+        '    Rules:', '      - Must be zero or greater.', '      - Must not exceed one hundred.', '',
+        '  --maximum <int>', '    The inclusive upper bound. Default: 10.',
+        '    Rules:', '      - Must be zero or greater.', '      - Must not exceed one hundred.', '',
+        '  --label <string>', '    An optional name for the range. Optional; no default.',
+        '    Rules when supplied:', '      - Must not be blank when supplied.', '',
+        'Execution', '  Runs the supplied command body after input validation.',
+        '  Combined input rules:', '    - Minimum must not exceed maximum.', '', ...helpControls
+      ].map((text, index) => helpLine(text, index === 0))
+    },
+    {
+      id: 'help-dependencies', title: '08b / Help · dependency workflow', source: 'dependencies.cs', exit: 0,
+      detail: '--help shows the entry group and its dependency graph. No build, test, or process callbacks execute.',
+      note: 'Accepted layout: distinguish the dependency-only group from target bodies, show direct dependencies, and state body order once. Entry selection comes from RunAsync, not a CLI target selector.',
+      lines: [
+        'Build the project and run its tests.', '', 'Command options', '  None declared.', '',
+        'Execution', '  The script selects verify. Each target body runs once.', '',
+        '  > verify <-- (build, test)', '    Build and test the project. (Group; no body.)', '',
+        '  [build]', '    Build the project.', '',
+        '  [test] <-- (build)', '    Run the tests after a successful build.', '',
+        '  Body order: build, test.', '', ...helpControls
+      ].map((text, index) => helpLine(text, index === 0))
+    },
+    {
+      id: 'multiple', title: '09 / Multiple selected entries', source: 'dependencies.cs', variant: true, exit: 0,
+      detail: 'Variant: RunAsync(args, test, build). The dependency still runs first; each target runs once.',
+      note: 'Accepted: requested entries keep their supplied order in the header and final summary; sections follow dependency execution order. Count each executed body once, including entries that are also dependencies. No synthetic grouping name is introduced.',
+      lines: [heading('> test, build'), routine('Build the project and run its tests.'), gap(), ...build, ...test,
+        success('[OK] test, build | 2 target bodies completed | 11.0 s')]
+    },
+    {
+      id: 'rejected', title: '10 / Rejected exit · default Throw', source: 'dependencies.cs', variant: true, exit: 1,
+      detail: 'Build exits with code 1. The default process policy unwinds the target; test never starts.',
+      note: 'Child stderr stays stderr. Rafter adds concise exit details without a framework stack trace or a duplicate failure section.',
+      lines: [...workflow, ...target('build', 'Build the project.'), process(), child('Build failed.', 'stderr'),
+        error('  Process failed | dotnet'), error('    Exit code: 1 | accepted: 0'), gap(), failure('[FAILED] verify | stopped in build | 1.2 s')]
+    },
+    {
+      id: 'exception', title: '11 / Unexpected callback exception', source: 'dependencies.cs', variant: true, exit: 1,
+      detail: 'Synthetic variant: the build callback throws an exception with an inner cause.',
+      note: 'Full available exception details remain in quiet and plain views. The stack shown is a complete synthetic fixture, not a real capture.',
+      lines: [...workflow, ...target('build', 'Build the project.'), error('  Callback failed | build'),
+        ...['System.InvalidOperationException: Could not prepare the build.',
+          ' ---> System.IO.IOException: Fixture input could not be read.',
+          '   at Fixture.ReadInput() in C:\\work\\demo\\Fixture.cs:line 12',
+          '   --- End of inner exception stack trace ---',
+          '   at Fixture.BuildAsync() in C:\\work\\demo\\Fixture.cs:line 24'].map(text => line(`    ${text}`, 'error stack')),
+        gap(), failure('[FAILED] verify | stopped in build | 42 ms')]
+    },
+    {
+      id: 'cancelled', title: '12 / Ctrl+C · graceful shutdown', source: 'dependencies.cs', variant: true, exit: 130,
+      detail: 'Cancellation arrives during build. Its process scope and output settle before the grace period expires.',
+      note: 'No test target starts. The elapsed time is illustrative, not a fixed shutdown delay. Quiet retains the unsuccessful final outcome.',
+      lines: [...cancellation, child('Build interrupted.', 'stderr'), routine('  Shutdown | owned processes stopped; output drained', 'progress'),
+        gap(), line('[CANCELLED] verify | stopped in build | 2.4 s', 'cancelled summary')]
+    },
+    {
+      id: 'forced', title: '13 / Ctrl+C · forced shutdown', source: 'dependencies.cs', variant: true, exit: 130,
+      detail: 'Grace expires; Rafter requests forceful termination and then confirms shutdown and output completion.',
+      note: 'Successful forceful cleanup does not turn cancellation into execution failure. A second Ctrl+C would skip grace and preserve verification.',
+      lines: [...cancellation, routine('  Shutdown | grace expired; requesting forceful termination', 'progress'),
+        routine('  Shutdown | owned processes stopped; output drained', 'progress'), gap(),
+        line('[CANCELLED] verify | stopped in build | 7.2 s', 'cancelled summary')]
+    },
+    {
+      id: 'termination-unknown', title: '14 / Termination unknown', source: 'dependencies.cs', variant: true, exit: 1,
+      detail: 'The main process exited with code 0, but surviving owned descendants could not be confirmed stopped after escalation and verification.',
+      note: 'An observed root exit code does not prove scope completion. No successful build or clean cancellation is reported.',
+      lines: [...workflow, ...target('build', 'Build the project.'), process(), child('Build succeeded.'),
+        routine('  Shutdown | cleaning up remaining owned descendants', 'progress'),
+        error('  Termination unknown | dotnet'), error('    Main process exit code: 0'),
+        error('    Could not confirm shutdown of the owned process scope.'),
+        error('    The 5 s verification budget expired after forceful termination was requested.'),
+        gap(), failure('[TERMINATION UNKNOWN] verify | stopped in build | elapsed 14.2 s')]
+    },
+    {
+      id: 'output-incomplete', title: '15 / Output incomplete', source: 'dependencies.cs', variant: true, exit: 1,
+      detail: 'Cancellation stopped the process scope, but complete output delivery could not be confirmed within the drain budget.',
+      note: 'For this fixture, Rafter has subsequently stopped its reader and settled cleanup safely. Incomplete delivery still prevents clean cancellation.',
+      lines: [...cancellation, child('Partial build output...'), error('  Output incomplete | dotnet'),
+        error('    Owned process termination confirmed.'), error('    Output delivery could not be confirmed within the 5 s verification/drain budget.'),
+        error('    Output reading and cleanup have stopped; some output may be missing.'), gap(),
+        failure('[OUTPUT INCOMPLETE] verify | stopped in build | elapsed 8.1 s')]
+    },
+    {
+      id: 'failure-cancellation', title: '16 / Failure followed by cancellation', source: 'process-failure.cs', variant: true, exit: 1,
+      detail: 'Variant: Fail records an execution failure, then cancellation arrives during subsequent awaited work. Cleanup succeeds.',
+      note: 'The original failure remains visible and takes precedence over cancellation. Expected cancellation adds no exception stack.',
+      lines: [...body('Build a project and inspect an unsuccessful result before leaving the body.'), process(),
+        child('Build failed.', 'stderr'), error('  Process failed | dotnet'), error('    Exit code: 1 | accepted: 0'),
+        script('Build exited with code 1.'), routine('  Cancellation requested; cleanup completed.', 'cancelled progress'), gap(),
+        failure('[FAILED] Execution failed; cancellation also requested | 1.4 s')]
+    },
+    {
+      id: 'outstanding', title: '17 / Outstanding process operation', source: 'processes.cs', variant: true, exit: 1,
+      detail: 'Variant: the process task was discarded and analyzer checks were bypassed. The body returns while that operation is outstanding.',
+      note: 'Proposed runtime diagnostic. Tracking covers descendants and output, not only the root process; already-completed tasks cannot prove an await occurred.',
+      lines: [...body('Display the installed .NET SDK version.'), process(), script('SDK inspection completed.'),
+        error('  Unfinished process operation | command body'), error('    The body returned while the dotnet operation was still outstanding.'),
+        routine('  Shutdown | stopping outstanding owned work', 'progress'),
+        routine('  Shutdown | owned processes stopped; output drained', 'progress'), gap(),
+        failure('[FAILED] Command body left unfinished process work | 310 ms')]
+    },
+    {
+      id: 'handled-continue', title: '18 / ProcessFailureAction.Continue', source: 'process-failure.cs', variant: true, exit: 0,
+      detail: 'Variant: OnFailure returns Continue. The body receives an unsuccessful process result, handles it, and completes successfully.',
+      note: 'Accepted: one yellow handled-failure warning after Continue is selected, retained in quiet mode. The final outcome is successful because no invocation failure was recorded.',
+      lines: [...body('Build a project and inspect an unsuccessful result before leaving the body.'), process(),
+        child('Build failed.', 'stderr'), line('  Process failure handled | dotnet', 'warning'),
+        line('    Exit code: 1 | accepted: 0 | action: Continue', 'warning'),
+        script('Build unavailable; continuing without a fresh build.'), gap(), success('[OK] Completed | 1.3 s')]
+    },
+    {
+      id: 'caught-throw', title: '19 / Caught process failure', source: 'process-failure.cs', variant: true, exit: 0,
+      detail: 'Variant: default Throw raises the process-failure exception. The body catches it, performs its recovery path, and finishes successfully.',
+      note: 'Accepted: defer the framework failure diagnostic until an exception escapes the body. A caught failure therefore has no automatic error or stack trace; original child output remains, and the script explains its recovery. Rafter does not try to detect individual catch blocks.',
+      lines: [...body('Build a project and inspect an unsuccessful result before leaving the body.'), process(),
+        child('Build failed.', 'stderr'), script('Build failed; the script recovered and will use the existing build.'),
+        gap(), success('[OK] Completed | 1.3 s')]
+    },
+    {
+      id: 'launch-failure', title: '20 / Process cannot start', source: 'dependencies.cs', variant: true, exit: 1,
+      detail: 'The build target attempts to launch dotnet, but the executable is unavailable. The launch exception escapes the target; test never starts.',
+      note: 'Compact diagnostic: one red status heading with the executable, followed by the launch reason and working directory. No invented child exit code or framework stack. OnFailure is not called because no process completed.',
+      lines: [...workflow, ...target('build', 'Build the project.'), process(),
+        error('  Process launch failed | dotnet'), error('    Reason: executable not found.'),
+        error('    Working directory: C:\\work\\demo'), gap(), failure('[FAILED] verify | stopped in build | 32 ms')]
+    },
+    {
+      id: 'handler-exception', title: '21 / Failure handler throws', source: 'process-failure.cs', variant: true, exit: 1,
+      detail: 'The child exits with code 1, then its OnFailure callback throws before returning an action. The exception escapes the body.',
+      note: 'Compact diagnostic: one red status heading identifies the failing handler and executable. Original exit details and the full callback exception follow in every mode. No failure action was returned. Stack details are synthetic.',
+      lines: [...body('Build a project and inspect an unsuccessful result before leaving the body.'), process(),
+        child('Build failed.', 'stderr'), error('  Process failure handler threw | dotnet'),
+        error('    Exit code: 1 | accepted: 0'),
+        ...['System.InvalidOperationException: Could not choose a failure action.',
+          ' ---> System.FormatException: Failure policy setting was invalid.',
+          '   at Fixture.ReadFailurePolicy() in C:\\work\\demo\\Fixture.cs:line 12',
+          '   --- End of inner exception stack trace ---',
+          '   at Fixture.HandleFailure() in C:\\work\\demo\\Fixture.cs:line 24'].map(text => line(`    ${text}`, 'error stack')),
+        gap(), failure('[FAILED] Command body | failure handler threw | 1.2 s')]
+    }
+  ];
+
+  function visibleLines(scenario, mode, stream) {
+    return scenario.lines.filter(item =>
+      (stream === 'combined' || item.stream === stream) &&
+      (item.visibility !== 'verbose' || mode === 'verbose') &&
+      !(mode === 'quiet' && item.visibility === 'routine'));
+  }
+
+  function presentationText(item, plain, flat) {
+    const literal = item.kind === 'script' || item.kind === 'child';
+    if (literal) {
+      const gutter = flat ? '  ' : '    ';
+      return (plain ? '' : gutter + (item.kind === 'script' ? '| ' : '> ')) + item.text;
+    }
+    if (flat && item.kind === 'target-description') return item.text.slice(2);
+    // Remove only the extra presentation indent; preserve original stack indentation and help formatting.
+    if (flat && item.kind !== 'help' && item.text.startsWith('    ')) return item.text.slice(2);
+    return item.text;
+  }
+
+  function renderTranscript(element, lines, plain, flat = false) {
+    element.replaceChildren();
+    if (!lines.length) {
+      const empty = document.createElement('div');
+      empty.className = 'empty';
+      empty.textContent = 'No output on this stream. (Preview annotation)';
+      element.append(empty);
+      return;
+    }
+    for (const item of lines) {
+      const row = document.createElement('div');
+      const literal = item.kind === 'script' || item.kind === 'child';
+      row.className = `line ${item.kind}${literal ? ' literal' : ''}`;
+      if (!plain && item.helpStyle) row.className += ` ${item.helpStyle}`;
+      row.dataset.stream = item.stream;
+      if (!plain && item.helpParts) {
+        for (const part of item.helpParts) {
+          const span = document.createElement('span');
+          span.className = part.style;
+          span.textContent = part.text;
+          row.append(span);
+        }
+      } else if (!plain && item.dependencies?.length) {
+        const label = document.createElement('span');
+        label.textContent = item.label;
+        const dependencies = document.createElement('span');
+        dependencies.className = 'dependency';
+        dependencies.textContent = ` <-- (${item.dependencies.join(', ')})`;
+        row.append(label, dependencies);
+      } else {
+        row.textContent = presentationText(item, plain, flat);
+      }
+      element.append(row);
+      if (flat && item.kind === 'target-description') {
+        const spacer = document.createElement('div');
+        spacer.className = 'line';
+        spacer.dataset.stream = item.stream;
+        element.append(spacer);
+      }
+    }
+  }
+
+  const controls = Object.fromEntries(['scenario', 'layout', 'mode', 'stream', 'width'].map(id => [id, document.getElementById(id)]));
+  for (const scenario of scenarios) {
+    const option = document.createElement('option');
+    option.value = scenario.id;
+    option.textContent = scenario.title;
+    controls.scenario.append(option);
+  }
+
+  function render() {
+    const scenario = scenarios.find(item => item.id === controls.scenario.value) || scenarios[0];
+    document.getElementById('scenario-title').textContent = scenario.title;
+    document.getElementById('scenario-detail').textContent = scenario.detail;
+    document.getElementById('scenario-note').textContent = scenario.note;
+    document.getElementById('source-label').textContent = scenario.variant ? 'Based on a variant of' : 'Example draft:';
+    const source = document.getElementById('source-link');
+    source.href = `../examples/${scenario.source}`;
+    source.textContent = scenario.source;
+    const exit = document.getElementById('exit-code');
+    exit.textContent = `exit ${scenario.exit}`;
+    exit.className = `exit${scenario.exit === 130 ? ' cancel' : scenario.exit ? ' failure' : ''}`;
+    const lines = visibleLines(scenario, controls.mode.value, controls.stream.value);
+    const compare = controls.layout.value === 'compare';
+    const flat = controls.layout.value === 'flat';
+    document.getElementById('left-title').textContent = flat ? 'Flatter layout · terminal' : 'Previous indentation · terminal';
+    document.getElementById('left-caption').textContent = flat
+      ? 'Description at the left margin; one two-space content gutter.'
+      : 'Two-space headings and descriptions; four-space content.';
+    document.getElementById('right-title').textContent = compare ? 'Flatter layout · terminal' : 'Plain / redirected';
+    document.getElementById('right-caption').textContent = compare
+      ? 'Description at the left margin; one two-space content gutter.'
+      : 'Selected layout, with original script and child text and no output gutters.';
+    document.getElementById('right-terminal').classList.toggle('plain', !compare);
+    document.getElementById('right-bar').textContent = compare ? 'rafter / illustrative output' : 'no Rafter styling or output prefixes';
+    document.getElementById('terminal-output').setAttribute('aria-label', flat ? 'Flatter terminal transcript' : 'Previous terminal transcript');
+    document.getElementById('plain-output').setAttribute('aria-label', compare ? 'Flatter terminal transcript' : 'Plain transcript');
+    document.getElementById('layout-note').textContent = compare
+      ? 'Previous indentation on the left; the selected flatter layout on the right. Use Flatter + plain to inspect the chosen layout with redirected output.'
+      : 'The flatter layout is the selected direction. The previous indentation remains available for comparison; stream routing, verbosity, dependencies, and exit codes are identical.';
+    renderTranscript(document.getElementById('terminal-output'), lines, false, flat);
+    renderTranscript(document.getElementById('plain-output'), lines, !compare, compare || flat);
+    document.getElementById('panels').classList.toggle('narrow', controls.width.value === 'narrow');
+    for (const label of document.querySelectorAll('.stream-label')) {
+      label.textContent = controls.stream.value === 'combined' ? 'stdout + stderr · illustrative order' : controls.stream.value;
+    }
+    document.getElementById('view-note').textContent = controls.mode.value === 'quiet'
+      ? 'Quiet retains script and child output, diagnostics, and unsuccessful final outcomes. It hides routine lifecycle messages.'
+      : controls.mode.value === 'verbose'
+        ? 'Verbose adds illustrative working-directory context. Direct dependencies already appear in normal headings. Rafter does not automatically print process arguments or environment values; script and child output retain their original content.'
+        : 'Normal includes direct dependencies in headings, descriptions, process headings, target timings, and the final outcome. Capabilities are detected independently for each stream.';
+  }
+
+  for (const control of Object.values(controls)) control.addEventListener('change', render);
+  controls.scenario.value = 'multiple';
+  render();
+</script>
+</body>
+</html>

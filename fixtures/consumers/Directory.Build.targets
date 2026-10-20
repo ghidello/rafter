@@ -1,0 +1,3 @@
+<Project>
+  <!-- Stop ancestor build targets from changing the isolated consumers. -->
+</Project>

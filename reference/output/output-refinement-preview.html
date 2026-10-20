@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rafter output refinement</title>
+  <style>
+    :root { color-scheme: light; font: 15px/1.6 system-ui, sans-serif; color: #22343c; background: #f1f4f2; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1120px; margin: auto; padding: 44px 24px; }
+    h1 { font-size: 34px; line-height: 1.2; margin: 0 0 16px; }
+    h2 { font-size: 19px; margin: 0 0 8px; }
+    p { max-width: 850px; }
+    .intro { color: #56696f; }
+    nav { display: flex; flex-wrap: wrap; gap: 16px; margin: 24px 0; }
+    a { color: #19696c; }
+    section { background: white; border: 1px solid #d6e0db; border-radius: 12px; padding: 22px; margin: 20px 0; }
+    .streams { display: grid; grid-template-columns: 1fr 1.6fr; gap: 14px; }
+    .terminal { min-width: 0; background: #19262e; color: #e0e9ed; border-radius: 7px; overflow: hidden; }
+    .label { color: #a5b7c0; background: #23333d; padding: 8px 14px; font-size: 12px; }
+    pre { font: 13px/1.7 Consolas, ui-monospace, monospace; margin: 0; padding: 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .heading { color: #8cd5dd; font-weight: 700; }
+    .muted { color: #a2b3bd; }
+    .ok { color: #a5ddb3; font-weight: 700; }
+    .failed { color: #ffa7ac; font-weight: 700; }
+    .skip { color: #e9d191; }
+    .narrow { max-width: 42ch; }
+    @media (max-width: 800px) { .streams { grid-template-columns: 1fr; } main { padding: 28px 14px; } }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Rafter output refinement</h1>
+  <p class="intro">Design previews of the agreed layout, prepared before renderer changes. Timings and tool lines are illustrative.
+  The streams are shown separately; these panels do not promise an interleaving order.</p>
+  <p>Compact command and target headings, brief grouping/skip results, process descriptions by default,
+  and executable details with <code>--verbose</code>. Quiet mode and diagnostic helpers remain deferred.
+  See <a href="automation-output.md">implementation and verification notes</a> for actual Windows results.</p>
+  <nav><a href="#success">Success</a><a href="#skip">Skipped</a><a href="#verbose">Verbose</a><a href="#failure">Failure</a>
+  <a href="#timeout">Timeout</a><a href="#cancel">Cancellation</a><a href="#help">Help</a><a href="#narrow">Narrow / plain</a></nav>
+  <section id="success"><h2>Build, test, and package</h2><div class="streams">
+    <div class="terminal"><div class="label">stdout · tool output and authored results</div><pre>Build succeeded.
+Tests passed: &lt;count&gt;.
+Local packages: .artifacts/packages</pre></div>
+    <div class="terminal"><div class="label">stderr · lifecycle</div><pre><span class="heading">Command: rafter.cs</span>
+<span class="muted">Build and test Rafter, optionally creating a local package.</span>
+
+<b>Target: build</b>
+  Build the solution.
+<span class="ok">✓ build</span> <span class="muted">| 8.9 s</span>
+
+<b>Target: test</b>
+  Run the test suite.
+<span class="ok">✓ test</span> <span class="muted">| 2m 14s</span>
+
+<b>Target: package</b>
+  Create the local package.
+<span class="ok">✓ package</span> <span class="muted">| 6.0 s</span>
+<span class="ok">✓ verify</span> <span class="muted">| 0 ms</span>
+
+<span class="ok">Succeeded</span> <span class="muted">| 4 targets | 2m 29s</span></pre></div>
+  </div></section>
+  <section id="skip"><h2>Intentional skip and grouping</h2><div class="terminal"><div class="label">stderr · after build and tests</div><pre><span class="ok">✓ test</span> <span class="muted">| 2m 14s</span>
+<span class="skip">[SKIPPED] package</span> <span class="muted">| Condition not met: Run when --package is requested.</span>
+<span class="ok">✓ verify</span> <span class="muted">| 0 ms</span>
+
+<span class="ok">Succeeded</span> <span class="muted">| 4 targets | 3 succeeded | 1 skipped | 2m 23s</span></pre></div></section>
+  <section id="verbose"><h2>Process details on request</h2><div class="terminal"><div class="label">stderr · --verbose</div><pre><b>Target: build</b>
+  Build the solution.
+  <span class="muted">$ dotnet build Rafter.slnx --configuration Release --verbosity minimal --disable-build-servers</span>
+  <span class="muted">Directory: E:\Ghidello\Git\rafter</span>
+<span class="ok">✓ build</span> <span class="muted">| 8.9 s</span></pre></div></section>
+  <section id="failure"><h2>Failed tool with downstream work blocked</h2><div class="terminal"><div class="label">stderr · diagnostics and lifecycle</div><pre><span class="heading">Command: rafter.cs</span>
+<span class="muted">Build and test Rafter, optionally creating a local package.</span>
+
+<b>Target: build</b>
+  Build the solution.
+<span class="ok">✓ build</span> <span class="muted">| 8.9 s</span>
+
+<b>Target: test</b>
+  Run the test suite.
+  Process: dotnet
+  <span class="muted">Directory: E:\Ghidello\Git\rafter</span>
+
+<span class="failed">  Error: Process 'dotnet' exited with code 2.</span>
+<span class="failed">[FAILED] test</span> <span class="muted">| 2m 14s</span>
+
+<span class="failed">Failed</span> <span class="muted">| 1 succeeded | 1 failed | 2 not run | Target: test | 2m 23s</span></pre></div></section>
+  <section id="timeout"><h2>Deadline and awaited shutdown</h2><div class="terminal"><div class="label">stderr</div><pre><b>Target: build</b>
+  Build the solution.
+  Process: dotnet
+  <span class="muted">Directory: E:\Ghidello\Git\rafter</span>
+
+<span class="failed">  Error: Process 'dotnet' timed out after 1s.</span>
+<span class="failed">[FAILED] build</span> <span class="muted">| 4.1 s</span>
+
+<span class="failed">Failed</span> <span class="muted">| 1 failed | 3 not run | Target: build | 4.1 s</span></pre></div></section>
+  <section id="cancel"><h2>Cooperative cancellation</h2><div class="terminal"><div class="label">stderr · emitted after owned work settles</div><pre><b>Target: test</b>
+  Run the test suite.
+<span class="skip">[CANCELLED] test</span> <span class="muted">| 42.0 s</span>
+
+<span class="skip">Cancelled</span> <span class="muted">| 1 succeeded | 1 cancelled | 2 not run | Target: test | 50.9 s</span></pre></div></section>
+  <section id="help"><h2>Help keeps command options above Rafter controls</h2><div class="terminal"><div class="label">stdout · abbreviated preview</div><pre><span class="heading">Build and test Rafter, optionally creating a local package.</span>
+
+Usage: dotnet run examples/rafter.cs -- [options]
+
+<span class="heading">Command options:</span>
+  -c, --configuration &lt;BuildConfiguration&gt;  The build configuration used by every step.
+      --package [bool]                      Create a local NuGet package after successful tests.
+
+<span class="heading">Execution:</span>
+  Target: verify - Complete build, tests, and optional local packaging.
+  Root:   Source file directory.
+
+<span class="heading">Rafter options:</span>
+  -h, --help     Show help.
+      --plain    Disable styling and live status.
+      --verbose  Show process command lines and working directories.</pre></div></section>
+  <section id="narrow"><h2>Narrow terminal and static plain output</h2><p>Styled output wraps to terminal width.
+  Plain and redirected runs use ASCII markers and no cursor animation. Live status can resume during quiet intervals only
+  when both streams are terminals and owned output lines are complete.</p><div class="terminal narrow"><div class="label">stderr · plain illustrative text</div><pre>Command: minimal.cs
+Run the smallest useful Rafter command.
+
+Target: hello
+[OK] hello | 850 ms
+
+Succeeded | 1 target | 850 ms</pre></div></section>
+</main>
+</body>
+</html>

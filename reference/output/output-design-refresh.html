@@ -1,0 +1,786 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rafter · output design exploration</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --page: light-dark(#f4f6f4, #141b1b);
+      --ink: light-dark(#243b38, #e0e9e5);
+      --secondary: light-dark(#526862, #abc0b7);
+      --surface: light-dark(#ffffff, #1d2925);
+      --edge: light-dark(#cbd7cf, #42564b);
+      --selected: light-dark(#245c49, #b4d6c4);
+      --selected-ink: light-dark(#ffffff, #17251d);
+      font: 15px/1.5 system-ui, sans-serif;
+      color: var(--ink);
+      background: var(--page);
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    main { max-width: 1510px; padding: 32px 28px 48px; margin: auto; }
+    h1 { margin: 5px 0 12px; font-size: clamp(27px, 4vw, 38px); letter-spacing: -.03em; font-weight: 650; }
+    h2 { font-size: 19px; font-weight: 650; margin: 0 0 5px; }
+    p { margin: 0 0 12px; }
+    .eyebrow { color: var(--secondary); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; }
+    .intro { max-width: 940px; color: var(--secondary); }
+    a { color: var(--selected); text-underline-offset: 3px; }
+    .controls { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 14px; margin: 26px 0 15px; }
+    .controls label { font-size: 13px; font-weight: 600; }
+    select, button {
+      font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--edge);
+      border-radius: 6px; padding: 9px 10px;
+    }
+    select { display: block; width: 100%; margin-top: 5px; font-size: 14px; }
+    button { cursor: pointer; font-size: 13px; }
+    select:focus-visible, button:focus-visible, a:focus-visible { outline: 3px solid var(--selected); outline-offset: 3px; }
+    .scenario { padding: 15px 18px; background: var(--surface); border-left: 3px solid var(--selected); }
+    .scenario p { margin-bottom: 5px; }
+    .scenario code { overflow-wrap: anywhere; font-size: 13px; }
+    .context { font-size: 13px; color: var(--secondary); }
+    .comparisons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; margin-top: 26px; }
+    .comparisons.all { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    article { min-width: 0; }
+    article > p { color: var(--secondary); font-size: 14px; min-height: 42px; }
+    .terminal {
+      --terminal-background: #172125; --terminal-ink: #e3eceb; --terminal-muted: #a9bab9;
+      --terminal-cyan: #83d9e0; --terminal-green: #9cddb0; --terminal-red: #ffadb1; --terminal-yellow: #ead598;
+      background: var(--terminal-background); color: var(--terminal-ink); border-radius: 8px; overflow: hidden;
+    }
+    .terminal.light {
+      --terminal-background: #fdfefd; --terminal-ink: #233733; --terminal-muted: #536b65;
+      --terminal-cyan: #006876; --terminal-green: #17623a; --terminal-red: #aa2638; --terminal-yellow: #79601a;
+      box-shadow: 0 0 0 1px var(--edge);
+    }
+    .terminal-bar {
+      display: flex; justify-content: space-between; gap: 12px; padding: 10px 15px;
+      border-bottom: 1px solid color-mix(in srgb, var(--terminal-ink) 18%, transparent);
+      color: var(--terminal-muted); font-size: 12px;
+    }
+    .terminal-body { overflow: auto; padding: 19px 18px; min-height: 180px; }
+    .transcript { font: 13px/1.65 Consolas, "Cascadia Mono", ui-monospace, monospace; }
+    .line { min-height: 1.65em; white-space: pre; }
+    .line.literal { white-space: pre-wrap; word-break: break-all; }
+    :is([data-design="reviewed"], [data-design="gutters"]) .line.literal[data-source="exception"] {
+      word-break: normal; overflow-wrap: anywhere;
+    }
+    .line-prefix { position: absolute; left: 0; top: 0; white-space: pre; }
+    .heading, .live { color: var(--terminal-cyan); font-weight: 700; }
+    .target { font-weight: 700; }
+    .muted, .rule { color: var(--terminal-muted); }
+    .ok { color: var(--terminal-green); font-weight: 600; }
+    .error, .failed { color: var(--terminal-red); }
+    .stack, .warning, .cancelled, .skipped { color: var(--terminal-yellow); }
+    .summary { font-weight: 600; }
+    .stdout { color: var(--terminal-ink); font-weight: 400; }
+    .plain .line { color: var(--terminal-ink); font-weight: 400; }
+    .no-color .line { color: var(--terminal-ink); }
+    .card-footer { display: flex; gap: 12px; align-items: center; margin-top: 10px; font-size: 12px; color: var(--secondary); }
+    .empty { color: var(--terminal-muted); font-style: italic; }
+    .decision { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--edge); max-width: 940px; }
+    .decision ul { padding-left: 21px; margin: 10px 0; }
+    .decision li { margin: 7px 0; }
+    .notice { margin-top: 17px; color: var(--secondary); font-size: 13px; }
+    .settings-note { min-height: 1.5em; margin: 12px 0 0; font-size: 13px; color: var(--secondary); }
+    [hidden] { display: none !important; }
+    @media (max-width: 1120px) {
+      .comparisons, .comparisons.all { grid-template-columns: 1fr; }
+      article > p { min-height: 0; }
+    }
+    @media (max-width: 760px) {
+      main { padding: 23px 15px 32px; }
+      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .controls label:first-child { grid-column: 1 / -1; }
+      .terminal-body { padding: 15px 12px; }
+    }
+    @media (max-width: 420px) { .controls { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow">Rafter · design exploration · 11 October 2026</div>
+  <h1>Find the command. Follow the targets.</h1>
+  <p class="intro">The reviewed compact design names the entry target at command start, shows dependency steps with
+    their own durations, and completes the entry once in the final summary. Earlier proposals remain available; the runtime now follows Fixed gutters.</p>
+  <p class="intro">Fixed gutters is the preferred design. The comparison retains the previous nested phases so spacing
+    and command-cleanup ownership can be reviewed across successes, diagnostics, and cleanup.</p>
+  <p class="intro">The Current view models the earlier renderer using capture-informed scenarios. Timings, paths, tool-log
+    excerpts, and running snapshots are illustrative. <a href="output-design-refresh.md">Scope and recommendation</a> ·
+    <a href="windows-acceptance-refresh.md">Actual terminal evidence</a></p>
+
+  <div class="controls">
+    <label>Scenario<select id="scenario"></select></label>
+    <label>Compare<select id="compare">
+      <option value="reviewed,gutters">Reviewed + fixed gutters</option>
+      <option value="current,gutters">Current + fixed gutters</option>
+      <option value="gutters">Fixed gutters only</option>
+      <option value="current,reviewed">Current + reviewed compact</option>
+      <option value="reviewed">Reviewed compact only</option>
+      <option value="current,sections">Current + clear sections</option>
+      <option value="current,compact">Current + refined compact</option>
+      <option value="compact,sections">Both proposals</option>
+      <option value="current,compact,sections">Three earlier designs</option>
+      <option value="current,reviewed,compact,sections">Four previous designs</option>
+    </select></label>
+    <label>Output mode<select id="mode">
+      <option value="normal">Normal</option><option value="quiet">Quiet</option><option value="verbose">Verbose</option>
+    </select></label>
+    <label>Appearance<select id="appearance">
+      <option value="color">Color</option><option value="no-color">NO_COLOR</option><option value="plain">Plain / redirected</option>
+    </select></label>
+    <label>Terminal width<select id="width">
+      <option value="80">80 columns</option><option value="36">36 columns</option><option value="108">108 columns</option>
+    </select></label>
+    <label>Earlier proposals: target timings<select id="timings">
+      <option value="overall">Overall only in normal mode</option><option value="targets">Keep per-target timings</option>
+    </select></label>
+    <label>Child-output prefix<select id="prefix">
+      <option value="terminal">Terminal only: four spaces + &gt;</option>
+      <option value="all">Also in plain / redirected output</option>
+      <option value="none">Keep child output literal</option>
+    </select></label>
+    <label>Streams<select id="stream">
+      <option value="both">Combined illustration</option><option value="out">stdout only</option><option value="err">stderr only</option>
+    </select></label>
+    <label>Moment<select id="moment">
+      <option value="settled">After settlement</option><option value="running">During work (snapshot)</option>
+    </select></label>
+    <label>Terminal background<select id="background">
+      <option value="dark">Dark</option><option value="light">Light</option>
+    </select></label>
+  </div>
+
+  <section class="scenario" aria-label="Scenario context">
+    <p id="scenario-title"></p>
+    <p><code id="invocation"></code></p>
+    <p id="scenario-note" class="context"></p>
+  </section>
+  <p id="settings-note" class="settings-note" role="status"></p>
+  <section class="comparisons" id="comparisons" aria-label="Output alternatives"></section>
+
+  <section class="decision">
+    <h2>Review in progress: compact target sections</h2>
+    <p>The reviewed design uses the entry target to frame the invocation. Dependency steps have [target] headings and
+      their own durations. An entry with a body gets its own execution section after dependencies; a dependency-only entry
+      needs no repeated section. Its single completion is the final summary. Child-output prefix routing remains open.</p>
+    <p>The preferred fixed-gutter design uses column zero for target sections and final results, two spaces for process/cleanup/error
+      headings and cleanup results, and four spaces for content. Diagnostics and exception details align at four spaces
+      instead of becoming deeper for each phase. Native stack and child-output indentation is retained. Quiet keeps
+      standalone diagnostics; plain/redirected authored and child output still follows the prefix selector.</p>
+    <p>Command cleanup names the script and selected entry, matching the invocation header: Command cleanup | probe.cs | finish.
+      Its result repeats that ownership, including in quiet mode, where the heading is hidden.</p>
+    <ul>
+      <li>Prefix script-authored results with four spaces and |. Child-process presentation uses four spaces and &gt;, preserving existing indentation and stream routing.</li>
+      <li>Keep one settled outcome for every target. The entry completion is integrated into the final summary, after body, processes, target cleanup, and command cleanup settle.</li>
+      <li>Successful cleanup retains its authored messages. Verbose output adds its description, result, and duration.</li>
+      <li>Keep failures and failed cleanup explicit in every mode. Callback exception details remain complete; process details follow verbose policy.</li>
+      <li>Normal mode has no timing tuples. Dependency step durations include their own work and target cleanup; the final entry result shows whole-invocation elapsed time.</li>
+      <li>Other grouping targets retain compact (group) results. Verbose names dependency, body, and cleanup components; shared dependencies already completed contribute no additional time.</li>
+      <li>Verbose traversal totals can overlap. Whole-invocation elapsed time also includes command cleanup and overhead. Timing components and rounded totals here are illustrative, not new measurements.</li>
+      <li>Verbose shows the complete representative executable and arguments plus working directory. Runtime presentation must quote arguments appropriately and redact sensitive values.</li>
+    </ul>
+    <p class="notice">This is a design comparison, not a new execution mode or a terminal emulator. Combined ordering is
+      illustrative; independently redirected streams cannot establish their shared-terminal order. The preview wraps
+      lifecycle text at the selected width and never inserts breaks into authored stdout, paths, or exception details.
+      A narrow terminal may visually wrap those long literal lines. No sensitive input values appear in these fixtures.</p>
+    <p class="notice">The reviewed and fixed-gutter designs add result indentation and child-output prefixes. Quiet keeps results
+      literal; the default also keeps plain/redirected output literal. Selecting prefixes in plain/redirected output also
+      indents authored results there. Raw process capture and direct Console writes are unaffected by presentation choices.</p>
+    <p class="notice">During-work views are fixed snapshots. Plain/redirected views stay static; NO_COLOR retains live status.
+      Cancellation is shown as complete only after child work and cleanup settle. Fixed gutters is the selected runtime design.</p>
+  </section>
+</main>
+<script>
+(() => {
+  'use strict';
+  const result = text => ({ text, stream: 'out', kind: 'stdout', literal: true, source: 'script' });
+  const childResult = text => ({ ...result(text), source: 'process' });
+    const diagnostic = (text, kind = 'muted') => ({ text, stream: 'err', kind, literal: true, source: 'diagnostic' });
+  const target = (name, description, logs, elapsed, extra = {}) =>
+    ({ name, description, logs, elapsed, status: 'OK', dependencies: [], ...extra });
+  const process = (description, command, extra = {}) =>
+    ({ description, command, directory: '<repository>', ...extra });
+  const cleanup = (description, logs, extra = {}) => ({ description, logs, elapsed: '2 ms', status: 'OK', ...extra });
+  const callbackDetails = [
+    'System.InvalidOperationException: Requested failure after reading shared inputs.',
+    '   at Program.<>c__DisplayClass0_0.<<<Main>$>b__3>d.MoveNext() in <repository>\\examples\\cleanup.cs:line 52',
+    '--- End of stack trace from previous location ---',
+    '   at Sotsera.Rafter.Internal.Invocation.ExecuteCallbackAsync(Func`2 callback, RafterContext context, InvocationState state, CancellationToken callerCancellation, String callbackKind) in <repository>\\src\\Sotsera.Rafter\\Internal\\Invocation.cs:line 651'
+  ];
+  const scenarios = {
+    greeting: {
+      title: 'A greeting', command: 'minimal.cs', description: 'Run the smallest useful Rafter command.',
+      invocation: 'dotnet run examples/minimal.cs', elapsed: '24 ms', exit: 0, active: 0, fast: true,
+      note: 'A fast single target. Live status does not appear before its delay. Authored greeting stays on stdout.',
+      targets: [target('hello', 'Print a greeting.', [result('Hello from Rafter.')], '24 ms')]
+    },
+    workflow: {
+      title: 'Build, test, package, verify', command: 'rafter.cs',
+      description: 'Build and test Rafter, optionally creating and verifying a local package.',
+      invocation: 'dotnet run examples/rafter.cs -- --package --version 0.1.0-dev.17',
+      elapsed: '9m 55s', exit: 0, active: 1, liveElapsed: '8.4 s',
+      note: 'Five targets in execution order. Tool logs are representative excerpts, not a new build or benchmark.',
+      targets: [
+        target('build', 'Restore and build the solution, including analyzers and linked examples.',
+          [childResult('Build succeeded.'), childResult('    0 Warning(s)'), childResult('    0 Error(s)')], '22.1 s',
+          { process: process('Build the solution.', 'dotnet build Rafter.slnx --configuration Release --verbosity minimal --disable-build-servers -p:Version=0.1.0-dev.17') }),
+        target('test', 'Run the complete test suite using the freshly built binaries.',
+          [childResult('Tests: 1,040 passed; 0 failed; 0 skipped.')], '6m 44s', { dependencies: ['build'],
+            process: process('Run the test suite.', 'dotnet test --solution Rafter.slnx --configuration Release --no-build --no-restore') }),
+        target('package', 'Create a private-use package from the verified build without uploading it.',
+          [result('Local packages: .artifacts/packages (relative to the repository if not absolute).')], '2.6 s',
+          { dependencies: ['test'], process: process('Create the local package.', 'dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --no-build --no-restore --output .artifacts/packages -p:Version=0.1.0-dev.17 --disable-build-servers') }),
+        target('verify-package', 'Verify isolated package consumers, analyzers, symbols, and reproducible package contents.',
+          [childResult('Package consumers and reproducibility verified.')], '2m 45s', { dependencies: ['package'],
+            process: process('Verify the local package.', 'dotnet run --project tools/PackageVerification/PackageVerification.csproj --configuration Release --no-build --no-restore -- --plain --packages .artifacts/packages --version 0.1.0-dev.17 --configuration Release --dotnet dotnet --timeout 00:10:00') }),
+        target('verify', 'Complete the build and tests, plus local packaging and consumer verification when requested.',
+          [], '0 ms', { dependencies: ['verify-package'], grouping: true })
+      ]
+    },
+    entrybody: {
+      title: 'Entry target with its own process', command: 'verify.cs',
+      description: 'Build the project, then verify its generated artifacts.',
+      invocation: 'Illustrative invocation: dotnet run verify.cs', elapsed: '12.1 s', exit: 0, active: 1, liveElapsed: '1.2 s',
+      note: 'Design-only scenario, not a canonical repository example. verify executes a process after build, then target and command cleanup. Only the final summary completes verify.',
+      targets: [
+        target('build', 'Build the solution before inspecting its artifacts.', [childResult('Build succeeded.')], '10 s',
+          { process: process('Build the solution.', 'dotnet build Rafter.slnx --configuration Release') }),
+        target('verify', 'Check the generated artifacts and produce a verification report.',
+          [childResult('All artifacts passed verification.'), result('Verification report: .artifacts/report.json')], '2 s',
+          { dependencies: ['build'], process: process('Check the generated artifacts.', 'dotnet artifact-check.dll --input .artifacts --report .artifacts/report.json'),
+            cleanup: cleanup('Release verification resources.', [result('Verification resources released.')], { elapsed: '200 ms' }) })
+      ],
+      commandCleanup: cleanup('Release shared workflow resources.', [result('Shared resources released.')], { elapsed: '100 ms' })
+    },
+    shared: {
+      title: 'Shared dependencies', command: 'dependencies.cs',
+      description: 'Run dependent targets sequentially, sharing common work.',
+      invocation: 'dotnet run examples/dependencies.cs', elapsed: '40 ms', exit: 0, active: 1, fast: true,
+      note: 'prepare runs once, then build and test. all is a grouping target; it has no callback or authored output.',
+      targets: [
+        target('prepare', 'Prepare inputs once for both branches.', [result('Inputs prepared.')], '20 ms'),
+        target('build', 'Build the prepared inputs.', [result('Build completed.')], '10 ms', { dependencies: ['prepare'] }),
+        target('test', 'Test the prepared inputs.', [result('Tests completed.')], '10 ms', { dependencies: ['prepare'] }),
+        target('all', 'Run both branches in declaration order.', [], '0 ms', { dependencies: ['build', 'test'], grouping: true })
+      ]
+    },
+    skip: {
+      title: 'An intentional skip', command: 'conditions.cs',
+      description: 'Skip optional work while allowing dependent targets to continue.',
+      invocation: 'dotnet run examples/conditions.cs', elapsed: '13 ms', exit: 0, active: 2, fast: true,
+      note: 'Skipping publish deliberately permits finish. A skip is an outcome, not a failed dependency.',
+      targets: [
+        target('prepare', 'Prepare inputs before evaluating the release condition.', [result('Inputs prepared.')], '6 ms'),
+        target('publish', 'Demonstrate optional release work.', [], '0 ms', {
+          dependencies: ['prepare'], status: 'SKIPPED', condition: 'Run when release is requested.' }),
+        target('finish', 'Finish after the optional release target, even if it was skipped.',
+          [result('Workflow completed.')], '7 ms', { dependencies: ['publish'] })
+      ]
+    },
+    validation: {
+      title: 'Two invalid inputs', command: 'options.cs', entry: 'hello',
+      description: 'Print a greeting using typed command-line options.',
+      invocation: 'dotnet run examples/options.cs -- --repeat two',
+      exit: 2, note: 'Reviewed normal/verbose output identifies the invocation before the diagnostic block. No target execution, cleanup, or execution summary. Quiet retains only the diagnostics and help hint.',
+      invalid: ['--name is required.', "--repeat expects an integer; received 'two'."],
+      usage: 'dotnet run examples/options.cs -- --name <string> [options]'
+    },
+    process: {
+      title: 'Rejected process exit with captured stderr', command: 'process-capture.cs',
+      description: 'Capture structured child output within explicit bounds, with optional live echo.',
+      invocation: 'dotnet run examples/process-capture.cs -- --scenario Failure',
+      elapsed: '108 ms', exit: 1, active: 0, fast: true,
+      note: 'An expected process failure: cause, accepted codes, executable, directory, and captured stderr. Full process details are verbose-only.',
+      targets: [target('inspect', 'Capture the child result and read its JSON.', [], '97 ms', {
+        status: 'FAILED', process: process('Produce a greeting as structured text.', '"<file-app executable>" --child Failure'),
+        failures: [{ kind: 'process', scope: 'target: inspect / process',
+          description: 'Produce a greeting as structured text.',
+          cause: 'Exit code 7 was not accepted (accepted: 0).', executable: '<file-app executable>', directory: '<repository>',
+          details: ["Process '<file-app executable>' exited with code 7."],
+          capture: ['The demonstration child could not produce a greeting.'] }]
+      })]
+    },
+    callback: {
+      title: 'Callback exception, then command cleanup', command: 'cleanup.cs',
+      description: 'Release target resources immediately and shared resources when the command finishes.',
+      invocation: 'dotnet run examples/cleanup.cs -- --fail', elapsed: '67 ms', exit: 1, active: 1, fast: true,
+      note: 'The complete representative callback exception is retained in every mode; cleanup is fully awaited before the failed summary.',
+      targets: [
+        target('prepare', 'Create one temporary file for this target and one shared input for the workflow.',
+          [result('Inputs prepared.')], '27 ms', { cleanup: cleanup('Delete preparation resources before the next target starts.',
+            [result('Preparation resources released.')]) }),
+        target('finish', 'Read the shared input, optionally fail, and finish the workflow.',
+          [result('Read: prepared inputs')], '33 ms', { dependencies: ['prepare'], status: 'FAILED',
+            failures: [{ kind: 'callback', scope: 'target: finish / callback', details: callbackDetails }] })
+      ],
+      commandCleanup: cleanup('Delete the shared input file after all entered work settles.', [result('Shared resources released.')])
+    },
+    cleanupexceptions: {
+      title: 'Target and command cleanup exceptions', command: 'cleanup-errors.cs',
+      description: 'Attempt both cleanup phases and retain each callback exception.',
+      invocation: 'Illustrative invocation: dotnet run cleanup-errors.cs', elapsed: '38 ms', exit: 1, active: 0, fast: true,
+      note: 'Design-only scenario. The body succeeds, target cleanup throws, and command cleanup also throws. Both complete representative exceptions remain visible before the failed summary.',
+      targets: [target('work', 'Produce a result before releasing local resources.', [result('Work completed.')], '34 ms', {
+        status: 'FAILED', cleanup: cleanup('Release local resources.', [], {
+          status: 'FAILED', failures: [{ kind: 'callback', scope: 'target: work / cleanup', details: [
+            'System.InvalidOperationException: Local resource release failed.',
+            '   at Script.ReleaseLocalAsync() in <repository>/cleanup-errors.cs:line 24',
+            '   at Script.RunTargetCleanupAsync() in <repository>/cleanup-errors.cs:line 35'
+          ] }]
+        })
+      })],
+      commandCleanup: cleanup('Release shared resources even after target cleanup fails.', [], {
+        status: 'FAILED', failures: [{ kind: 'callback', scope: 'command cleanup', details: [
+          'System.IO.IOException: Shared resource release failed.',
+          '   at Script.ReleaseSharedAsync() in <repository>/cleanup-errors.cs:line 29',
+          '   at Script.RunCommandCleanupAsync() in <repository>/cleanup-errors.cs:line 41'
+        ] }]
+      })
+    },
+    cancel: {
+      title: 'Cancellation after child and cleanup settlement', command: 'probe.cs',
+      description: 'Verify packaged editor feedback and interactive failure presentation.',
+      invocation: 'dotnet run scripts/probe.cs -- --scenario Cancel', elapsed: '8.7 s', exit: 130, active: 1, liveElapsed: '8.4 s',
+      note: 'Based on the isolated package probe. Ctrl+C is requested during work; CANCELLED appears only after the child and both cleanup callbacks settle.',
+      targets: [
+        target('prepare', 'Prepare the acceptance work.', [result('Preparation completed.')], '9 ms'),
+        target('inspect', 'Run the selected acceptance scenario.',
+          [{ ...diagnostic('The child handled cancellation and finished its cleanup.', 'stdout'), source: 'process' }], '8.6 s', {
+            dependencies: ['prepare'], status: 'CANCELLED',
+            process: process('Produce a greeting as structured text.', '"<consumer executable>" --child Wait'),
+            cleanup: cleanup('Release local acceptance resources.', [result('Local cleanup completed.')]) }),
+        target('finish', 'Continue only after successful inspection and local cleanup.', [], '0 ms',
+          { dependencies: ['inspect'], status: 'NOT RUN' })
+      ],
+      commandCleanup: cleanup('Release shared acceptance resources.', [result('Shared cleanup completed.')])
+    },
+    cleanup: {
+      title: 'Cleanup fails after successful body work', command: 'diagnostics.cs',
+      description: 'Keep results separate from information, warnings, and expected failures.',
+      invocation: 'dotnet run examples/diagnostics.cs -- --fail TargetCleanup', elapsed: '35 ms', exit: 1, active: 0, fast: true,
+      note: 'The body result remains on stdout. Local cleanup fails, the dependent is not run, and command cleanup is still attempted.',
+      targets: [
+        target('work', 'Check prerequisites and produce a result.', [
+          { ...diagnostic('Info [target: work / condition]: Checking the prerequisite.'), info: true },
+          { ...diagnostic('Info [target: work]: Preparing the result.'), info: true },
+          diagnostic('Warning [target: work]: This is a demonstration warning; work can continue.', 'warning'),
+          result('Work completed.')], '30 ms', { status: 'FAILED', cleanup: cleanup('Release local resources.', [
+            { ...diagnostic('Info [target: work / cleanup]: Local resources released.'), info: true }], {
+              status: 'FAILED', failures: [{ kind: 'expected', scope: 'target: work / cleanup',
+                cause: 'Local resource release could not complete.' }] }) }),
+        target('finish', 'Continue after successful work and local cleanup.', [], '0 ms', { dependencies: ['work'], status: 'NOT RUN' })
+      ],
+      commandCleanup: cleanup('Release shared resources.', [
+        { ...diagnostic('Info [command cleanup]: Shared resources released.'), info: true }])
+    }
+  };
+
+  const designs = {
+    current: { title: 'Current', note: 'Existing markers, cleanup result rows, and completed per-target timings. A modeled baseline, not a new capture.' },
+    reviewed: { title: 'Reviewed compact', note: 'Entry target at command start; [target] steps, own-work durations, prefixed output, and one final entry completion. Timing breakdowns are verbose.' },
+    gutters: { title: 'Fixed gutters · preferred', note: 'Sections/results at column 0, phase/error headings at 2, content at 4. Command cleanup names the script and entry; diagnostics do not add further levels.' },
+    compact: { title: 'Refined compact', note: 'Retain > and ::. Reduce successful cleanup rows and timing noise. Familiar structure with fewer lifecycle lines.' },
+    sections: { title: 'Clear sections', note: 'Earlier proposal: explicit Command and Target labels, one short command underline, and reduced lifecycle detail.' }
+  };
+  const controls = Object.fromEntries(['scenario', 'compare', 'mode', 'appearance', 'width', 'timings', 'prefix', 'stream', 'moment', 'background']
+    .map(id => [id, document.getElementById(id)]));
+  for (const [key, scenario] of Object.entries(scenarios)) {
+    controls.scenario.add(new Option(scenario.title, key));
+  }
+  controls.scenario.value = 'workflow';
+
+  function state() {
+    return Object.fromEntries(Object.entries(controls).map(([key, element]) => [key, element.value]));
+  }
+
+  function milliseconds(text) {
+    const units = { ms: 1, s: 1000, m: 60000, h: 3600000 };
+    return [...text.matchAll(/([\d.]+)\s*(ms|s|m|h)/g)]
+      .reduce((total, match) => total + Number(match[1]) * units[match[2]], 0);
+  }
+
+  function duration(value) {
+    const rounded = Math.round(value);
+    if (rounded < 1000) { return `${rounded} ms`; }
+    const minutes = Math.floor(rounded / 60000);
+    const seconds = Number(((rounded % 60000) / 1000).toFixed(1));
+    return minutes ? `${minutes}m ${seconds}s` : `${seconds} s`;
+  }
+
+  function collectTimings(scenario) {
+    const items = new Map(scenario.targets.map(item => [item.name, item]));
+    const referenced = new Set(scenario.targets.flatMap(item => item.dependencies));
+    const visited = new Set();
+    const timings = new Map();
+    const visit = item => {
+      if (visited.has(item.name)) { return 0; }
+      visited.add(item.name);
+      let dependencies = 0;
+      for (const name of item.dependencies) { dependencies += visit(items.get(name)); }
+      const own = milliseconds(item.elapsed);
+      const cleanup = item.cleanup ? milliseconds(item.cleanup.elapsed) : 0;
+      const body = item.grouping ? 0 : Math.max(0, own - cleanup);
+      const total = dependencies + body + cleanup;
+      timings.set(item.name, { dependencies, body, cleanup, total });
+      return total;
+    };
+    for (const item of scenario.targets.filter(item => !referenced.has(item.name))) { visit(item); }
+    return timings;
+  }
+
+  function compose(scenario, design, settings) {
+    const rows = [];
+    const quiet = settings.mode === 'quiet';
+    const verbose = settings.mode === 'verbose';
+    const current = design === 'current';
+    const fixed = design === 'gutters';
+    const reviewed = design === 'reviewed' || fixed;
+    const during = settings.moment === 'running';
+    const timing = current || reviewed || verbose || settings.timings === 'targets';
+    const timings = reviewed && !scenario.invalid ? collectTimings(scenario) : null;
+    const entry = scenario.targets?.at(-1);
+    const prefixChild = reviewed && !quiet && settings.prefix !== 'none'
+      && (settings.prefix === 'all' || settings.appearance !== 'plain');
+    const prefixAuthored = reviewed && !quiet && (settings.prefix === 'all' || settings.appearance !== 'plain');
+    const add = (text = '', kind = '', stream = 'err', literal = false, source = '') =>
+      rows.push({ text, kind, stream, literal, source });
+    const childLog = (text, kind, stream) => {
+      const presented = prefixChild ? text.split(/\r?\n/).map(line => `    > ${line}`).join('\n') : text;
+      add(presented, kind, stream, true, 'process');
+    };
+    const capturedError = (text, indent) => {
+      const prefix = reviewed ? indent + (prefixChild ? '> ' : '') : '';
+      const presented = text.split(/\r?\n/).map(line => prefix + line).join('\n');
+      add(presented, '', 'err', true, 'capture');
+    };
+    const logs = (entries, phaseIndent = 0) => {
+      for (const entry of entries || []) {
+        if (!quiet || !entry.info) {
+          if (entry.source === 'process') { childLog(entry.text, entry.kind, entry.stream); }
+          else {
+            let prefix = '';
+            if (entry.source === 'script' && prefixAuthored) { prefix = '    | '; }
+            else if (entry.source === 'diagnostic' && reviewed && !quiet) { prefix = fixed ? '    ' : ' '.repeat(phaseIndent + 2); }
+            const text = prefix ? entry.text.split(/\r?\n/).map(line => prefix + line).join('\n') : entry.text;
+            add(text, entry.kind, entry.stream, entry.literal, entry.source);
+          }
+        }
+      }
+    };
+    const failures = (entries, phaseIndent = 0) => {
+      for (const failure of entries || []) {
+        const errorIndent = reviewed && !quiet ? ' '.repeat(fixed ? 2 : phaseIndent + 2) : '';
+        const detailIndent = reviewed ? errorIndent + '  ' : '';
+        if (failure.kind === 'callback') {
+          add(`${errorIndent}Error [${failure.scope}]`, 'error');
+          failure.details.forEach((line, index) =>
+            add(`${detailIndent}${line}`, index === 0 ? 'error' : 'stack', 'err', true, 'exception'));
+        } else if (failure.kind === 'process') {
+          const processIndent = reviewed && !quiet ? errorIndent + (fixed ? '' : '  ') : '';
+          const processDetailIndent = processIndent + '  ';
+          const excerptIndent = processDetailIndent + (fixed && !quiet ? '' : '  ');
+          add(`${processIndent}Error [${failure.scope}]: ${failure.description}`, 'error');
+          add(`${processDetailIndent}${failure.cause}`);
+          add(`${processDetailIndent}Executable: ${failure.executable}`, '', 'err', true);
+          add(`${processDetailIndent}Directory: ${failure.directory}`, '', 'err', true);
+          if (verbose) {
+            add(`${processDetailIndent}Details:`, 'muted');
+            failure.details.forEach(line => add(`${excerptIndent}${line}`, 'stack', 'err', true));
+          }
+          if (failure.capture) {
+            add(`${processDetailIndent}Captured stderr:`, 'muted');
+            failure.capture.forEach(line => capturedError(line, excerptIndent));
+          }
+        } else {
+          if (fixed && !quiet) {
+            add(`${errorIndent}Error [${failure.scope}]:`, 'error');
+            add(`${detailIndent}${failure.cause}`, 'error', 'err', true, 'failure-detail');
+          } else { add(`${errorIndent}Error [${failure.scope}]: ${failure.cause}`, 'error'); }
+        }
+      }
+    };
+    const outcome = (status, name, elapsed, indent = '') => {
+      const kind = ({ OK: 'ok', FAILED: 'failed', CANCELLED: 'cancelled', SKIPPED: 'skipped' })[status];
+      add(`${indent}[${status}] ${name}${timing ? ' | ' + elapsed : ''}`, kind);
+    };
+    const timingDetails = item => {
+      const values = timings.get(item.name);
+      const indent = fixed ? '    ' : '  ';
+      add(`${indent}Dependencies: ${duration(values.dependencies)}`, 'muted');
+      const body = item.grouping ? 'none' : item.status === 'NOT RUN' || item.status === 'SKIPPED'
+        ? 'not run' : duration(values.body);
+      add(`${indent}Body: ${body}`, 'muted');
+      add(`${indent}Cleanup: ${duration(values.cleanup)}`, 'muted');
+    };
+    const targetOutcome = item => {
+      if (!reviewed) { outcome(item.status, item.name, item.elapsed); return; }
+      if (item === entry) { return; }
+      const values = timings.get(item.name);
+      const kind = ({ OK: 'ok', FAILED: 'failed', CANCELLED: 'cancelled' })[item.status];
+      const text = `[${item.status}] ${item.name}${item.grouping ? ' (group)' : ''}`
+        + (item.grouping ? '' : ` | ${duration(values.body + values.cleanup)}`);
+      add(text, kind);
+      if (verbose) {
+        add(`${fixed ? '    ' : '  '}Traversal total: ${duration(values.total)}`, 'muted');
+        timingDetails(item);
+      }
+    };
+    const showCleanup = (item, name, commandScope = false) => {
+      if (!item) { return; }
+      const visibleLogs = item.logs.some(entry => !quiet || !entry.info);
+      const failed = item.status !== 'OK';
+      const showHeading = !quiet && (current || reviewed || verbose || visibleLogs || failed || item.process);
+      const commandOwner = `${scenario.command} | ${entry.name}`;
+      if (commandScope && (showHeading || reviewed && (visibleLogs || failed))) { add(); }
+      if (showHeading) {
+        const heading = commandScope ? `Command cleanup${fixed ? ' | ' + commandOwner : ''}` : '  Cleanup';
+        add(reviewed && !commandScope ? `  Cleanup | ${name}`
+          : design === 'sections' && !commandScope ? `  Cleanup: ${name}` : heading, 'muted');
+        if (verbose) { add(`${commandScope && !fixed ? '  ' : '    '}${item.description}`, 'muted'); }
+      }
+      logs(item.logs, commandScope ? 0 : 2);
+      failures(item.failures, commandScope ? 0 : 2);
+      if (failed || (!quiet && (current || reviewed || verbose))) {
+        const resultName = commandScope ? `command cleanup${fixed ? ' | ' + commandOwner : ''}` : `cleanup: ${name}`;
+        outcome(item.status, resultName, item.elapsed, commandScope ? '' : '  ');
+      }
+    };
+
+    if (scenario.invalid) {
+      if (reviewed && !quiet) {
+        add(`> ${scenario.command} | ${scenario.entry}`, 'heading');
+        add(scenario.description, 'muted');
+        add();
+      }
+      add(`${fixed && !quiet ? '  ' : ''}Invalid arguments`, 'error');
+      scenario.invalid.forEach(line => add(`${fixed && !quiet ? '    ' : '  '}${line}`));
+      add();
+      add(`Usage: ${scenario.usage}`);
+      add();
+      add('Run with --help to see all options.', 'muted');
+      return rows;
+    }
+    if (!quiet) {
+      add(reviewed ? `> ${scenario.command} | ${entry.name}`
+        : design === 'sections' ? `Command: ${scenario.command}` : `> ${scenario.command}`, 'heading');
+      add(scenario.description, 'muted');
+      if (design === 'sections') { add('─'.repeat(Math.min(Number(settings.width), scenario.command.length + 9)), 'rule'); }
+      if (reviewed && verbose && entry.grouping) {
+        add(`${fixed ? '    ' : '  '}${entry.description}`, 'muted');
+        add(`${fixed ? '    ' : '  '}Depends on: ${entry.dependencies.join(', ')}`, 'muted');
+      }
+    }
+    for (let index = 0; index < scenario.targets.length; index++) {
+      const item = scenario.targets[index];
+      if (item.status === 'NOT RUN') { continue; }
+      if (during && index > scenario.active) { break; }
+      if (reviewed && item === entry && item.grouping) {
+        if (!during) { showCleanup(item.cleanup, item.name); }
+        continue;
+      }
+      if (reviewed && !quiet) {
+        add();
+        add(`[${item.name}]`, 'target');
+      }
+      if (item.status === 'SKIPPED') {
+        if (!quiet) { add(`[SKIPPED] ${item.name} | Condition not met: ${item.condition}`, 'skipped'); }
+        continue;
+      }
+      if (!reviewed && !quiet && !item.grouping) {
+        add();
+        add(design === 'sections' ? `Target: ${item.name}` : `:: ${item.name}`, 'target');
+      }
+      if (verbose) {
+        add(`${fixed ? '    ' : '  '}${item.description}`, 'muted');
+        if (!current && item.dependencies.length) { add(`${fixed ? '    ' : '  '}Depends on: ${item.dependencies.join(', ')}`, 'muted'); }
+      }
+      if (!quiet && item.process) {
+        add(`  Process | ${item.process.description}`, 'muted');
+        if (verbose) {
+          add(`${reviewed ? '    ' : '  '}$ ${item.process.command}`, 'muted', 'err', true);
+          add(`${reviewed ? '    Working directory' : '  Directory'}: ${item.process.directory}`, 'muted', 'err', true);
+        }
+      }
+      if (during && index === scenario.active) {
+        if (!quiet && settings.appearance !== 'plain' && !scenario.fast && Number(settings.width) > 11) {
+          add(`- ${item.name} | ${scenario.liveElapsed}`, 'live');
+        }
+        break;
+      }
+      logs(item.logs);
+      failures(item.failures);
+      showCleanup(item.cleanup, item.name);
+      if (!quiet || item.status !== 'OK') { targetOutcome(item); }
+    }
+    if (during) { return rows; }
+    showCleanup(scenario.commandCleanup, 'command cleanup', true);
+    if (!quiet || scenario.exit !== 0) {
+      const counts = scenario.targets.reduce((accumulator, item) => {
+        accumulator[item.status] = (accumulator[item.status] || 0) + 1;
+        return accumulator;
+      }, {});
+      let summary;
+      if (scenario.exit === 0) {
+        const total = scenario.targets.length;
+        summary = `${reviewed ? `[OK] ${entry.name}` : 'Succeeded'} | ${total} ${total === 1 ? 'target' : 'targets'}`;
+        if (counts.SKIPPED) { summary += ` | ${counts.OK || 0} succeeded | ${counts.SKIPPED} skipped`; }
+      } else {
+        const labels = { OK: 'succeeded', SKIPPED: 'skipped', FAILED: 'failed', CANCELLED: 'cancelled', 'NOT RUN': 'not run' };
+        summary = reviewed ? `[${scenario.exit === 130 ? 'CANCELLED' : 'FAILED'}] ${entry.name}`
+          : scenario.exit === 130 ? 'Cancelled' : 'Failed';
+        for (const [key, label] of Object.entries(labels)) {
+          if (counts[key]) { summary += ` | ${counts[key]} ${label}`; }
+        }
+        const affected = scenario.targets.find(item => item.status === 'FAILED' || item.status === 'CANCELLED');
+        if (affected && (!reviewed || affected !== entry)) {
+          summary += ` | ${reviewed ? 'Stopped at' : 'Target'}: ${affected.name}`;
+        }
+      }
+      add();
+      add(`${summary} | ${scenario.elapsed}`, `summary ${scenario.exit === 0 ? 'ok' : scenario.exit === 130 ? 'cancelled' : 'failed'}`);
+      if (reviewed && verbose) {
+        timingDetails(entry);
+        if (scenario.commandCleanup) { add(`${fixed ? '    ' : '  '}Command cleanup: ${scenario.commandCleanup.elapsed}`, 'muted'); }
+      }
+    }
+    return rows;
+  }
+
+  function wrap(text, columns) {
+    if (text.length <= columns) { return [text]; }
+    const lines = [];
+    let remaining = text;
+    const indentation = text.match(/^ */)[0];
+    while (remaining.length > columns) {
+      let split = remaining.lastIndexOf(' ', columns);
+      if (split <= indentation.length) { split = columns; }
+      lines.push(remaining.slice(0, split));
+      remaining = indentation + remaining.slice(split).trimStart();
+    }
+    lines.push(remaining);
+    return lines;
+  }
+
+  function render() {
+    const settings = state();
+    const scenario = scenarios[settings.scenario];
+    if (scenario.invalid) {
+      controls.moment.value = 'settled';
+      settings.moment = 'settled';
+    }
+    controls.moment.disabled = Boolean(scenario.invalid);
+    controls.timings.disabled = settings.mode === 'verbose'
+      || !settings.compare.split(',').some(name => name === 'compact' || name === 'sections');
+    const names = settings.compare.split(',');
+    const hasReviewed = names.some(name => name === 'reviewed' || name === 'gutters');
+    controls.prefix.disabled = settings.mode === 'quiet' || !hasReviewed;
+    const comparison = document.getElementById('comparisons');
+    comparison.classList.toggle('all', names.length === 3);
+    comparison.replaceChildren();
+    document.getElementById('scenario-title').textContent = `${scenario.title} · ${settings.moment === 'running' ? 'work has not settled' : 'exit ' + scenario.exit}`;
+    document.getElementById('invocation').textContent = scenario.invocation;
+    document.getElementById('scenario-note').textContent = scenario.note;
+    document.getElementById('settings-note').textContent = names.includes('gutters')
+      ? 'Fixed gutters is preferred: 0 / 2 / 4 spaces replace recursive diagnostic nesting. Command cleanup names the script and entry. Native output spacing, streams, and prefix choices are retained.'
+      : hasReviewed
+      ? 'Reviewed steps show own-work durations. The entry completes once in the final summary, after command cleanup. Dependency/body/cleanup timing details are verbose only.'
+      : settings.mode === 'verbose'
+        ? 'Verbose retains per-target timings and adds dependency relationships in the earlier proposals.'
+        : 'The current baseline always retains completed per-target timings. The timing selector affects the two earlier proposals.';
+
+    for (const name of names) {
+      const rows = compose(scenario, name, settings).filter(row => settings.stream === 'both' || row.stream === settings.stream);
+      const article = document.createElement('article');
+      article.dataset.design = name;
+      const heading = document.createElement('h2');
+      heading.textContent = designs[name].title;
+      const note = document.createElement('p');
+      note.textContent = designs[name].note;
+      const terminal = document.createElement('div');
+      terminal.className = `terminal ${settings.appearance} ${settings.background}`;
+      const bar = document.createElement('div');
+      bar.className = 'terminal-bar';
+      const streamLabel = document.createElement('span');
+      streamLabel.textContent = ({ both: 'stdout + stderr', out: 'stdout', err: 'stderr' })[settings.stream];
+      const widthLabel = document.createElement('span');
+      widthLabel.textContent = `${settings.width} columns · ${settings.mode}`;
+      bar.append(streamLabel, widthLabel);
+      const body = document.createElement('div');
+      body.className = 'terminal-body';
+      const transcript = document.createElement('div');
+      transcript.className = 'transcript';
+      transcript.style.width = `${settings.width}ch`;
+      transcript.setAttribute('role', 'region');
+      transcript.setAttribute('aria-label', `${designs[name].title} output`);
+      transcript.tabIndex = 0;
+      for (const row of rows) {
+        const text = settings.appearance === 'plain' && row.kind === 'rule' ? row.text.replace(/─/g, '-') : row.text;
+        const parts = row.literal ? [text] : wrap(text, Number(settings.width));
+        for (const part of parts) {
+          const line = document.createElement('div');
+          line.className = `line ${row.kind}${row.literal ? ' literal' : ''}`;
+          line.dataset.stream = row.stream;
+          line.dataset.source = row.source || 'rafter-or-script';
+          line.title = row.source === 'capture' ? 'stderr · retained child-output excerpt inside the failure diagnostic'
+            : row.source === 'process' ? `${row.stream === 'out' ? 'stdout' : 'stderr'} · child-process presentation`
+            : row.stream === 'out' ? 'stdout · script-authored result presentation' : 'stderr · lifecycle or diagnostics';
+          if ((name === 'reviewed' || name === 'gutters') && row.literal) {
+            const indent = text.match(/^ *(?:[>|] )?/)[0].length;
+            line.style.paddingLeft = `${indent}ch`;
+            line.style.textIndent = `-${indent}ch`;
+          }
+          line.textContent = part || '\u00a0';
+          if ((name === 'reviewed' || name === 'gutters') && row.source === 'exception') {
+            const indent = text.match(/^ */)[0].length;
+            const prefix = document.createElement('span');
+            prefix.className = 'line-prefix';
+            prefix.textContent = text.slice(0, indent);
+            const content = document.createElement('span');
+            content.textContent = text.slice(indent);
+            line.style.position = 'relative';
+            line.style.textIndent = '0';
+            line.replaceChildren(prefix, content);
+          }
+          transcript.append(line);
+        }
+      }
+      if (!rows.some(row => row.text)) {
+        const empty = document.createElement('div');
+        empty.className = 'line empty';
+        empty.textContent = '(empty stream)';
+        transcript.append(empty);
+      }
+      body.append(transcript);
+      terminal.append(bar, body);
+      const footer = document.createElement('div');
+      footer.className = 'card-footer';
+      const copy = document.createElement('button');
+      copy.type = 'button';
+      copy.textContent = 'Copy transcript';
+      const status = document.createElement('span');
+      status.setAttribute('role', 'status');
+      copy.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(rows.map(row => settings.appearance === 'plain' && row.kind === 'rule'
+            ? row.text.replace(/─/g, '-') : row.text).join('\n'));
+          status.textContent = 'Copied unwrapped text.';
+        } catch {
+          status.textContent = 'Clipboard unavailable; select the transcript to copy.';
+        }
+      });
+      const information = document.createElement('span');
+      information.textContent = settings.moment === 'running' ? 'Snapshot · no final outcome yet' : `Settled · exit ${scenario.exit}`;
+      footer.append(copy, information, status);
+      article.append(heading, note, terminal, footer);
+      comparison.append(article);
+    }
+  }
+
+  for (const control of Object.values(controls)) { control.addEventListener('change', render); }
+  render();
+})();
+</script>
+</body>
+</html>

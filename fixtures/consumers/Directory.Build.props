@@ -1,0 +1,3 @@
+<Project>
+  <!-- Stop ancestor build imports; these fixtures must define their own settings. -->
+</Project>

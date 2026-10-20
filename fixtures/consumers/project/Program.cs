@@ -1,0 +1,1 @@
+return ConsumerProbe.Run(args);

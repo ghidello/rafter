@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rafter · Static output review</title>
+  <style>
+    :root { color-scheme: light; --ink: #172d35; --muted: #607078; --edge: #dbe2e0; --accent: #166a61; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f3f5f2; color: var(--ink); font: 15px/1.6 system-ui, sans-serif; }
+    main { max-width: 1280px; margin: 0 auto; padding: 64px 32px 48px; }
+    .eyebrow { color: var(--accent); font-size: 12px; font-weight: 700; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { margin: 12px 0 14px; font-size: clamp(32px, 5vw, 52px); line-height: 1.12; letter-spacing: -.035em; font-weight: 650; }
+    .intro { max-width: 770px; margin: 0; color: var(--muted); font-size: 17px; }
+    .notice { max-width: 860px; margin: 24px 0 28px; padding: 14px 18px; background: #e6eeea; border-left: 3px solid #418c7b; }
+    .notice strong { font-weight: 650; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 42px; }
+    nav a { color: var(--accent); text-underline-offset: 4px; font-size: 13px; }
+    .case { margin: 0 0 28px; padding: 24px; background: #fff; border: 1px solid var(--edge); border-radius: 14px; }
+    .case-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; margin-bottom: 20px; }
+    h2 { margin: 0 0 6px; font-size: 20px; line-height: 1.35; letter-spacing: -.02em; font-weight: 650; }
+    .case-heading p { margin: 0; max-width: 770px; color: var(--muted); font-size: 14px; }
+    .chip { flex-shrink: 0; padding: 5px 10px; border: 1px solid var(--edge); border-radius: 99px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .streams { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.8fr); gap: 14px; align-items: start; }
+    .terminal { min-width: 0; overflow: hidden; background: #172129; border: 1px solid #25343e; border-radius: 8px; }
+    .terminal-header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 12px; padding: 9px 14px; background: #1e2b34; border-bottom: 1px solid #30404a; }
+    .stream-name { color: #dfe8ed; font: 600 11px/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; }
+    .stream-purpose { color: #9baeb9; font-size: 10px; }
+    pre { margin: 0; min-height: 84px; padding: 18px 16px; overflow-x: auto; color: #dce5eb; white-space: pre; tab-size: 4; font: 12px/1.65 ui-monospace, "Cascadia Code", Consolas, monospace; }
+    .empty { color: #7f939f; font-style: italic; }
+    .ansi-bold { font-weight: 700; } .ansi-dim { opacity: .67; }
+    .ansi-black { color: #56636d; } .ansi-red { color: #ff979b; } .ansi-green { color: #91d7a9; }
+    .ansi-yellow { color: #e9d18b; } .ansi-blue { color: #9bbdf6; } .ansi-magenta { color: #d4a9e6; }
+    .ansi-cyan { color: #8ad8df; } .ansi-white { color: #edf3f6; }
+    footer { padding: 12px 4px 0; color: var(--muted); font-size: 12px; }
+    code { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .92em; }
+    @media (max-width: 900px) { .streams { grid-template-columns: 1fr; } .case-heading { flex-direction: column; gap: 12px; } }
+    @media (max-width: 540px) { main { padding: 36px 14px; } .case { padding: 17px 12px; } pre { padding: 15px 12px; font-size: 11px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Rafter / first implementation / review draft</div>
+    <h1>Small commands.<br>Clear output.</h1>
+    <p class="intro">Historical captures from the earlier output layout, shown with the result stream and diagnostic stream kept separate.</p>
+    <div class="notice"><strong>The layout has since changed.</strong> See the <a href="output-refinement-preview.html">current design previews</a> for explicit command headings, compact target headings, and revised summaries. The captures below preserve the earlier implementation for comparison.</div>
+    <nav aria-label="Preview cases">
+      <a href="#success">Success</a><a href="#sequential-targets">Several targets</a><a href="#help">Help</a><a href="#validation">Invalid input</a>
+      <a href="#help-plain">Plain help</a><a href="#help-no-color">NO_COLOR help</a>
+      <a href="#help-redirected">Redirected help</a><a href="#help-narrow">Narrow help</a>
+      <a href="#multiple-errors">Multiple errors</a><a href="#validation-plain">Plain errors</a><a href="#definition">Definition errors</a>
+      <a href="#exception">Exception</a><a href="#cancellation">Cancellation</a><a href="#narrow">Narrow terminal</a>
+      <a href="#plain">Plain</a><a href="#no-color">NO_COLOR</a><a href="#redirected">Redirected</a>
+    </nav>
+    <section class="case" id="success">
+  <div class="case-heading">
+    <div><h2>A successful command</h2><p>Script results remain literal on stdout. The script heading, target dividers, lifecycle, and final summary use stderr.</p></div>
+    <span class="chip">Color &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>Hello from Rafter.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-cyan ansi-bold">options.cs</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: hello</span><span class="ansi-dim"> ───────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-green ansi-bold">✓</span> hello<span class="ansi-dim"> | 84 ms</span>
+
+<span class="ansi-green ansi-bold">Succeeded</span><span class="ansi-dim"> | 1 target | 84 ms</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="sequential-targets">
+  <div class="case-heading">
+    <div><h2>Several sequential targets (renderer illustration)</h2><p>The same layout can repeat for dependencies, with a duration per target and one overall summary. Dependency scheduling is still a future feature.</p></div>
+    <span class="chip">Color &#183; renderer only</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>Dependencies restored.
+Compiled successfully.
+Hello, boh!
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-cyan ansi-bold">options.cs</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: restore</span><span class="ansi-dim"> ─────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-green ansi-bold">✓</span> restore<span class="ansi-dim"> | 320 ms</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: build</span><span class="ansi-dim"> ───────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-green ansi-bold">✓</span> build<span class="ansi-dim"> | 840 ms</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: hello</span><span class="ansi-dim"> ───────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-green ansi-bold">✓</span> hello<span class="ansi-dim"> | 2 ms</span>
+
+<span class="ansi-green ansi-bold">Succeeded</span><span class="ansi-dim"> | 3 targets | 1.16 s</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="help">
+  <div class="case-heading">
+    <div><h2>Help with command options first</h2><p>Help uses stdout capabilities. Colored headings and bold option names guide reading; Rafter options form the final section.</p></div>
+    <span class="chip">Color &#183; stdout terminal</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="ansi-cyan ansi-bold">Print a greeting using typed command-line options.</span>
+
+<span class="ansi-cyan ansi-bold">Usage: </span>dotnet run examples/options.cs -- --name &lt;string&gt; [options]
+
+<span class="ansi-cyan ansi-bold">Command options:</span>
+  <span class="ansi-bold">-n, --name &lt;string&gt;</span>     Name to greet.<span class="ansi-dim"> [required]</span>               &#32;
+  <span class="ansi-bold">-r, --repeat &lt;int&gt;</span>      Greeting count.<span class="ansi-dim"> [default: 1]</span>            &#32;
+  <span class="ansi-bold">-u, --uppercase [bool]</span>  Use uppercase greetings.<span class="ansi-dim"> [default: false]</span>
+
+<span class="ansi-cyan ansi-bold">Execution:</span>
+<span class="ansi-bold">  Target: hello</span> - Print the requested greetings.
+<span class="ansi-bold">  Root:   </span>Invocation directory.
+
+<span class="ansi-cyan ansi-bold">Rafter options:</span>
+  <span class="ansi-bold">-h, --help</span>              Show help.                     &#32;
+  <span class="ansi-bold">    --plain</span>             Disable styling and live status.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+  </div>
+</section>
+<section class="case" id="help-plain">
+  <div class="case-heading">
+    <div><h2>Plain help</h2><p>The same sections, descriptions, and option order with all terminal styling disabled.</p></div>
+    <span class="chip">--plain</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>Print a greeting using typed command-line options.
+
+Usage: dotnet run examples/options.cs -- --name &lt;string&gt; [options]
+
+Command options:
+  -n, --name &lt;string&gt;     Name to greet. [required]
+  -r, --repeat &lt;int&gt;      Greeting count. [default: 1]
+  -u, --uppercase [bool]  Use uppercase greetings. [default: false]
+
+Execution:
+  Target: hello - Print the requested greetings.
+  Root:   Invocation directory.
+
+Rafter options:
+  -h, --help              Show help.
+      --plain             Disable styling and live status.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+  </div>
+</section>
+<section class="case" id="help-no-color">
+  <div class="case-heading">
+    <div><h2>Help with NO_COLOR</h2><p>Headings and option names keep emphasis while color is disabled.</p></div>
+    <span class="chip">NO_COLOR</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="ansi-bold">Print a greeting using typed command-line options.</span>
+
+<span class="ansi-bold">Usage: </span>dotnet run examples/options.cs -- --name &lt;string&gt; [options]
+
+<span class="ansi-bold">Command options:</span>
+  <span class="ansi-bold">-n, --name &lt;string&gt;</span>     Name to greet.<span class="ansi-dim"> [required]</span>               &#32;
+  <span class="ansi-bold">-r, --repeat &lt;int&gt;</span>      Greeting count.<span class="ansi-dim"> [default: 1]</span>            &#32;
+  <span class="ansi-bold">-u, --uppercase [bool]</span>  Use uppercase greetings.<span class="ansi-dim"> [default: false]</span>
+
+<span class="ansi-bold">Execution:</span>
+<span class="ansi-bold">  Target: hello</span> - Print the requested greetings.
+<span class="ansi-bold">  Root:   </span>Invocation directory.
+
+<span class="ansi-bold">Rafter options:</span>
+  <span class="ansi-bold">-h, --help</span>              Show help.                     &#32;
+  <span class="ansi-bold">    --plain</span>             Disable styling and live status.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+  </div>
+</section>
+<section class="case" id="help-redirected">
+  <div class="case-heading">
+    <div><h2>Redirected help</h2><p>Redirected stdout receives complete unstyled text even when stderr is a terminal.</p></div>
+    <span class="chip">Redirected stdout</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>Print a greeting using typed command-line options.
+
+Usage: dotnet run examples/options.cs -- --name &lt;string&gt; [options]
+
+Command options:
+  -n, --name &lt;string&gt;     Name to greet. [required]
+  -r, --repeat &lt;int&gt;      Greeting count. [default: 1]
+  -u, --uppercase [bool]  Use uppercase greetings. [default: false]
+
+Execution:
+  Target: hello - Print the requested greetings.
+  Root:   Invocation directory.
+
+Rafter options:
+  -h, --help              Show help.
+      --plain             Disable styling and live status.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+  </div>
+</section>
+<section class="case" id="help-narrow">
+  <div class="case-heading">
+    <div><h2>Help in a narrow terminal</h2><p>Help wraps to the available width, preserving full option names and descriptions.</p></div>
+    <span class="chip">Color &#183; 36 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="ansi-cyan ansi-bold">Print a greeting using typed </span>
+<span class="ansi-cyan ansi-bold">command-line options.</span>
+
+<span class="ansi-cyan ansi-bold">Usage:</span>
+  dotnet run examples/options.cs --&#32;
+--name &lt;string&gt; [options]
+
+<span class="ansi-cyan ansi-bold">Command options:</span>
+<span class="ansi-bold">  -n, --name &lt;string&gt;</span>
+    Name to greet.<span class="ansi-dim"> [required]</span>
+<span class="ansi-bold">  -r, --repeat &lt;int&gt;</span>
+    Greeting count.<span class="ansi-dim"> [default: 1]</span>
+<span class="ansi-bold">  -u, --uppercase [bool]</span>
+    Use uppercase greetings.<span class="ansi-dim"> </span>
+<span class="ansi-dim">[default: false]</span>
+
+<span class="ansi-cyan ansi-bold">Execution:</span>
+<span class="ansi-bold">  Target: hello</span> - Print the&#32;
+requested greetings.
+<span class="ansi-bold">  Root:   </span>Invocation directory.
+
+<span class="ansi-cyan ansi-bold">Rafter options:</span>
+<span class="ansi-bold">  -h, --help</span>
+    Show help.
+<span class="ansi-bold">      --plain</span>
+    Disable styling and live status.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+  </div>
+</section>
+<section class="case" id="validation">
+  <div class="case-heading">
+    <div><h2>A missing required option</h2><p>One red heading, a neutral diagnostic, a short usage synopsis, and a subdued help hint. No target starts.</p></div>
+    <span class="chip">Color &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-red ansi-bold">Invalid arguments</span>
+  <span class="ansi-bold">--name</span> is required.
+
+<span class="ansi-bold">Usage: </span>dotnet run examples/options.cs -- --name &lt;string&gt; [options]
+
+<span class="ansi-dim">Run with --help to see all options.</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="multiple-errors">
+  <div class="case-heading">
+    <div><h2>Several invalid options</h2><p>Friendly option diagnostics stay together under one heading. Compact usage and the hint appear once for the whole group.</p></div>
+    <span class="chip">Color &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-red ansi-bold">Invalid arguments</span>
+  <span class="ansi-bold">--name</span> is required.
+  <span class="ansi-bold">--repeat</span> expects an integer; received &#39;two&#39;.
+
+<span class="ansi-bold">Usage: </span>dotnet run examples/options.cs -- --name &lt;string&gt; [options]
+
+<span class="ansi-dim">Run with --help to see all options.</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="validation-plain">
+  <div class="case-heading">
+    <div><h2>Plain validation output</h2><p>The same information and grouping, with no colors or terminal controls.</p></div>
+    <span class="chip">--plain &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre>Invalid arguments
+  --name is required.
+  --repeat expects an integer; received &#39;two&#39;.
+
+Usage: dotnet run examples/options.cs -- --name &lt;string&gt; [options]
+
+Run with --help to see all options.
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="definition">
+  <div class="case-heading">
+    <div><h2>An invalid script definition</h2><p>Author errors identify the declaration to fix without suggesting that command-line usage can repair it.</p></div>
+    <span class="chip">Color &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-red ansi-bold">Invalid command definition</span>
+  Option &#39;repeat&#39; needs a nonblank description. Use .Description(...).
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="exception">
+  <div class="case-heading">
+    <div><h2>An unexpected callback exception</h2><p>The red message is followed by the complete, unchanged exception text. Inner exceptions and long lines remain available.</p></div>
+    <span class="chip">Color &#183; full details</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-cyan ansi-bold">options.cs</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: hello</span><span class="ansi-dim"> ───────────────────────────────────────────────────────────────────────</span>
+
+<span class="ansi-red ansi-bold">  Error: The greeting could not be prepared.</span>
+
+System.InvalidOperationException: The greeting could not be prepared.
+ ---&gt; System.IO.IOException: Could not read [settings] for Caff&#232; / 世界. Source: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+   at Program.&lt;&lt;Main&gt;$&gt;g__CreateException|0_14() in E:\Ghidello\Git\rafter\.test-work\preview-generator\Program.cs:line 339
+   --- End of inner exception stack trace ---
+   at Program.&lt;&lt;Main&gt;$&gt;g__CreateException|0_14() in E:\Ghidello\Git\rafter\.test-work\preview-generator\Program.cs:line 343
+<span class="ansi-red ansi-bold">  [FAILED] hello</span>
+
+<span class="ansi-red ansi-bold">Failed | 340 ms</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="cancellation">
+  <div class="case-heading">
+    <div><h2>Cooperative cancellation</h2><p>Cancellation is a distinct outcome. This summary represents callback work that has already stopped.</p></div>
+    <span class="chip">Color &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre><span class="empty">No output</span></pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-cyan ansi-bold">options.cs</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: hello</span><span class="ansi-dim"> ───────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-yellow ansi-bold">  [CANCELLED] hello</span>
+
+<span class="ansi-yellow ansi-bold">Cancelled | 1.25 s</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="narrow">
+  <div class="case-heading">
+    <div><h2>A narrow terminal</h2><p>Spectre wraps lifecycle lines to the available width. Script output keeps its original characters and line breaks.</p></div>
+    <span class="chip">Color &#183; 36 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>[greeting] Ciao, 世界 — this stdout line stays exactly as authored.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-cyan ansi-bold">options.cs</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: hello</span><span class="ansi-dim"> ───────────────────</span>
+<span class="ansi-green ansi-bold">✓</span> hello<span class="ansi-dim"> | 84 ms</span>
+
+<span class="ansi-green ansi-bold">Succeeded</span><span class="ansi-dim"> | 1 target | 84 ms</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="plain">
+  <div class="case-heading">
+    <div><h2>Explicit plain output</h2><p>The structure is static ASCII with no ANSI escapes. Authored Unicode and bracket characters are preserved.</p></div>
+    <span class="chip">--plain &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>[greeting] Ciao, 世界.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre>options.cs
+
+-- target: hello -----------------------------------------------------------------------
+[OK] hello | 84 ms
+
+Succeeded | 1 target | 84 ms
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="no-color">
+  <div class="case-heading">
+    <div><h2>NO_COLOR on a capable terminal</h2><p>Color is disabled independently of other terminal styling. Bold headings and dim timings remain permitted.</p></div>
+    <span class="chip">NO_COLOR &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>Hello from Rafter.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre><span class="ansi-bold">options.cs</span>
+
+<span class="ansi-dim">── </span><span class="ansi-bold">target: hello</span><span class="ansi-dim"> ───────────────────────────────────────────────────────────────────────</span>
+<span class="ansi-bold">✓</span> hello<span class="ansi-dim"> | 84 ms</span>
+
+<span class="ansi-bold">Succeeded</span><span class="ansi-dim"> | 1 target | 84 ms</span>
+</pre>
+</div>
+  </div>
+</section>
+<section class="case" id="redirected">
+  <div class="case-heading">
+    <div><h2>Redirected diagnostic output</h2><p>A nonterminal stderr stream receives static text without escape sequences. Stdout remains an independent result stream.</p></div>
+    <span class="chip">Redirected stderr &#183; 88 columns</span>
+  </div>
+  <div class="streams">
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stdout</span><span class="stream-purpose">Script results / requested help</span></div>
+  <pre>Hello from Rafter.
+</pre>
+</div>
+    <div class="terminal">
+  <div class="terminal-header"><span class="stream-name">stderr</span><span class="stream-purpose">Lifecycle / diagnostics</span></div>
+  <pre>options.cs
+
+-- target: hello -----------------------------------------------------------------------
+[OK] hello | 84 ms
+
+Succeeded | 1 target | 84 ms
+</pre>
+</div>
+  </div>
+</section>
+
+    <footer>
+      Captured directly from <code>src/Sotsera.Rafter/Internal/InvocationConsole.cs</code> with fixed durations and terminal capabilities.
+      HTML escaping preserves literal text; ANSI SGR sequences become styling spans. The page palette approximates a terminal palette.
+      Each stream retains its own ordering; the two panels do not imply timing between streams.
+    </footer>
+  </main>
+</body>
+</html>
