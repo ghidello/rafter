@@ -13,7 +13,9 @@ internal sealed class IsolatedConsumer : IDisposable
     private readonly ITestOutputHelper _output;
     private readonly string _entryPoint;
 
-    public IsolatedConsumer(string kind, ITestOutputHelper output)
+    public string WorkingDirectory { get; }
+
+    public IsolatedConsumer(string kind, ITestOutputHelper output, string? entryPoint = null)
     {
         _kind = kind;
         _output = output;
@@ -28,12 +30,10 @@ internal sealed class IsolatedConsumer : IDisposable
             File.Copy(source, destination);
         }
 
-        _entryPoint = kind == "file-app"
+        _entryPoint = entryPoint ?? (kind == "file-app"
             ? Path.Combine("file-app", "probe.cs")
-            : Path.Combine("project", "ConsumerProbe.csproj");
+            : Path.Combine("project", "ConsumerProbe.csproj"));
     }
-
-    public string WorkingDirectory { get; }
 
     public async Task BuildAsync()
     {

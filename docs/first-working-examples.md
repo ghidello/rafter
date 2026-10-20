@@ -111,8 +111,9 @@ before launching the child. Invalid process configuration follows the agreed exc
 Choose the CLI parser and its configuration after these policies are selected. The old parser dependency and version
 are references, not new-project decisions. Invalid input, invalid declarations, and exceptions during validation must
 remain distinct outcomes.
-The [System.CommandLine review](parser-review.md) recommends a candidate and records source-level differences;
-empty attached values, safe diagnostics, and the full parsing/help compatibility checks remain unverified adoption gates.
+The [System.CommandLine review](parser-review.md) and [executable evaluation](parser-evaluation.md) now recommend
+2.0.13 with a bounded internal adapter. Empty attached values, safe diagnostics, and initial parsing/help rules have
+Windows execution evidence; this does not yet implement the Rafter runtime or establish other platforms.
 
 ### Process completion and failure boundaries
 

@@ -427,8 +427,21 @@ Reject repeated occurrences of a scalar option as invalid input (exit `2`), even
 applies before body or target execution. Collection-valued inputs are a separate future design topic.
 
 Boolean literals are case-insensitive: `true`, `True`, and `TRUE` resolve to true, and corresponding false spellings
-resolve to false. This is independent of case-sensitive option-name matching. The parser implementation and actual
-file-app verification remain pending.
+resolve to false. This is independent of case-sensitive option-name matching.
+
+Additional syntax agreed during the parser evaluation:
+
+- `--name=` supplies an explicit empty string, just like a separate empty argument. Empty Boolean and numeric values
+  are invalid; `--flag=` must not become a bare true flag.
+- A declared option starts a new input: `--name --help` reports a missing name value. Use `--name=--help` to pass that
+  literal text as the name. The same boundary applies to declared aliases and attached option spellings.
+- Colon option separators, response-file expansion, and directives are unsupported initially. Colons and equals
+  signs inside string values remain literal. An `@file` supplied as a string value does not read that file.
+
+The [parser evaluation](parser-evaluation.md) exercises these rules through direct arrays and a real file app.
+This verifies a fixed evaluation adapter, not the future Rafter runtime. Positional arguments and the public meaning
+of a standalone `--` remain outside the agreed initial grammar; the probe rejects that token rather than silently
+enabling the package's end-of-options feature.
 
 #### Input diagnostics and API constraints
 

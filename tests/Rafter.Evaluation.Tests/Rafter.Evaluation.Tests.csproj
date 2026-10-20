@@ -13,10 +13,22 @@
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" PrivateAssets="all" />
+    <PackageReference Include="System.CommandLine" PrivateAssets="all" />
     <PackageReference Include="xunit.v3.mtp-v2" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="../../fixtures/parser/CandidateAdapter.cs" Link="Parser/CandidateAdapter.cs" />
+    <Compile Include="../../fixtures/parser/ParserCandidate.cs" Link="Parser/ParserCandidate.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../fixtures/parser/**"
+          Exclude="../../fixtures/parser/**/bin/**;../../fixtures/parser/**/obj/**"
+          Link="Fixtures/parser/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../Directory.Packages.props" Link="Fixtures/parser/Directory.Packages.props"
+          CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/consumers/**"
           Exclude="../../fixtures/consumers/**/bin/**;../../fixtures/consumers/**/obj/**"
           Link="Fixtures/%(RecursiveDir)%(Filename)%(Extension)"

@@ -4,6 +4,8 @@ Rafter is being designed afresh through small C# automation examples.
 
 The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-based and project-consumer checks
 through xUnit v3 and Microsoft.Testing.Platform. It is evaluation tooling; the Rafter runtime is not implemented yet.
+The [parser evaluation](docs/parser-evaluation.md) records executable System.CommandLine compatibility checks and
+the recommended internal adapter.
 
 See the [example design plan](docs/example-design-plan.md) for the working approach, topic checklist, and open questions.
 The [first working examples milestone](docs/first-working-examples.md) proposes the initial implementation scope and remaining decisions.

@@ -30,7 +30,9 @@ global.json selects SDK 10.0.402 with latestPatch and allowPrerelease=false. Thi
 Versions live in Directory.Packages.props. The xUnit v3 product uses a 4.x package version; this does not select xUnit v2
 or a different testing framework. MTP and MTP.MSBuild resolve transitively to 2.5.1. Other transitive packages include
 xUnit's runner/core/assertion packages, xunit.analyzers 2.2.0, and the MTP telemetry dependencies.
-All three direct references have PrivateAssets=all and the test project is not packable. There is no shipping project.
+These three test-tool references have PrivateAssets=all and the test project is not packable. There is no shipping project.
+Issue #2 adds System.CommandLine 2.0.13 as a fourth private evaluation reference; its net8.0 asset adds no transitive
+packages. See the [parser evaluation](parser-evaluation.md) for the candidate-specific graph and checks.
 
 Versions and dependency ranges were inspected in official NuGet metadata before restore. The full resolved graph is
 reported by the command below. These explicit versions are a baseline, not a committed transitive lock file.
@@ -59,7 +61,7 @@ Release build; after changing source, build again or omit no-build. The direct p
 
 ## What the checks establish
 
-Four test cases cover the file-based and project consumers:
+Four baseline test cases cover the file-based and project consumers:
 
 - Arguments preserve empty strings, spaces, quotes, trailing backslashes, Unicode, and option-like tokens.
   The consumer observes the selected working directory and executes on the .NET 10 runtime.
@@ -70,6 +72,9 @@ the repository, including a working-directory name with a space. Local Directory
 and Directory.Packages.props stop ancestor build/package imports. Both consumers explicitly select their own target and
 language settings; the file app explicitly disables Native AOT. The project links only the shared probe source.
 A temporary directory is deleted only after its test's launched processes and output reads have settled.
+
+The harness now also copies the parser fixture, with the root central package file placed beside that fixture to
+override the package-free baseline consumer settings. Its regression cases are described in the parser evaluation.
 
 The harness records SDK selection, build/run commands, working directory, exit code, stdout, and stderr in test output.
 Both fixtures are built through dotnet, then executed through dotnet run --file or --project with --no-build.
@@ -106,8 +111,10 @@ implementation commit 47299dbb223a8419c28204fb236c6d4817e757a6. The downloaded T
 Skipped: 0**. The retained windows-evaluation artifact includes SDK/OS/image details, the build binlog, and test output.
 Runner: Windows Server 2022 Datacenter build 20348, x64; win22 image 20261012.333.1; SDK 10.0.402;
 MSBuild 18.9.15+a8dd0577c. This run used the development fork's build-branch push event. Upstream Actions was enabled
-but did not create a run for the first workflow PR; verify the upstream main/PR triggers after this workflow merges.
+but did not create a run for the first workflow PR. After PR #6 merged, the upstream main push passed in
+[run 39486320504](https://github.com/sotsera/rafter/actions/runs/39486320504) at commit
+74dac6418a6da2a687b72f876bdeb3989783630c, confirming the main trigger. Subsequent PR checks are recorded on their PRs.
 The named Windows evaluation job is verified, but it has not been configured as a required merge check.
 
-Linux, macOS, Native AOT, package consumption, runtime/analyzer behavior, and parser/renderer compatibility remain
-unexecuted gates. Issues #2 and #3 will add their own meaningful compatibility checks to this harness.
+Linux, macOS, Native AOT, shipping-package consumption, runtime/analyzer behavior, and renderer compatibility remain
+unexecuted gates. Issue #2 adds [parser compatibility evidence](parser-evaluation.md); renderer checks follow in #3.

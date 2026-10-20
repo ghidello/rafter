@@ -1,7 +1,8 @@
 # Dependency decisions and implementation readiness
 
 Initial review: 2026-10-20. Dependency selection is an explicit part of the readiness review before scaffolding.
-The parser and renderer candidates below remain recommendations for evaluation, not adopted runtime packages.
+The parser evaluation now recommends adoption for the initial named-input slice; renderer evaluation remains pending.
+Neither package is part of a shipping runtime yet.
 Issue #1 now establishes the SDK and test-tool baseline; see the [evaluation harness](evaluation-harness.md)
 for exact versions, resolved dependencies, and observed results. Existing test-tool preferences remain in force.
 
@@ -10,7 +11,7 @@ for exact versions, resolved dependencies, and observed results. Existing test-t
 | Area | Initial direction | Status |
 | --- | --- | --- |
 | SDK and target framework | .NET 10 SDK 10.0.402, C# 14, and net10.0, with Windows x64 verification first. | Configured and locally verified for the evaluation harness; see its current CI results. |
-| CLI parsing | Evaluate `System.CommandLine` as an internal parsing component, with Rafter owning invocation, validation ordering, help, and diagnostics. | Source review completed for 2.0.13; recommended candidate, executable compatibility checks and adoption pending. |
+| CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 pinned in evaluation tooling; executable checks support adoption for the first named-input slice. See the parser evaluation for adapter requirements and limits. |
 | Terminal rendering | Prefer evaluating `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. Compare with `Spectre.Console.Ansi` alone and framework APIs. | Source review completed for 0.57.2; recommended candidate, executable compatibility/cost checks and adoption pending. |
 | Process execution | Start the assessment with framework process APIs plus platform ownership mechanisms. Evaluate a wrapper only if it fits ownership at launch, signalling, and output settlement. | Mechanism and any package remain pending. |
 | Analyzer development | Use Roslyn APIs; select compatible `Microsoft.CodeAnalysis` packages for the analyzer project and its host baseline. | Proposed tooling direction; versions and packaging pending. |
@@ -31,16 +32,16 @@ initial scope, with native AOT publishing a separate compatibility gate. Only ev
 
 ## Parser: first evaluation
 
-The [detailed parser review](parser-review.md) records findings from the stable 2.0.13 source and package metadata.
-It recommends a parsing-only integration, with explicit gates for empty-value handling and structured diagnostics.
-Default help behavior, bundling, response files, and directives must not silently become Rafter behavior. No candidate
-package has been executed or adopted yet.
+The [detailed parser review](parser-review.md) and [executable evaluation](parser-evaluation.md) record findings from
+System.CommandLine 2.0.13. The checks support a parsing-only integration with bounded adaptation for empty values,
+option boundaries, Boolean conversion, and safe diagnostics. Built-in help, bundling, response files, colon separators,
+and directives are explicitly controlled. The fixed evaluation adapter is not the Rafter runtime.
 
 Microsoft's documentation describes typed options, aliases, configurable arity, and parser defaults. It also documents
 root-command defaults such as help/version options. This makes `System.CommandLine` a reasonable candidate, but does
 not establish compatibility with Rafter's contract. [Official syntax documentation](https://learn.microsoft.com/en-us/dotnet/standard/commandline/syntax)
 
-Before adoption, check the candidate against these agreed behaviors:
+The evaluation covers these agreed behaviors; preserve them when implementing the runtime:
 
 - Normalized primary names and aliases, including explicitly preserved `-name` and `--n` spellings, case-sensitive
   matching, and declaration-order display. Do not inherit extra built-in aliases or directives without a decision.
@@ -53,8 +54,8 @@ Before adoption, check the candidate against these agreed behaviors:
   containing input values or invoke a parser-owned help/exception/shutdown pipeline.
 - Establish what malformed-input recovery can reliably aggregate; do not promise more than the parser can support.
 
-Use a small executable compatibility check after the evaluation work is scoped. Do not commit to a parser solely
-because it can parse the happy-path options example. A custom parser is a fallback to assess, not the automatic default.
+Keep the executable checks as regression evidence for upgrades and runtime integration. Reconsider the parser if new
+input types or grammar require extensive duplicate tokenization; a custom parser remains a fallback to assess.
 
 ## Rendering: second evaluation
 
@@ -103,8 +104,8 @@ and test-runner compatibility need their own checks; the newest compiler package
 
 The [GitHub workflow](github-workflow.md) is established and evaluation issues #1–#3 are published.
 [#1: the evaluation harness](https://github.com/sotsera/rafter/issues/1) is implemented in
-[PR #6](https://github.com/sotsera/rafter/pull/6), with local and Windows CI checks passing. Parser and renderer
-compatibility evaluations remain next; neither candidate is adopted by the harness work.
+[PR #6](https://github.com/sotsera/rafter/pull/6), with local and Windows CI checks passing. Issue #2 now provides
+parser compatibility evidence and an adoption recommendation. Renderer compatibility remains next under #3.
 
 Readiness sequence:
 
