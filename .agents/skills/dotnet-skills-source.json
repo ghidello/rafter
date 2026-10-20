@@ -1,0 +1,31 @@
+{
+  "repository": "https://github.com/dotnet/skills",
+  "revision": "cbb2bb74cb70e0c5ee49cca10470a92da03d4b25",
+  "files": [
+    {
+      "path": "csharp-scripts/SKILL.md",
+      "source": "plugins/dotnet-advanced/skills/csharp-scripts/SKILL.md",
+      "sha256": "acc0ea3c023127db9ef4be653686b543808597a252a1ab06a3754a3ae93572f9"
+    },
+    {
+      "path": "scaffold-dotnet-test-project/SKILL.md",
+      "source": "plugins/dotnet-test/skills/scaffold-dotnet-test-project/SKILL.md",
+      "sha256": "dfb06c39a27523f5135abd81fdc64ec86c200799af39d085b412510fb4c43683"
+    },
+    {
+      "path": "run-tests/SKILL.md",
+      "source": "plugins/dotnet-test/skills/run-tests/SKILL.md",
+      "sha256": "7b9698bb5c1f172ca35695dc3b614957c2cb8badf7b230a4b8118d173650fe2b"
+    },
+    {
+      "path": "run-tests/references/filter-syntax.md",
+      "source": "plugins/dotnet-test/skills/filter-syntax/SKILL.md",
+      "sha256": "64c294d0fc2d0c4d5887d391c6684429fc4d7a66b6b9f99a475e6abe390c5d19"
+    },
+    {
+      "path": "LICENSE.dotnet-skills",
+      "source": "LICENSE",
+      "sha256": "cfc21f5e8bd655ae997eec916138b707b1d290b83272c02a95c9f821b8c87310"
+    }
+  ]
+}
