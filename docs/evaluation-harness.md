@@ -33,6 +33,8 @@ xUnit's runner/core/assertion packages, xunit.analyzers 2.2.0, and the MTP telem
 These three test-tool references have PrivateAssets=all and the test project is not packable. There is no shipping project.
 Issue #2 adds System.CommandLine 2.0.13 as a fourth private evaluation reference; its net8.0 asset adds no transitive
 packages. See the [parser evaluation](parser-evaluation.md) for the candidate-specific graph and checks.
+Issue #3 adds a private Spectre.Console 0.57.2 evaluation reference, resolving Spectre.Console.Ansi 0.57.2. The renderer
+comparison also has separate file-app/project consumers for the full package, Ansi alone, and framework APIs.
 
 Versions and dependency ranges were inspected in official NuGet metadata before restore. The full resolved graph is
 reported by the command below. These explicit versions are a baseline, not a committed transitive lock file.
@@ -116,5 +118,7 @@ but did not create a run for the first workflow PR. After PR #6 merged, the upst
 74dac6418a6da2a687b72f876bdeb3989783630c, confirming the main trigger. Subsequent PR checks are recorded on their PRs.
 The named Windows evaluation job is verified, but it has not been configured as a required merge check.
 
-Linux, macOS, Native AOT, shipping-package consumption, runtime/analyzer behavior, and renderer compatibility remain
-unexecuted gates. Issue #2 adds [parser compatibility evidence](parser-evaluation.md); renderer checks follow in #3.
+Linux, macOS, Native AOT, shipping-package consumption, and runtime/analyzer behavior remain unexecuted gates.
+Issue #2 adds [parser compatibility evidence](parser-evaluation.md); #3 adds [renderer evidence](renderer-evaluation.md),
+including standalone scripts for terminal verification and timing measurements. Those terminal/timing scripts run
+separately from CI; ordinary CI captures the automated renderer and consumer tests in its TRX artifact.

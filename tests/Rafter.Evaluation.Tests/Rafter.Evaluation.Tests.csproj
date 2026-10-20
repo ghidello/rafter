@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" PrivateAssets="all" />
+    <PackageReference Include="Spectre.Console" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" PrivateAssets="all" />
     <PackageReference Include="xunit.v3.mtp-v2" PrivateAssets="all" />
   </ItemGroup>
@@ -20,9 +21,17 @@
   <ItemGroup>
     <Compile Include="../../fixtures/parser/CandidateAdapter.cs" Link="Parser/CandidateAdapter.cs" />
     <Compile Include="../../fixtures/parser/ParserCandidate.cs" Link="Parser/ParserCandidate.cs" />
+    <Compile Include="../../fixtures/renderer/shared/RendererDestination.cs" Link="Renderer/RendererDestination.cs" />
+    <Compile Include="../../fixtures/renderer/shared/HelpSamples.cs" Link="Renderer/HelpSamples.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="../../fixtures/renderer/**"
+          Exclude="../../fixtures/renderer/**/bin/**;../../fixtures/renderer/**/obj/**"
+          Link="Fixtures/renderer/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../Directory.Packages.props" Link="Fixtures/renderer/Directory.Packages.props"
+          CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/parser/**"
           Exclude="../../fixtures/parser/**/bin/**;../../fixtures/parser/**/obj/**"
           Link="Fixtures/parser/%(RecursiveDir)%(Filename)%(Extension)"

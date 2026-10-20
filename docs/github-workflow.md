@@ -12,7 +12,7 @@ API and the working workflow selected for this project. It does not claim that G
 | Local origin | git@github-ghidello:ghidello/rafter.git |
 | Acting GitHub account | ghidello; API reports admin/push permissions on both repositories |
 | Integration branch | Upstream main; both repositories use main as their default |
-| Parser evaluation base | Upstream main at 74dac6418a6da2a687b72f876bdeb3989783630c after PR #6 merged; fork main was not synchronized by this task |
+| Renderer evaluation base | Upstream main at ae3c889c9d60bfd230a42674f5aeda3d5ed1fd87 after PR #7 merged; fork main was not synchronized by this task |
 
 Upstream issues are enabled; fork issues are disabled. Create project issues and milestones upstream. Publish
 development branches on the fork and open PRs into sotsera/rafter:main. Do not change remotes or treat origin as upstream.
@@ -45,8 +45,8 @@ Milestone: [First working examples](https://github.com/sotsera/rafter/milestone/
 | --- | --- | --- |
 | [#4: Configure the initial .NET skills for Rafter](https://github.com/sotsera/rafter/issues/4) | Choose installation scope, install the three initial skills with their resources, and verify discovery. | Completed through PR #5. |
 | [#1: Establish the .NET 10 evaluation harness and Windows CI](https://github.com/sotsera/rafter/issues/1) | Configure the stable SDK/test baseline, publish design references, and establish real consumers and CI. | Completed through PR #6; upstream main CI passed. |
-| [#2: Verify System.CommandLine compatibility before adoption](https://github.com/sotsera/rafter/issues/2) | Prove the parsing contract and decide adoption from executable evidence. | Evaluation implemented; see parser results and the issue's PR. |
-| [#3: Verify Spectre.Console output compatibility and startup cost](https://github.com/sotsera/rafter/issues/3) | Prove stream/literal/plain behavior and assess renderer cost. | Depends on #1; independent of #2. |
+| [#2: Verify System.CommandLine compatibility before adoption](https://github.com/sotsera/rafter/issues/2) | Prove the parsing contract and decide adoption from executable evidence. | Completed through PR #7. |
+| [#3: Verify Spectre.Console output compatibility and startup cost](https://github.com/sotsera/rafter/issues/3) | Prove stream/literal/plain behavior and assess renderer cost. | Evaluation implemented; see renderer results and the issue's PR. |
 
 The issues contain the detailed acceptance checklists. Keep design rationale and accepted behavior in Markdown;
 record execution results and scoped completion in the issues/PRs without maintaining duplicate checklists.

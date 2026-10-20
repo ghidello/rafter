@@ -1,7 +1,7 @@
 # Dependency decisions and implementation readiness
 
 Initial review: 2026-10-20. Dependency selection is an explicit part of the readiness review before scaffolding.
-The parser evaluation now recommends adoption for the initial named-input slice; renderer evaluation remains pending.
+The parser and renderer evaluations now recommend their candidates for the initial named-input and output slices.
 Neither package is part of a shipping runtime yet.
 Issue #1 now establishes the SDK and test-tool baseline; see the [evaluation harness](evaluation-harness.md)
 for exact versions, resolved dependencies, and observed results. Existing test-tool preferences remain in force.
@@ -12,7 +12,7 @@ for exact versions, resolved dependencies, and observed results. Existing test-t
 | --- | --- | --- |
 | SDK and target framework | .NET 10 SDK 10.0.402, C# 14, and net10.0, with Windows x64 verification first. | Configured and locally verified for the evaluation harness; see its current CI results. |
 | CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 pinned in evaluation tooling; executable checks support adoption for the first named-input slice. See the parser evaluation for adapter requirements and limits. |
-| Terminal rendering | Prefer evaluating `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. Compare with `Spectre.Console.Ansi` alone and framework APIs. | Source review completed for 0.57.2; recommended candidate, executable compatibility/cost checks and adoption pending. |
+| Terminal rendering | Use `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. | 0.57.2 pinned in evaluation tooling; Windows terminal/consumer checks and cost comparison support adoption. |
 | Process execution | Start the assessment with framework process APIs plus platform ownership mechanisms. Evaluate a wrapper only if it fits ownership at launch, signalling, and output settlement. | Mechanism and any package remain pending. |
 | Analyzer development | Use Roslyn APIs; select compatible `Microsoft.CodeAnalysis` packages for the analyzer project and its host baseline. | Proposed tooling direction; versions and packaging pending. |
 | Tests | xUnit v3, Microsoft.Testing.Platform, and AwesomeAssertions, as specified in `AGENTS.md`. | xunit.v3.mtp-v2 4.0.2, MTP 2.5.1, AwesomeAssertions 9.6.0; local native-MTP run passed. |
@@ -59,18 +59,17 @@ input types or grammar require extensive duplicate tokenization; a custom parser
 
 ## Rendering: second evaluation
 
-The [detailed renderer review](renderer-review.md) recommends Spectre.Console provisionally, with separate destination
-instances and coordinated literal/plain output. It records two consequential defaults: CI enrichment can re-enable
-ANSI, and the non-ANSI backend skips WriteAnsi callbacks. Neither may override Rafter's output contract. The review
-also compares the smaller Spectre.Console.Ansi package. No package or terminal behavior has been executed or adopted.
+The [detailed renderer review](renderer-review.md) and [executable evaluation](renderer-evaluation.md) recommend
+Spectre.Console 0.57.2 with separate destination policies and coordinated literal/plain output. Tests cover the CI
+override and non-ANSI WriteAnsi no-op risks. Real terminal checks, captured help, and cost comparisons with Ansi-only
+and framework consumers now support adoption; this remains evaluation tooling rather than a shipping runtime.
 
 Spectre.Console documents styled rendering, console capability detection, and configuration overrides. These are useful
 building blocks for the selected help and output design. [Official rendering model](https://spectreconsole.net/console/explanation/understanding-rendering-model/)
 
-Check independent stdout/stderr destinations and capabilities, including stdout redirected while stderr stays styled.
-Verify plain output, literal text containing markup-like characters, original child/script indentation, narrow-width
-help, and full exception details. The dependency must support our flat layout rather than dictating a different UI.
-Do not assume default capability detection already satisfies independent-stream requirements.
+Preserve the evaluated independent stdout/stderr behavior, plain output, literal brackets, original child/script
+indentation, narrow help, and full exceptions when implementing the runtime. Do not replace the explicit policy with
+default capability detection or profile enrichment.
 
 The initial milestone does not need live dashboards or animation. Compare startup cost, package/transitive footprint,
 and implementation effort before selecting a general renderer or a small framework-based implementation. If using
@@ -105,7 +104,7 @@ and test-runner compatibility need their own checks; the newest compiler package
 The [GitHub workflow](github-workflow.md) is established and evaluation issues #1–#3 are published.
 [#1: the evaluation harness](https://github.com/sotsera/rafter/issues/1) is implemented in
 [PR #6](https://github.com/sotsera/rafter/pull/6), with local and Windows CI checks passing. Issue #2 now provides
-parser compatibility evidence and an adoption recommendation. Renderer compatibility remains next under #3.
+parser compatibility evidence and an adoption recommendation. Issue #3 adds renderer compatibility and cost evidence.
 
 Readiness sequence:
 

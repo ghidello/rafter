@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PublishAot>false</PublishAot>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../shared/RendererDestination.cs" Link="RendererDestination.cs" />
+    <Compile Include="../../shared/HelpSamples.cs" Link="HelpSamples.cs" />
+    <Compile Include="../../shared/RendererProbe.cs" Link="RendererProbe.cs" />
+    <Compile Include="../../shared/BenchmarkProbe.cs" Link="BenchmarkProbe.cs" />
+  </ItemGroup>
+</Project>

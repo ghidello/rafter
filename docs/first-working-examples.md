@@ -85,8 +85,9 @@ automatically prints process arguments or environment values, including in verbo
 disclosure/redaction is deferred. Refine remaining help/failure transcripts and further verbose content before the
 affected renderer work. Keep animation and machine-readable events for a later topic.
 
-The [Spectre.Console review](renderer-review.md) recommends a provisional internal renderer and identifies explicit
-literal/plain paths, independent stream capabilities, and CI overrides as compatibility checks before adoption.
+The [Spectre.Console review](renderer-review.md) and [executable evaluation](renderer-evaluation.md) now recommend
+0.57.2 with explicit literal/plain paths and independent stream policy. Windows terminal checks and startup/allocation
+measurements support the choice; child-ANSI policy and other platforms remain separate work.
 
 ### Input and declaration edge cases
 

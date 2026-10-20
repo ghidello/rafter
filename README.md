@@ -6,6 +6,8 @@ The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-base
 through xUnit v3 and Microsoft.Testing.Platform. It is evaluation tooling; the Rafter runtime is not implemented yet.
 The [parser evaluation](docs/parser-evaluation.md) records executable System.CommandLine compatibility checks and
 the recommended internal adapter.
+The [renderer evaluation](docs/renderer-evaluation.md) records real terminal checks, captured help, and the comparison
+between Spectre.Console, its Ansi-only package, and framework output.
 
 See the [example design plan](docs/example-design-plan.md) for the working approach, topic checklist, and open questions.
 The [first working examples milestone](docs/first-working-examples.md) proposes the initial implementation scope and remaining decisions.

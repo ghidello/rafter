@@ -1,10 +1,10 @@
 # Renderer review: Spectre.Console
 
-Reviewed 2026-10-20. Recommend `Spectre.Console` as the preferred internal renderer for Rafter-authored help and
-formatted messages, subject to executable compatibility and startup-cost checks. Preserve script/child text and
+Reviewed 2026-10-20. The [executable evaluation](renderer-evaluation.md) now recommends `Spectre.Console` 0.57.2
+as the internal renderer for Rafter-authored help and formatted messages. Preserve script/child text and
 full exception details through a literal output path. Keep presentation policy and output ownership in Rafter.
-This recommendation is provisional: no package was installed, no terminal checks or benchmarks ran, and no runtime
-implementation was added. The existing output design remains the accepted contract.
+The package is pinned in evaluation tooling, with real Windows terminal/consumer checks and startup/allocation
+measurements. No Rafter runtime implementation was added. The existing output design remains the accepted contract.
 
 ## Reviewed baseline
 
@@ -13,8 +13,8 @@ and netstandard2.0 assets. The modern .NET assets depend on `Spectre.Console.Ans
 also lists Microsoft.Bcl.TimeProvider and System.Memory. The package download is about 2.13 MB; that is not a measure
 of consumer deployment size, loaded memory, or startup time. [Package metadata](https://www.nuget.org/packages/Spectre.Console/0.57.2)
 
-Findings below use upstream tag `0.57.2`. No upstream code was copied. The eventual restored dependency graph and
-selected framework still need verification.
+Findings below use upstream tag `0.57.2`, commit `bbbb5729dde27b58deee44f447a788eea46ee451`. No upstream code was copied.
+The evaluated net10.0 graph resolves Spectre.Console.Ansi 0.57.2 with no further dependencies.
 
 ## Fit against Rafter's output contract
 
@@ -46,11 +46,11 @@ No Spectre.Console.Cli, prompts, live displays, global console replacement, or e
 Use layout only where wrapping is intentional. For literal content, write the original text through a coordinated
 destination writer; terminal prefixes can be styled separately and reset before the original text. The terminal may
 visually wrap long lines, but Rafter must not insert layout-driven newlines into that content. This is a text-preservation
-requirement, not a newly promised byte-for-byte process capture API. Partial lines, carriage returns, and child ANSI
-behavior still need explicit implementation checks and any unresolved policy decisions.
+requirement, not a newly promised byte-for-byte process capture API. The evaluation now checks partial lines and
+carriage-return preservation; production child-ANSI policy and actual process-capture integration remain open.
 
-Plain/redirected output must bypass the legacy backend's global Console color changes and the WriteAnsi no-op.
-Framework help may still use measured plain layout, provided the implementation writes its resulting text without
+The evaluated adapter bypasses the legacy backend's global Console color changes and the WriteAnsi no-op by rendering
+through public IRenderable APIs and writing the resulting segments. Framework help uses measured plain layout without
 styling side effects. Do not crop long identifiers or hide full exception details to satisfy a narrow width.
 
 Capability checks recognize standard writers by identity; wrapping a writer before detection can change the result.
@@ -59,8 +59,8 @@ changing the host's global encoding as an incidental renderer setup step.
 [Writer identity checks](https://github.com/spectreconsole/spectre.console/blob/0.57.2/src/Spectre.Console/Extensions/Bcl/TextWriterExtensions.cs)
 
 `NO_COLOR` disables colors in the reviewed detector, but does not itself mean that all ANSI decoration is disabled.
-Recommend respecting it for color and keeping `--plain` as the explicit complete presentation override. This environment
-policy is proposed, not an additional accepted requirement.
+We confirmed respecting a nonempty value for color and keeping `--plain` as the explicit complete presentation override.
+The evaluation verifies retained emphasis/prefixes and independent redirection.
 [Color detection](https://github.com/spectreconsole/spectre.console/blob/0.57.2/src/Spectre.Console.Ansi/ColorSystemDetector.cs)
 
 ## Alternatives and cost
@@ -88,5 +88,6 @@ The detailed acceptance checklist now lives in
 depending on the harness in #1. Retain the output contract above and check actual captured text, not just screenshots
 or stripped-color snapshots. Record terminal environments and separate restore/build overhead from runtime cost.
 
-No executable adoption check has run. The source review supports evaluating Spectre.Console with these explicit boundaries; it does
-not establish terminal compatibility or justify pinning a production dependency yet.
+The [evaluation record](renderer-evaluation.md) supersedes the earlier source-only status. It records executable
+checks, captured help, cost comparison, and remaining limits. The candidate remains internal; adopting it does not
+also adopt Spectre.Console.Cli or its live UI features, and does not claim cross-platform verification.

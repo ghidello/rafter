@@ -2,7 +2,8 @@
 
 Current design direction, accepted for now on 2026-10-19. Refine it through examples as implementation progresses.
 This replaces the initial proposal and its inline preview. Transcripts below are illustrative, not captured executions.
-No library or renderer has been implemented.
+No Rafter runtime renderer has been implemented. The separate [renderer evaluation](renderer-evaluation.md) now
+provides executable checks and [captured help samples](renderer-samples.md) alongside these illustrative transcripts.
 
 The [example design plan](example-design-plan.md) defines execution behavior and exit codes. The old output explorations
 are preserved in [reference/output](../reference/output/README.md). The new
@@ -81,6 +82,10 @@ configuration API. This policy governs Rafter-authored process metadata; it does
 by scripts or child tools. Exception details follow the agreed failure policy below, including full unexpected callback
 exception details. The policy is not a blanket guarantee that arbitrary exception messages contain no sensitive data.
 These controls do not introduce a live renderer into the first milestone; animation remains deferred.
+
+During the renderer evaluation, we also agreed to respect a **nonempty `NO_COLOR` environment variable** by disabling
+Rafter's colors. This does not itself disable emphasis or terminal presentation prefixes. `--plain` remains the complete
+presentation override, and redirected destinations remain plain independently of `NO_COLOR` and CI environment variables.
 
 ## Minimal success
 
