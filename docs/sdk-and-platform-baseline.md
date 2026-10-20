@@ -5,7 +5,8 @@ and a single net10.0 runtime-library target**. Start verification on Windows x64
 before making corresponding support claims. This is a planning recommendation, not a completed compatibility check.
 No SDK was installed, no global.json or project was created, and no Rafter code was compiled during the initial review.
 Subsequent issue #1 work now implements this baseline for the [evaluation harness](evaluation-harness.md), which records
-the current configuration and observed results. Inventory observations below describe the pre-scaffolding state.
+the current configuration and observed results. Issue #9 extends it to the [minimal runtime](minimal-runtime.md).
+Inventory observations below describe the pre-scaffolding state.
 
 ## Why .NET 10
 

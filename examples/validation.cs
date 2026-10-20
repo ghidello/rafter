@@ -1,4 +1,4 @@
-// Syntax draft: the new Rafter library is not implemented yet.
+// Syntax draft: typed inputs and validation rules are not implemented yet.
 using Sotsera.Rafter;
 
 var command = Rafter.Command("Describe a range after validating its bounds and optional label.");

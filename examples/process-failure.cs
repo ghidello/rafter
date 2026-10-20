@@ -1,4 +1,4 @@
-// Syntax draft: the new Rafter library is not implemented yet.
+// Syntax draft: typed inputs and external processes are not implemented yet.
 using Sotsera.Rafter;
 
 var command = Rafter.Command("Build a project and inspect an unsuccessful result before leaving the body.");
@@ -11,7 +11,7 @@ return await command.RunAsync(args, async context =>
 {
     var result = await context.Process("dotnet")
         .Arguments("build", context.GetValue(project))
-        .OnFailure(result => ProcessFailureAction.Fail)
+        .OnFailure(_ => ProcessFailureAction.Fail)
         .RunAsync();
 
     if (!result.Succeeded)

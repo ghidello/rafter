@@ -1,6 +1,7 @@
 # Rafter roots and paths
 
-Agreed design for the new Rafter. Implementation is pending.
+Agreed design for the new Rafter. The [minimal runtime](minimal-runtime.md) implements per-invocation root capture;
+process/path APIs and explicit roots remain pending. The captured root is currently internal to the invocation.
 
 ## Default root
 
@@ -11,9 +12,10 @@ The script's location does not determine the default root.
 ```csharp
 var command = Rafter.Command("Print a greeting.");
 
-return await command.RunAsync(
-    args,
-    context => context.WriteLine("Hello from Rafter."));
+return await command.RunAsync(args, context =>
+{
+    context.WriteLine("Hello from Rafter.");
+});
 ```
 
 The root is captured when `RunAsync` starts, rather than when `Rafter.Command(description)` is declared. Each invocation captures

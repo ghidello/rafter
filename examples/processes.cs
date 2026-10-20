@@ -1,4 +1,4 @@
-// Syntax draft: the new Rafter library is not implemented yet.
+// Syntax draft: external processes are not implemented yet.
 using Sotsera.Rafter;
 
 var command = Rafter.Command("Display the installed .NET SDK version.");

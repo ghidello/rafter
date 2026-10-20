@@ -44,10 +44,12 @@ internal sealed class IsolatedConsumer : IDisposable
         version.Minor.Should().Be(0);
         version.Build.Should().BeInRange(402, 499);
 
-        var build = await ExecuteAsync("build", _entryPoint, "--configuration", "Release",
-            "--verbosity", "minimal", "--disable-build-servers");
+        var build = await CompileAsync();
         build.ExitCode.Should().Be(0, "the isolated consumer must build: {0}", build.StandardError);
     }
+
+    public Task<ProcessResult> CompileAsync() => ExecuteAsync("build", _entryPoint, "--configuration", "Release",
+        "--verbosity", "minimal", "--disable-build-servers");
 
     public Task<ProcessResult> RunAsync(params string[] arguments)
     {

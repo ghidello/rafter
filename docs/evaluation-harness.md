@@ -1,7 +1,8 @@
 # Evaluation harness
 
 Issue [#1](https://github.com/sotsera/rafter/issues/1) establishes the environment for the parser and renderer evaluations.
-It does not implement the Rafter runtime. The seven files in examples remain syntax drafts; reference contains historical
+That issue did not implement the runtime. Issue #9 now adds the [minimal runtime](minimal-runtime.md), referenced by
+the same test entry point. examples/minimal.cs runs; the other six examples remain drafts. Reference contains historical
 snapshots, and the HTML previews show illustrative output.
 
 ## Review using the installed skills
@@ -30,7 +31,8 @@ global.json selects SDK 10.0.402 with latestPatch and allowPrerelease=false. Thi
 Versions live in Directory.Packages.props. The xUnit v3 product uses a 4.x package version; this does not select xUnit v2
 or a different testing framework. MTP and MTP.MSBuild resolve transitively to 2.5.1. Other transitive packages include
 xUnit's runner/core/assertion packages, xunit.analyzers 2.2.0, and the MTP telemetry dependencies.
-These three test-tool references have PrivateAssets=all and the test project is not packable. There is no shipping project.
+These three test-tool references have PrivateAssets=all and the test project is not packable. The separate runtime project
+does not reference them and is also non-packable until the packaging slice.
 Issue #2 adds System.CommandLine 2.0.13 as a fourth private evaluation reference; its net8.0 asset adds no transitive
 packages. See the [parser evaluation](parser-evaluation.md) for the candidate-specific graph and checks.
 Issue #3 adds a private Spectre.Console 0.57.2 evaluation reference, resolving Spectre.Console.Ansi 0.57.2. The renderer
@@ -96,6 +98,12 @@ for 14 days even when a later step fails. Workflow permissions are contents: rea
 
 CI uses the same restore, Release build, and native-MTP test commands shown above. The named baseline SDK is installed
 from global.json. Runner images can contain additional SDK servicing patches; the resolved version is recorded.
+
+The actions now pin checkout v7.0.1, setup-dotnet v6.0.0, and upload-artifact v7.0.2 by commit SHA. Their action
+definitions use Node.js 24. This replaces the original v4 pins after GitHub reported deprecated Node.js 20 actions
+being forced onto Node.js 24. The inspected hosted runner was 2.337.0, above the documented 2.327.1 minimum.
+The workflow uses ordinary pull_request events, compatible with checkout's updated fork safeguards, and retains
+upload-artifact's default zipped format. PR checks verify execution and artifact retrieval after the upgrade.
 
 ## Observed results
 

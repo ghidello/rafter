@@ -2,7 +2,7 @@
 
 Initial review: 2026-10-20. Dependency selection is an explicit part of the readiness review before scaffolding.
 The parser and renderer evaluations now recommend their candidates for the initial named-input and output slices.
-Neither package is part of a shipping runtime yet.
+Issue #9 adopts both internally in the [minimal runtime](minimal-runtime.md); no package has been published.
 Issue #1 now establishes the SDK and test-tool baseline; see the [evaluation harness](evaluation-harness.md)
 for exact versions, resolved dependencies, and observed results. Existing test-tool preferences remain in force.
 
@@ -10,9 +10,9 @@ for exact versions, resolved dependencies, and observed results. Existing test-t
 
 | Area | Initial direction | Status |
 | --- | --- | --- |
-| SDK and target framework | .NET 10 SDK 10.0.402, C# 14, and net10.0, with Windows x64 verification first. | Configured and locally verified for the evaluation harness; see its current CI results. |
-| CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 pinned in evaluation tooling; executable checks support adoption for the first named-input slice. See the parser evaluation for adapter requirements and limits. |
-| Terminal rendering | Use `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. | 0.57.2 pinned in evaluation tooling; Windows terminal/consumer checks and cost comparison support adoption. |
+| SDK and target framework | .NET 10 SDK 10.0.402, C# 14, and net10.0, with Windows x64 verification first. | Configured for the harness and minimal runtime; see their recorded results. |
+| CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 adopted for runtime controls. Typed-input integration remains pending; retain the parser evaluation's adapter requirements. |
+| Terminal rendering | Use `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. | 0.57.2 adopted for body-only runtime output, with Ansi 0.57.2 as its only transitive package. |
 | Process execution | Start the assessment with framework process APIs plus platform ownership mechanisms. Evaluate a wrapper only if it fits ownership at launch, signalling, and output settlement. | Mechanism and any package remain pending. |
 | Analyzer development | Use Roslyn APIs; select compatible `Microsoft.CodeAnalysis` packages for the analyzer project and its host baseline. | Proposed tooling direction; versions and packaging pending. |
 | Tests | xUnit v3, Microsoft.Testing.Platform, and AwesomeAssertions, as specified in `AGENTS.md`. | xunit.v3.mtp-v2 4.0.2, MTP 2.5.1, AwesomeAssertions 9.6.0; local native-MTP run passed. |
@@ -28,7 +28,7 @@ The [SDK and platform review](sdk-and-platform-baseline.md) recommends .NET 10 S
 net10.0 runtime target. The evaluation harness now pins the documented SDK policy and locally resolves 10.0.402.
 Begin verification on Windows x64, then establish Linux/macOS
 evidence before claiming support there; process ownership needs platform-specific checks. Managed execution is the
-initial scope, with native AOT publishing a separate compatibility gate. Only evaluation/test build configuration exists.
+initial scope, with native AOT publishing a separate compatibility gate. The minimal runtime now uses this baseline too.
 
 ## Parser: first evaluation
 
@@ -62,7 +62,8 @@ input types or grammar require extensive duplicate tokenization; a custom parser
 The [detailed renderer review](renderer-review.md) and [executable evaluation](renderer-evaluation.md) recommend
 Spectre.Console 0.57.2 with separate destination policies and coordinated literal/plain output. Tests cover the CI
 override and non-ANSI WriteAnsi no-op risks. Real terminal checks, captured help, and cost comparisons with Ansi-only
-and framework consumers now support adoption; this remains evaluation tooling rather than a shipping runtime.
+and framework consumers support adoption. The minimal runtime now implements the body-only portion of this integration;
+the evaluation fixtures remain independent evidence for the broader output design.
 
 Spectre.Console documents styled rendering, console capability detection, and configuration overrides. These are useful
 building blocks for the selected help and output design. [Official rendering model](https://spectreconsole.net/console/explanation/understanding-rendering-model/)

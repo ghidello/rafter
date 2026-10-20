@@ -1,4 +1,4 @@
-// Syntax draft: the new Rafter library is not implemented yet.
+// Syntax draft: targets and external processes are not implemented yet.
 // Assumes the command root contains a buildable project or solution with tests.
 using Sotsera.Rafter;
 

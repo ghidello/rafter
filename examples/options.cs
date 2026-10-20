@@ -1,4 +1,4 @@
-// Syntax draft: the new Rafter library is not implemented yet.
+// Syntax draft: typed inputs are not implemented yet.
 using Sotsera.Rafter;
 
 var command = Rafter.Command("Print a personalized greeting.");
@@ -20,6 +20,7 @@ return await command.RunAsync(args, context =>
     var recipient = context.GetValue(name);
     var count = context.GetValue(repeat);
     var useUppercase = context.GetValue(uppercase);
+
     var greeting = $"Hello, {recipient}!";
 
     if (useUppercase)

@@ -66,7 +66,7 @@ into smaller scopes when needed; agreement on basic inputs, for example, does no
 
 | Topic | Drafted | Agreed | Implemented | Verified |
 | --- | --- | --- | --- | --- |
-| Minimal script | ✓ | — | — | — |
+| Minimal script | ✓ | ✓ | ✓ | ✓ |
 | Roots and paths | — | — | — | — |
 | Typed inputs | ✓ | — | — | — |
 | Input validation | ✓ | ✓ | — | — |
@@ -189,13 +189,13 @@ full exception details, and plain output retains all wording without color. This
 
 The topic is partially drafted and agreed. The new [HTML comparison](output-preview.html) contains 23 illustrative
 scenarios with terminal/plain, stream, verbosity, and width controls. Remaining diagnostic wording
-remains proposed for review. Renderer implementation and runtime verification remain pending. Neither historical
-previews nor the new synthetic fixtures verify this project's runtime behavior.
+remains proposed for review. The [minimal runtime](minimal-runtime.md) now verifies body-only output and help;
+targets/processes remain pending. Historical previews and synthetic fixtures are not runtime evidence.
 
 ### Minimal script
 
-Scenario: print a greeting using a single command. The syntax draft is [examples/minimal.cs](../examples/minimal.cs).
-It is not runnable until the new library and its reference are in place.
+Scenario: print a greeting using a single command. [examples/minimal.cs](../examples/minimal.cs) is now runnable
+against the new runtime through a project reference. See [implementation and verification](minimal-runtime.md).
 
 Agreed:
 
@@ -225,9 +225,10 @@ Agreed:
 Open questions:
 
 - What analyzer scope, severity, and packaging should enforce nonblank descriptions during authoring?
-- Cancellation and timeout policies will be discussed with their dedicated topic.
+- Timeout policies and broader process cancellation remain in their dedicated topic. Cooperative managed cancellation
+  is implemented for the body-only invocation.
 
-The topic remains pending agreement as a whole.
+The body-only scope is implemented and verified. Analyzer authoring feedback and the target invocation form remain separate work.
 
 #### Description validation
 
@@ -243,7 +244,7 @@ only string literals. Do not reject a dynamic expression merely because its valu
 
 Requiring the description argument at command creation handles omission through the API itself, without analyzing
 fluent call sequences. The analyzer proposal concerns invalid argument values. Analyzer scope, severity, packaging,
-and exact diagnostic wording remain pending agreement; neither validation nor an analyzer is implemented yet.
+and exact diagnostic wording remain pending agreement. Command description validation is implemented; analyzers are not.
 
 #### Invocation behavior
 
@@ -255,7 +256,7 @@ Task<int> RunAsync(string[] args, Func<RafterContext, Task> body);
 Task<int> RunAsync(string[] args, Target target, params Target[] additionalTargets);
 ```
 
-These are the agreed public signature shapes; the library has not been implemented.
+These are the agreed public signature shapes. The two body overloads are implemented; the target overload is pending.
 For a body invocation, validate and then execute the supplied callback. For a target invocation, validate and then
 execute the selected dependency graph. Validation and help execute neither form's work callbacks.
 
@@ -282,7 +283,7 @@ runtime failure or forced termination. No exit result can be promised when the p
 
 Cancellation uses exit `130` when cleanup succeeds and no unhandled or recorded execution failure remains. Execution
 failures and unconfirmed process/output settlement take precedence with exit `1`, as described below. Timeout policy
-remains open. Implementation is pending.
+remains open. Managed body cancellation is implemented; process cancellation remains pending.
 
 #### Help and validation
 
@@ -310,7 +311,7 @@ resolving relative paths against the command root and using absolute paths direc
 root or the script process's working directory. See the external-process notes and root guide for examples.
 
 Explicit root syntax, source-directory discovery, path validation, and executable-path resolution remain open.
-The broader topic is not yet complete; implementation and verification are pending.
+Per-invocation root capture is implemented and verified. The broader path/process topic remains pending.
 
 ### Invalid values and repeated callback configuration
 
@@ -337,7 +338,7 @@ errors are not initial command declaration failures with exit `2`.
 
 Scenario: print a personalized greeting with a required name, defaulted repeat count, and defaulted uppercase flag.
 The syntax draft is [examples/options.cs](../examples/options.cs), including declarations and the greeting body.
-It remains non-runnable until the new library is implemented.
+It remains non-runnable until the typed-input runtime slice is implemented.
 
 Agreed declaration syntax and behavior:
 

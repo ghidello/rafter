@@ -1,9 +1,19 @@
 # Rafter by Sotsera
 
-Rafter is being designed afresh through small C# automation examples.
+Rafter is being built afresh through small C# automation examples.
+
+The first [runtime slice](docs/minimal-runtime.md) runs body-only commands with validation, help, direct output,
+exception containment, and cooperative managed cancellation. Try the real [minimal example](examples/minimal.cs):
+
+```powershell
+dotnet run --file examples/minimal.cs -- --help
+dotnet run --file examples/minimal.cs -- --quiet
+```
+
+Options, targets, processes, analyzers, and packaging remain separate work; their examples are still syntax drafts.
 
 The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-based and project-consumer checks
-through xUnit v3 and Microsoft.Testing.Platform. It is evaluation tooling; the Rafter runtime is not implemented yet.
+through xUnit v3 and Microsoft.Testing.Platform. It also verifies the runtime through a production project reference.
 The [parser evaluation](docs/parser-evaluation.md) records executable System.CommandLine compatibility checks and
 the recommended internal adapter.
 The [renderer evaluation](docs/renderer-evaluation.md) records real terminal checks, captured help, and the comparison

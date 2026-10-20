@@ -45,4 +45,23 @@
     <None Include="../../global.json" Link="Fixtures/global.json" CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../NuGet.Config" Link="Fixtures/NuGet.Config" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../../src/Sotsera.Rafter/**"
+          Exclude="../../src/Sotsera.Rafter/**/bin/**;../../src/Sotsera.Rafter/**/obj/**"
+          Link="Fixtures/src/Sotsera.Rafter/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/runtime/**"
+          Exclude="../../fixtures/runtime/**/bin/**;../../fixtures/runtime/**/obj/**"
+          Link="Fixtures/fixtures/runtime/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/minimal.cs" Link="Fixtures/examples/minimal.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../Directory.Packages.props" Link="Fixtures/Directory.Packages.props"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
