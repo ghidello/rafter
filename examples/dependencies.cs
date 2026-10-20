@@ -1,4 +1,4 @@
-// Syntax draft: targets and external processes are not implemented yet.
+// Syntax draft: external processes are not implemented yet; targets.cs runs a callback-only graph.
 // Assumes the command root contains a buildable project or solution with tests.
 using Sotsera.Rafter;
 

@@ -71,7 +71,7 @@ into smaller scopes when needed; agreement on basic inputs, for example, does no
 | Typed inputs | ✓ | Partial | Partial | Partial |
 | Input validation | ✓ | ✓ | ✓ | ✓ |
 | Environment inputs | — | — | — | — |
-| Targets and dependencies | ✓ | ✓ | — | — |
+| Targets and dependencies | ✓ | ✓ | Partial | Partial |
 | Conditional execution | — | — | — | — |
 | Output and diagnostics | Partial | Partial | — | — |
 | Failures | — | — | — | — |
@@ -190,7 +190,8 @@ full exception details, and plain output retains all wording without color. This
 The topic is partially drafted and agreed. The new [HTML comparison](output-preview.html) contains 23 illustrative
 scenarios with terminal/plain, stream, verbosity, and width controls. Remaining diagnostic wording
 remains proposed for review. The [minimal runtime](minimal-runtime.md) now verifies body-only output and help;
-targets/processes remain pending. Historical previews and synthetic fixtures are not runtime evidence.
+[target output](targets.md) is now implemented too; processes remain pending. Historical previews and synthetic
+fixtures are not runtime evidence.
 
 ### Minimal script
 
@@ -228,7 +229,8 @@ Open questions:
 - Timeout policies and broader process cancellation remain in their dedicated topic. Cooperative managed cancellation
   is implemented for the body-only invocation.
 
-The body-only scope is implemented and verified. Analyzer authoring feedback and the target invocation form remain separate work.
+The body-only scope and [target invocation form](targets.md) are implemented and verified. Analyzer authoring feedback
+remains separate work.
 
 #### Description validation
 
@@ -256,7 +258,7 @@ Task<int> RunAsync(string[] args, Func<RafterContext, Task> body);
 Task<int> RunAsync(string[] args, Target target, params Target[] additionalTargets);
 ```
 
-These are the agreed public signature shapes. The two body overloads are implemented; the target overload is pending.
+These are the agreed public signature shapes. The two body overloads and the required-entry target overload are implemented.
 For a body invocation, validate and then execute the supplied callback. For a target invocation, validate and then
 execute the selected dependency graph. Validation and help execute neither form's work callbacks.
 
@@ -760,8 +762,10 @@ Implementation and real-process verification remain pending.
 
 ### Targets and dependencies
 
-Scenario: build a project and then run its tests through a dependency-only grouping target. The syntax draft is
-[examples/dependencies.cs](../examples/dependencies.cs). Implementation and verification are pending.
+Scenario: build a project and then run its tests through a dependency-only grouping target. The process-based draft is
+[examples/dependencies.cs](../examples/dependencies.cs). The [callback-based target slice](targets.md) implements
+sequential graph execution now, demonstrated by [examples/targets.cs](../examples/targets.cs). External-process
+integration and analyzer coverage remain pending.
 
 Agreed execution shape:
 
@@ -828,7 +832,8 @@ Agreed nonempty invocation contract:
   without executing its work. There is no separate no-work invocation form for help.
 - Compiler enforcement of argument presence does not replace runtime validation of nulls, ownership, and graph validity.
 
-The target and dependency design above is agreed. Implementation, analyzer coverage, and verification remain pending.
+The target and dependency design above is agreed. Callback-based graph execution is implemented and verified in the
+[target runtime record](targets.md); analyzer coverage and the build/test process workflow remain pending.
 
 ### Proposed automatic namespace import
 

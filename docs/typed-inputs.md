@@ -86,6 +86,6 @@ A real Windows pseudoterminal run of options.cs help confirmed blue names, laven
 With NO_COLOR set it retained bold emphasis without colors. Automated captures verify plain literal output and
 48/100-column wrapping. GitHub CI evidence is recorded in the PR.
 
-Targets, processes,
+Targets were outside this slice and are now implemented separately in the [target runtime](targets.md). Processes,
 environment inputs, async resolution, additional types, analyzers, NuGet/global-usings integration, native AOT,
 and Linux/macOS verification remain outside this slice.

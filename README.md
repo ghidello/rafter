@@ -18,7 +18,16 @@ dotnet run --file examples/options.cs -- --name Ada --repeat 2
 dotnet run --file examples/validation.cs -- --minimum 3 --maximum 5
 ```
 
-Targets, processes, analyzers, and packaging remain separate work; the four remaining examples are syntax drafts.
+The [target slice](docs/targets.md) adds sequential targets, dependency groups, graph validation, and target-aware
+help/output. Try its callback-based [example](examples/targets.cs):
+
+```powershell
+dotnet run --file examples/targets.cs -- --name Ada
+dotnet run --file examples/targets.cs -- --help
+```
+
+Processes, analyzers, and packaging remain separate work. The four process-based examples are still syntax drafts,
+including the build/test dependency workflow.
 
 The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-based and project-consumer checks
 through xUnit v3 and Microsoft.Testing.Platform. It also verifies the runtime through a production project reference.

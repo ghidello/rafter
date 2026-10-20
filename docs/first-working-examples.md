@@ -8,7 +8,8 @@ requiring another broad redesign. Some observable behavior still needs decisions
 
 The [example design plan](example-design-plan.md) remains the source of agreed API behavior. Recommendations below
 are proposals, not additional accepted requirements. The [minimal runtime](minimal-runtime.md) implements body-only
-invocations; typed inputs, targets, processes, analyzers, and packaging remain pending.
+invocations; [typed inputs](typed-inputs.md) and [callback targets](targets.md) are now implemented too.
+Processes, analyzers, and packaging remain pending.
 The [dependency review](dependency-decisions.md) records the initial shortlist and compatibility checks to complete
 before adopting packages. Dependency selection is part of readiness, not an incidental scaffolding choice.
 
@@ -26,7 +27,8 @@ before adopting packages. Dependency selection is part of readiness, not an inci
 
 No obsolete command `.Run(...)`, `context.Output`, or `context.Value(...)` calls remain in these drafts. Explicit
 namespace imports remain intentionally: automatic imports are still a packaging proposal. Package/project reference
-directives are present in minimal.cs; the other six examples remain syntax drafts until their runtime slices arrive.
+directives are present in minimal.cs, options.cs, validation.cs, and the added callback-based targets.cs.
+The four process-based examples remain drafts until process execution is implemented.
 
 Important boundaries to preserve during implementation:
 
@@ -207,14 +209,15 @@ the examples.
 
 The initial [evaluation issues](github-workflow.md#published-initial-work) are complete. Minimal invocation is scoped in
 [#9](https://github.com/sotsera/rafter/issues/9), and typed inputs/validation in
-[#11](https://github.com/sotsera/rafter/issues/11); the remaining rows are outlines. Detailed acceptance checklists live in
+[#11](https://github.com/sotsera/rafter/issues/11), and callback target graphs in
+[#13](https://github.com/sotsera/rafter/issues/13); the remaining rows are outlines. Detailed acceptance checklists live in
 the scoped issues, with links here and to design notes rather than parallel copies of the same checklist.
 
 | Work item | Concrete completion evidence |
 | --- | --- |
 | [Minimal invocation (#9)](https://github.com/sotsera/rafter/issues/9) | [Implemented body-only runtime](minimal-runtime.md), separate runtime/test boundaries, real minimal file app and regular consumer, sync/awaited async bodies, root capture, help, description errors, contained exceptions, and managed cancellation. Analyzer project and packaging remain in their later slice. |
 | [Typed inputs and validation (#11)](https://github.com/sotsera/rafter/issues/11) | [Implemented runtime](typed-inputs.md): options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
-| Execute target graphs | Dependency example runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. |
+| [Target graphs (#13)](https://github.com/sotsera/rafter/issues/13) | [Callback target example](targets.md) runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. The build/test process example remains pending. |
 | Execute and own external processes | Real child fixtures verify tokens, cwd, environment isolation, accepted/rejected exits, all failure actions, launch/output errors, and selected interruption/settlement behavior. |
 | Deliver authoring diagnostics and local package | Analyzer positives and false-positive checks, fresh package-only file-app/project consumers, selected namespace-import behavior, and editor feedback are verified. |
 

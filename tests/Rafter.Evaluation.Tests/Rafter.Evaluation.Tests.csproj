@@ -65,6 +65,8 @@
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/validation.cs" Link="Fixtures/examples/validation.cs"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/targets.cs" Link="Fixtures/examples/targets.cs"
+          CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../Directory.Packages.props" Link="Fixtures/Directory.Packages.props"
           CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

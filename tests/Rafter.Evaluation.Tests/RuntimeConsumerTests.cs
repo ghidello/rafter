@@ -22,6 +22,17 @@ public sealed class RuntimeConsumerTests
         typed.StandardOutput.Should().Be("Ada:4:False:::" + Environment.NewLine);
         typed.StandardError.Should().BeEmpty();
 
+        var targets = await consumer.RunAsync("targets", "--name=Ada", "--quiet");
+        targets.ExitCode.Should().Be(0);
+        targets.StandardOutput.Should().Be("First: Ada" + Environment.NewLine + "Second: Ada" + Environment.NewLine);
+        targets.StandardError.Should().BeEmpty();
+
+        var targetFailure = await consumer.RunAsync("targets-failure", "--quiet");
+        targetFailure.ExitCode.Should().Be(1);
+        targetFailure.StandardOutput.Should().Be("First: Rafter" + Environment.NewLine);
+        targetFailure.StandardError.Should().Contain("Target 'first' failed").And.Contain("stopped in first")
+            .And.Contain("InvalidOperationException").And.NotContain("[OK]");
+
         var asynchronous = await consumer.RunAsync("async", "--quiet");
         asynchronous.ExitCode.Should().Be(0);
         asynchronous.StandardOutput.Should().Be("Async body finished." + Environment.NewLine);

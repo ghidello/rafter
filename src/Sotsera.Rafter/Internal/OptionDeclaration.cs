@@ -147,18 +147,9 @@ internal sealed record OptionSnapshot(
         }
         var prefixLength = name.TakeWhile(character => character == '-').Count();
         var bare = name[prefixLength..];
-        if (prefixLength > 2 || bare.Length == 0 || bare[0] is < 'a' or > 'z' || bare[^1] == '-')
+        if (prefixLength > 2 || !DeclarationName.IsValid(bare))
         {
             return null;
-        }
-        for (var index = 0; index < bare.Length; index++)
-        {
-            var character = bare[index];
-            if (character is not (>= 'a' and <= 'z' or >= '0' and <= '9' or '-')
-                || (character == '-' && index > 0 && bare[index - 1] == '-'))
-            {
-                return null;
-            }
         }
         return prefixLength > 0 ? name : (bare.Length == 1 ? "-" : "--") + bare;
     }

@@ -2,7 +2,8 @@
 
 Current design direction, accepted for now on 2026-10-19. Refine it through examples as implementation progresses.
 This replaces the initial proposal and its inline preview. Transcripts below are illustrative, not captured executions.
-The [minimal runtime](minimal-runtime.md) implements body-only output and help. Targets and processes remain pending.
+The [minimal runtime](minimal-runtime.md) implements body-only output and help; [typed inputs](typed-inputs.md) and
+[targets](targets.md) extend it with dynamic metadata and graph output. Process output remains pending.
 The separate [renderer evaluation](renderer-evaluation.md) provides broader executable checks and
 [captured help samples](renderer-samples.md) alongside these illustrative transcripts.
 

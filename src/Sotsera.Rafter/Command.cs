@@ -11,6 +11,7 @@ public sealed class Command
     private readonly object _declarationGate = new();
     private readonly List<OptionDeclaration> _options = [];
     private readonly List<CombinedRule> _rules = [];
+    private readonly List<Target> _targets = [];
 
     internal Command(string description, Func<InvocationHost>? captureHost = null)
     {
@@ -26,6 +27,17 @@ public sealed class Command
             var declaration = new OptionDeclaration(_declarationGate, name, description, typeof(T));
             _options.Add(declaration);
             return new(declaration);
+        }
+    }
+
+    /// <summary>Declares a named body or dependency-only group.</summary>
+    public Target Target(string name, string description)
+    {
+        lock (_declarationGate)
+        {
+            var target = new Target(_declarationGate, name, description);
+            _targets.Add(target);
+            return target;
         }
     }
 
@@ -52,12 +64,18 @@ public sealed class Command
     /// <summary>Validates and awaits a body, including its output, returning its invocation exit code.</summary>
     public Task<int> RunAsync(string[] args, Func<RafterContext, Task> body) => InvokeAsync(args, body);
 
-    private async Task<int> InvokeAsync(string[] args, Func<RafterContext, Task>? body)
+    /// <summary>Runs selected targets and their prerequisites sequentially, executing each body at most once.</summary>
+    public Task<int> RunAsync(string[] args, Target target, params Target[] additionalTargets)
+        => InvokeAsync(args, null, target, additionalTargets, targetInvocation: true);
+
+    private async Task<int> InvokeAsync(string[] args, Func<RafterContext, Task>? body,
+        Target? entry = null, Target[]? additionalTargets = null, bool targetInvocation = false)
     {
         InvocationHost? host = null;
         InvocationOutput? output = null;
         InvocationCancellation? cancellation = null;
         IDisposable? subscription = null;
+        TargetExecution? targetExecution = null;
         var code = 1;
         var executed = false;
         var reported = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
@@ -105,19 +123,35 @@ public sealed class Command
             host = _captureHost();
             OptionSnapshot[] options;
             CombinedRule[] rules;
+            TargetSnapshot[] targets;
+            Target[]? entries = null;
             lock (_declarationGate)
             {
                 options = _options.Select(option => option.Snapshot()).ToArray();
                 rules = _rules.ToArray();
+                targets = _targets.Select(target => target.Snapshot()).ToArray();
+                if (targetInvocation)
+                {
+                    entries = [entry!, .. additionalTargets ?? []];
+                }
             }
             var declarations = new List<string>();
             if (string.IsNullOrWhiteSpace(_description))
             {
                 declarations.Add("Command description must contain non-whitespace text.");
             }
-            if (body is null)
+            if (!targetInvocation && body is null)
             {
                 declarations.Add("Command body must not be null.");
+            }
+            if (targetInvocation && additionalTargets is null)
+            {
+                declarations.Add("Additional target array must not be null.");
+            }
+            var plan = TargetPlan.Prepare(targets, entries, declarations);
+            if (plan is not null)
+            {
+                targetExecution = new(plan);
             }
             var spellings = new HashSet<string>(StringComparer.Ordinal);
             for (var index = 0; index < options.Length; index++)
@@ -148,7 +182,7 @@ public sealed class Command
             }
             else if (arguments.Help)
             {
-                output.Help(_description, options, rules);
+                output.Help(_description, options, rules, plan);
                 code = 0;
             }
             else
@@ -185,10 +219,17 @@ public sealed class Command
                         {
                             context.CancellationToken.ThrowIfCancellationRequested();
                             executed = true;
-                            output.Start(_description);
-                            var task = body!(context)
-                                ?? throw new InvalidOperationException("The command body returned a null task.");
-                            await task.ConfigureAwait(false);
+                            output.Start(_description, plan);
+                            if (targetExecution is not null)
+                            {
+                                await targetExecution.RunAsync(context, output).ConfigureAwait(false);
+                            }
+                            else
+                            {
+                                var task = body!(context)
+                                    ?? throw new InvalidOperationException("The command body returned a null task.");
+                                await task.ConfigureAwait(false);
+                            }
                             code = 0;
                         }
                     }
@@ -199,7 +240,8 @@ public sealed class Command
                     }
                     catch (Exception exception) when (ExceptionPolicy.IsRecoverable(exception))
                     {
-                        Report(exception, "Command body");
+                        Report(exception, targetExecution?.Current is { } current
+                            ? $"Target '{current.Name}'" : "Command body");
                     }
                 }
                 catch (Exception exception) when (ExceptionPolicy.IsRecoverable(exception))
@@ -250,7 +292,7 @@ public sealed class Command
                 }
                 try
                 {
-                    output.Summary(code, elapsed.Elapsed);
+                    output.Summary(code, elapsed.Elapsed, targetExecution);
                 }
                 catch (Exception exception) when (ExceptionPolicy.IsRecoverable(exception))
                 {

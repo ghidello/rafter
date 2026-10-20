@@ -12,7 +12,27 @@ internal static class Scenario
         var cwd = Directory.GetCurrentDirectory();
         int result;
 
-        if (scenario == "typed")
+        if (scenario is "targets" or "targets-failure")
+        {
+            var name = command.Option<string>("name", "Name.").Default("Rafter");
+            var first = command.Target("first", "Prepare a result.").Run(context =>
+            {
+                context.WriteLine("First: " + context.GetValue(name));
+                if (scenario == "targets-failure")
+                {
+                    throw new InvalidOperationException("Target failed after output.");
+                }
+            });
+            var second = command.Target("second", "Await and write the next result.").DependsOn(first)
+                .Run(async context =>
+                {
+                    await Task.Yield();
+                    context.WriteLine("Second: " + context.GetValue(name));
+                });
+            var group = command.Target("group", "Run both bodies.").DependsOn(first, second);
+            result = await command.RunAsync(controls, group, second, first);
+        }
+        else if (scenario == "typed")
         {
             var text = command.Option<string>("text", "Optional text.");
             var number = command.Option<int>("number", "Optional integer.");
