@@ -10,7 +10,15 @@ dotnet run --file examples/minimal.cs -- --help
 dotnet run --file examples/minimal.cs -- --quiet
 ```
 
-Options, targets, processes, analyzers, and packaging remain separate work; their examples are still syntax drafts.
+The [typed-input slice](docs/typed-inputs.md) adds string, integer, and Boolean options, aliases, required/default
+policies, typed value lookup, individual and combined validation, and generated help. Try the runnable examples:
+
+```powershell
+dotnet run --file examples/options.cs -- --name Ada --repeat 2
+dotnet run --file examples/validation.cs -- --minimum 3 --maximum 5
+```
+
+Targets, processes, analyzers, and packaging remain separate work; the four remaining examples are syntax drafts.
 
 The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-based and project-consumer checks
 through xUnit v3 and Microsoft.Testing.Platform. It also verifies the runtime through a production project reference.

@@ -1,4 +1,7 @@
-// Syntax draft: typed inputs are not implemented yet.
+#!/usr/bin/env dotnet
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
+#:property PublishAot=false
+
 using Sotsera.Rafter;
 
 var command = Rafter.Command("Print a personalized greeting.");

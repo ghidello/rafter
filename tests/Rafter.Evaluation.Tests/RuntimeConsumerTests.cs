@@ -17,6 +17,11 @@ public sealed class RuntimeConsumerTests
         sync.StandardOutput.Should().Be("  Hello [red]literal[/].\n\n界面 cafe\u0301" + Environment.NewLine);
         sync.StandardError.Should().Contain("[OK] Completed").And.NotContain("\x1b");
 
+        var typed = await consumer.RunAsync("typed", "-n", "Ada", "--enabled=false", "--quiet");
+        typed.ExitCode.Should().Be(0);
+        typed.StandardOutput.Should().Be("Ada:4:False:::" + Environment.NewLine);
+        typed.StandardError.Should().BeEmpty();
+
         var asynchronous = await consumer.RunAsync("async", "--quiet");
         asynchronous.ExitCode.Should().Be(0);
         asynchronous.StandardOutput.Should().Be("Async body finished." + Environment.NewLine);

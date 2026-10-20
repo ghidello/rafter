@@ -11,8 +11,8 @@ for exact versions, resolved dependencies, and observed results. Existing test-t
 | Area | Initial direction | Status |
 | --- | --- | --- |
 | SDK and target framework | .NET 10 SDK 10.0.402, C# 14, and net10.0, with Windows x64 verification first. | Configured for the harness and minimal runtime; see their recorded results. |
-| CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 adopted for runtime controls. Typed-input integration remains pending; retain the parser evaluation's adapter requirements. |
-| Terminal rendering | Use `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. | 0.57.2 adopted for body-only runtime output, with Ansi 0.57.2 as its only transitive package. |
+| CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 adopted for runtime controls and dynamic string/int/bool inputs; see the typed-input record. |
+| Terminal rendering | Use `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. | 0.57.2 adopted for runtime output and dynamic help, with Ansi 0.57.2 as its only transitive package. |
 | Process execution | Start the assessment with framework process APIs plus platform ownership mechanisms. Evaluate a wrapper only if it fits ownership at launch, signalling, and output settlement. | Mechanism and any package remain pending. |
 | Analyzer development | Use Roslyn APIs; select compatible `Microsoft.CodeAnalysis` packages for the analyzer project and its host baseline. | Proposed tooling direction; versions and packaging pending. |
 | Tests | xUnit v3, Microsoft.Testing.Platform, and AwesomeAssertions, as specified in `AGENTS.md`. | xunit.v3.mtp-v2 4.0.2, MTP 2.5.1, AwesomeAssertions 9.6.0; local native-MTP run passed. |

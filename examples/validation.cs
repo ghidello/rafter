@@ -1,4 +1,7 @@
-// Syntax draft: typed inputs and validation rules are not implemented yet.
+#!/usr/bin/env dotnet
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
+#:property PublishAot=false
+
 using Sotsera.Rafter;
 
 var command = Rafter.Command("Describe a range after validating its bounds and optional label.");

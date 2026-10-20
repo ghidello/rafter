@@ -206,13 +206,14 @@ the examples.
 ## Proposed GitHub issue breakdown
 
 The initial [evaluation issues](github-workflow.md#published-initial-work) are complete. Minimal invocation is scoped in
-[#9](https://github.com/sotsera/rafter/issues/9); the remaining rows are outlines. Detailed acceptance checklists live in
+[#9](https://github.com/sotsera/rafter/issues/9), and typed inputs/validation in
+[#11](https://github.com/sotsera/rafter/issues/11); the remaining rows are outlines. Detailed acceptance checklists live in
 the scoped issues, with links here and to design notes rather than parallel copies of the same checklist.
 
 | Work item | Concrete completion evidence |
 | --- | --- |
 | [Minimal invocation (#9)](https://github.com/sotsera/rafter/issues/9) | [Implemented body-only runtime](minimal-runtime.md), separate runtime/test boundaries, real minimal file app and regular consumer, sync/awaited async bodies, root capture, help, description errors, contained exceptions, and managed cancellation. Analyzer project and packaging remain in their later slice. |
-| Add typed inputs and validation | Options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
+| [Typed inputs and validation (#11)](https://github.com/sotsera/rafter/issues/11) | [Implemented runtime](typed-inputs.md): options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
 | Execute target graphs | Dependency example runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. |
 | Execute and own external processes | Real child fixtures verify tokens, cwd, environment isolation, accepted/rejected exits, all failure actions, launch/output errors, and selected interruption/settlement behavior. |
 | Deliver authoring diagnostics and local package | Analyzer positives and false-positive checks, fresh package-only file-app/project consumers, selected namespace-import behavior, and editor feedback are verified. |

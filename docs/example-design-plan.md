@@ -68,8 +68,8 @@ into smaller scopes when needed; agreement on basic inputs, for example, does no
 | --- | --- | --- | --- | --- |
 | Minimal script | ✓ | ✓ | ✓ | ✓ |
 | Roots and paths | — | — | — | — |
-| Typed inputs | ✓ | — | — | — |
-| Input validation | ✓ | ✓ | — | — |
+| Typed inputs | ✓ | Partial | Partial | Partial |
+| Input validation | ✓ | ✓ | ✓ | ✓ |
 | Environment inputs | — | — | — | — |
 | Targets and dependencies | ✓ | ✓ | — | — |
 | Conditional execution | — | — | — | — |
@@ -320,6 +320,9 @@ Agreed declaration rules:
 - `.Default(null)` is invalid: a defaulted input promises a non-null value. An optional input without a default
   represents absence. Non-nullable annotations do not replace runtime validation of supplied defaults.
 - Null callbacks are invalid, including command/target bodies, validation predicates, and process failure handlers.
+- Calling `.Required()` more than once or `.Default(...)` more than once on an option is invalid, even when the
+  repeated default is identical. Mixing those policies is also invalid. Initial validation catches separate calls
+  through a retained original handle; a future analyzer should report repetitions it can prove statically.
 - Calling `.Run(...)` twice on the same target is invalid; do not silently replace or combine target bodies.
 - Calling `.OnFailure(...)` twice on the same process configuration is invalid; do not silently replace handlers.
 - Collection-style methods such as `.Aliases(...)` and `.Validate(...)` continue to append according to their own
@@ -337,8 +340,9 @@ errors are not initial command declaration failures with exit `2`.
 ### Typed inputs
 
 Scenario: print a personalized greeting with a required name, defaulted repeat count, and defaulted uppercase flag.
-The syntax draft is [examples/options.cs](../examples/options.cs), including declarations and the greeting body.
-It remains non-runnable until the typed-input runtime slice is implemented.
+The runnable example is [examples/options.cs](../examples/options.cs), including declarations and the greeting body.
+The [typed-input runtime record](typed-inputs.md) describes the string/int/bool implementation and verification.
+Additional types and analyzer feedback remain pending.
 
 Agreed declaration syntax and behavior:
 
@@ -358,7 +362,8 @@ Agreed declaration syntax and behavior:
   perform I/O, or recompute the value on each call. Stored values belong to the invocation, not to the option declaration.
 - Required/defaulted handles expose non-nullable values; optional handles expose nullable values. For example,
   required/defaulted string and integer inputs return `string` and `int`, while optional inputs return `string?`
-  and `int?`. The exact handle types and lookup signatures remain implementation design work.
+  and `int?`. `Option<T>` is the optional declaration handle; `ValueOption<T>` is the finalized required/defaulted
+  handle. See the [lookup signatures](typed-inputs.md#typed-handles-and-lookups) for the implemented initial types.
 
 #### Names and aliases
 
@@ -440,9 +445,8 @@ Additional syntax agreed during the parser evaluation:
   signs inside string values remain literal. An `@file` supplied as a string value does not read that file.
 
 The [parser evaluation](parser-evaluation.md) exercises these rules through direct arrays and a real file app.
-This verifies a fixed evaluation adapter, not the future Rafter runtime. Positional arguments and the public meaning
-of a standalone `--` remain outside the agreed initial grammar; the probe rejects that token rather than silently
-enabling the package's end-of-options feature.
+That evaluation verifies a fixed adapter; the [runtime tests](typed-inputs.md#verification) now verify dynamic
+declarations too. Positional arguments and a standalone `--` remain unsupported in the initial runtime grammar.
 
 #### Input diagnostics and API constraints
 
@@ -455,14 +459,16 @@ Agreed:
   fluent chains in either order through the API, without requiring analyzer-based chain tracking.
 - Conflicts introduced through separate statements or helper methods are rejected during initial `RunAsync`
   validation with exit code `2` before the body executes. Fluent constraints do not replace runtime validation.
+- Repeating either policy through a retained optional handle is also invalid: reject both repeated `.Required()`
+  and repeated `.Default(...)`, including identical defaults. Do not silently accept or replace either policy.
 - Reject null defaults during initial validation to preserve the promised non-null value of defaulted inputs.
 
 Possible additions and open details:
 
-- A code fix could remove nullable syntax where safe. Additional authoring diagnostics could flag provable policy
-  conflicts through separate statements; general conflict detection across arbitrary helpers is not a static guarantee.
-- Handle type names, further input types, and detailed default and validation policies
-  remain open. No implementation or analyzer is present yet.
+- A code fix could remove nullable syntax where safe. A future analyzer should flag provable repeated or conflicting
+  policies through separate statements; detection across arbitrary helpers is not a static guarantee.
+- Further input types and analyzer implementation remain open. The initial typed handles and runtime policy checks
+  are implemented; nullable reference type annotations cannot be detected at runtime.
 
 #### Future asynchronous value resolution
 
@@ -486,9 +492,9 @@ No asynchronous option syntax or implementation is selected. Revisit this note w
 ### Input validation
 
 Scenario: validate two defaulted range bounds individually and together, with multiple rules per bound and an optional
-label whose validation is skipped when omitted. The combined syntax draft is [examples/validation.cs](../examples/validation.cs).
-The individual and cross-input rule design below is agreed;
-implementation and verification are pending.
+label whose validation is skipped when omitted. The runnable example is [examples/validation.cs](../examples/validation.cs).
+The individual and cross-input rule design below is implemented for string/int/bool;
+see the [runtime record](typed-inputs.md) for verification and remaining scope.
 
 Agreed individual value validation:
 

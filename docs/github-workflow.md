@@ -47,7 +47,8 @@ Milestone: [First working examples](https://github.com/sotsera/rafter/milestone/
 | [#1: Establish the .NET 10 evaluation harness and Windows CI](https://github.com/sotsera/rafter/issues/1) | Configure the stable SDK/test baseline, publish design references, and establish real consumers and CI. | Completed through PR #6; upstream main CI passed. |
 | [#2: Verify System.CommandLine compatibility before adoption](https://github.com/sotsera/rafter/issues/2) | Prove the parsing contract and decide adoption from executable evidence. | Completed through PR #7. |
 | [#3: Verify Spectre.Console output compatibility and startup cost](https://github.com/sotsera/rafter/issues/3) | Prove stream/literal/plain behavior and assess renderer cost. | Completed through PR #8. |
-| [#9: Implement minimal command invocation and body-only output](https://github.com/sotsera/rafter/issues/9) | Run the first real script with help, output, exception containment, and managed cancellation. | Implemented in its focused PR; see the minimal runtime record. |
+| [#9: Implement minimal command invocation and body-only output](https://github.com/sotsera/rafter/issues/9) | Run the first real script with help, output, exception containment, and managed cancellation. | Completed through PR #10. |
+| [#11: Implement typed inputs, value lookup, and validation](https://github.com/sotsera/rafter/issues/11) | Run options.cs and validation.cs with typed handles, dynamic help, and invocation-local values. | Implemented in its focused PR; see the typed-input runtime record. |
 
 The issues contain the detailed acceptance checklists. Keep design rationale and accepted behavior in Markdown;
 record execution results and scoped completion in the issues/PRs without maintaining duplicate checklists.

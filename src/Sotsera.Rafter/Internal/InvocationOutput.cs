@@ -22,15 +22,34 @@ internal sealed class InvocationOutput
 
     public void WriteLine(string? text) => _output.Literal((text ?? "") + Environment.NewLine, "  | ");
 
-    public void Help(string description)
+    public void Help(string description, OptionSnapshot[] options, CombinedRule[] rules)
     {
         _output.Framework(description, new Style(decoration: Decoration.Bold));
         _output.Framework("", Style.Plain);
         Section("Command options");
-        _output.Framework("  None.", Style.Plain);
+        if (options.Length == 0)
+        {
+            _output.Framework("  None.", Style.Plain);
+        }
+        for (var index = 0; index < options.Length; index++)
+        {
+            if (index > 0 && options[index - 1].Rules.Length > 0)
+            {
+                _output.Framework("", Style.Plain);
+            }
+            Input(options[index]);
+        }
         _output.Framework("", Style.Plain);
         Section("Execution");
         _output.Framework("  Run the supplied command body.", Style.Plain);
+        if (rules.Length > 0)
+        {
+            _output.Framework("  Combined input rules:", Style.Plain);
+            foreach (var rule in rules)
+            {
+                _output.Layout(new Paragraph("- " + rule.Description) { Overflow = Overflow.Fold }, 4);
+            }
+        }
         _output.Framework("", Style.Plain);
         Section("Rafter options");
         Control("--help", "Show help without executing the command body.");
@@ -99,4 +118,45 @@ internal sealed class InvocationOutput
         _output.Framework("  " + name, new Style(Color.LightSkyBlue1));
         _output.Layout(new Paragraph(description) { Overflow = Overflow.Fold }, 4);
     }
+
+    private void Input(OptionSnapshot option)
+    {
+        var paragraph = new Paragraph { Overflow = Overflow.Fold };
+        for (var index = 0; index < option.Spellings.Length; index++)
+        {
+            if (index > 0)
+            {
+                paragraph.Append(", ", new Style(Color.Grey));
+            }
+            paragraph.Append(option.Spellings[index], new Style(new Color(173, 214, 240)));
+        }
+        var typeHint = option.ValueType == typeof(bool) ? " [bool]"
+            : option.ValueType == typeof(int) ? " <int>" : " <string>";
+        paragraph.Append(typeHint, new Style(new Color(223, 196, 255)));
+        _output.Layout(paragraph, 2);
+        var policy = option.Required ? "Required." : option.HasDefault
+            ? $"Default: {FormatDefault(option.DefaultValue)}." : "Optional; no default.";
+        _output.Layout(new Paragraph($"{option.Description} {policy}") { Overflow = Overflow.Fold }, 4);
+        if (option.ValueType == typeof(bool))
+        {
+            _output.Layout(new Paragraph("Bare flag means true; explicit true/false allowed.")
+                { Overflow = Overflow.Fold }, 4);
+        }
+        if (option.Rules.Length > 0)
+        {
+            _output.Framework(option.Required || option.HasDefault ? "    Rules:" : "    Rules when supplied:",
+                Style.Plain);
+            foreach (var rule in option.Rules)
+            {
+                _output.Layout(new Paragraph("- " + rule.Description) { Overflow = Overflow.Fold }, 6);
+            }
+        }
+    }
+
+    private static string FormatDefault(object? value) => value switch
+    {
+        bool boolean => boolean ? "true" : "false",
+        string text => "\"" + text + "\"",
+        _ => Convert.ToString(value, CultureInfo.InvariantCulture) ?? ""
+    };
 }

@@ -2,11 +2,11 @@
 
 Issue [#9](https://github.com/sotsera/rafter/issues/9), implemented and locally verified on 2026-10-20.
 [examples/minimal.cs](../examples/minimal.cs) now runs against [Sotsera.Rafter](../src/Sotsera.Rafter/Sotsera.Rafter.csproj).
-The other six examples remain drafts for later slices.
+This records the original slice. [Typed inputs and validation](typed-inputs.md) now make two more examples runnable.
 
 ## Implemented contract
 
-`Rafter.Command(description)` creates immutable command metadata. The two body overloads accept
+`Rafter.Command(description)` creates command metadata. The two body overloads accept
 `Action<RafterContext>` and `Func<RafterContext, Task>` and return `Task<int>`. Description and body are required by
 the compiler; null/blank descriptions and null body delegates are rejected at invocation time with exit 2.
 Declaration validation precedes parsing and help. A null task returned by an asynchronous body is an execution failure.
@@ -17,7 +17,7 @@ does not change the process working directory, replace console writers, or dispo
 
 The built-in `--help`, `--quiet`, `--verbose`, and `--plain` controls are case-sensitive switches without values or
 aliases. Repetition, attached values, positional input, colon syntax, response files, directives, and quiet plus verbose
-are invalid input. This control-only parser has no user options yet. Malformed input still fails with help, and safe
+are invalid input. This slice originally supported only controls; [typed inputs](typed-inputs.md) extend it. Malformed input still fails with help, and safe
 diagnostics do not echo rejected tokens. Help writes stdout only and never runs the body. Verbose currently has the
 same content as normal for a body-only invocation; extra process context belongs to the process slice.
 

@@ -8,11 +8,35 @@ public sealed class Command
 {
     private readonly string _description;
     private readonly Func<InvocationHost> _captureHost;
+    private readonly object _declarationGate = new();
+    private readonly List<OptionDeclaration> _options = [];
+    private readonly List<CombinedRule> _rules = [];
 
     internal Command(string description, Func<InvocationHost>? captureHost = null)
     {
         _description = description;
         _captureHost = captureHost ?? InvocationHost.Capture;
+    }
+
+    /// <summary>Declares an optional typed input. Presence and default policies can finalize its value contract.</summary>
+    public Option<T> Option<T>(string name, string description)
+    {
+        lock (_declarationGate)
+        {
+            var declaration = new OptionDeclaration(_declarationGate, name, description, typeof(T));
+            _options.Add(declaration);
+            return new(declaration);
+        }
+    }
+
+    /// <summary>Adds a rule evaluated after all individual input rules succeed.</summary>
+    public Command Validate(string description, Func<InputValidationContext, bool> predicate)
+    {
+        lock (_declarationGate)
+        {
+            _rules.Add(new(description, predicate));
+        }
+        return this;
     }
 
     /// <summary>Validates and executes a synchronous body, returning its invocation exit code.</summary>
@@ -79,6 +103,13 @@ public sealed class Command
         {
             // This executes synchronously at invocation entry, before the first await or user callback.
             host = _captureHost();
+            OptionSnapshot[] options;
+            CombinedRule[] rules;
+            lock (_declarationGate)
+            {
+                options = _options.Select(option => option.Snapshot()).ToArray();
+                rules = _rules.ToArray();
+            }
             var declarations = new List<string>();
             if (string.IsNullOrWhiteSpace(_description))
             {
@@ -88,9 +119,21 @@ public sealed class Command
             {
                 declarations.Add("Command body must not be null.");
             }
+            var spellings = new HashSet<string>(StringComparer.Ordinal);
+            for (var index = 0; index < options.Length; index++)
+            {
+                options[index].ValidateDeclaration(index, declarations, spellings);
+            }
+            foreach (var rule in rules)
+            {
+                if (string.IsNullOrWhiteSpace(rule.Description) || rule.Predicate is null)
+                {
+                    declarations.Add("Combined rules must have a description and a predicate.");
+                }
+            }
 
             // Honor an explicit presentation switch even when declaration validation prevents parsing.
-            var arguments = declarations.Count == 0 ? InvocationArguments.Parse(args)
+            var arguments = declarations.Count == 0 ? InvocationArguments.Parse(args, options)
                 : new InvocationArguments(false, false, false, args?.Contains("--plain") == true, []);
             output = new InvocationOutput(host, arguments);
             if (declarations.Count > 0)
@@ -105,25 +148,49 @@ public sealed class Command
             }
             else if (arguments.Help)
             {
-                output.Help(_description);
+                output.Help(_description, options, rules);
                 code = 0;
             }
             else
             {
-                executed = true;
                 cancellation = new InvocationCancellation(output);
                 try
                 {
                     subscription = host.SubscribeCancellation(cancellation.Request);
-                    output.Start(_description);
-                    var context = new RafterContext(host.RootDirectory, output, cancellation.Token);
+                    var validation = InputValidation.Evaluate(options, rules, arguments.Values, cancellation.Token);
+                    if (validation.Diagnostics.Length > 0)
+                    {
+                        output.Invalid("Invalid input", validation.Diagnostics);
+                    }
+                    var context = new RafterContext(host.RootDirectory, output, cancellation.Token, arguments.Values);
                     try
                     {
-                        context.CancellationToken.ThrowIfCancellationRequested();
-                        var task = body!(context)
-                            ?? throw new InvalidOperationException("The command body returned a null task.");
-                        await task.ConfigureAwait(false);
-                        code = 0;
+                        if (validation.Exception is { } validationException)
+                        {
+                            if (validationException is OperationCanceledException cancelled
+                                && cancellation.Requested && cancelled.CancellationToken == cancellation.Token)
+                            {
+                                code = 130;
+                            }
+                            else
+                            {
+                                Report(validationException, validation.Scope!);
+                            }
+                        }
+                        else if (validation.Diagnostics.Length > 0)
+                        {
+                            code = 2;
+                        }
+                        else
+                        {
+                            context.CancellationToken.ThrowIfCancellationRequested();
+                            executed = true;
+                            output.Start(_description);
+                            var task = body!(context)
+                                ?? throw new InvalidOperationException("The command body returned a null task.");
+                            await task.ConfigureAwait(false);
+                            code = 0;
+                        }
                     }
                     catch (OperationCanceledException exception) when (
                         cancellation.Requested && exception.CancellationToken == cancellation.Token)

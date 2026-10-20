@@ -12,7 +12,39 @@ internal static class Scenario
         var cwd = Directory.GetCurrentDirectory();
         int result;
 
-        if (scenario == "invalid")
+        if (scenario == "typed")
+        {
+            var text = command.Option<string>("text", "Optional text.");
+            var number = command.Option<int>("number", "Optional integer.");
+            var flag = command.Option<bool>("flag", "Optional Boolean.");
+            var name = command.Option<string>("name", "Required text.").Required()
+                .Aliases("n").Validate("Nonempty.", value => value.Length > 0);
+            var count = command.Option<int>("count", "Defaulted integer.").Default(4)
+                .Aliases("c").Validate("Positive.", value => value > 0);
+            var enabled = command.Option<bool>("enabled", "Required Boolean.").Required();
+            command.Validate("Types are available during validation.", inputs =>
+            {
+                string? optionalText = inputs.GetValue(text);
+                int? optionalNumber = inputs.GetValue(number);
+                bool? optionalFlag = inputs.GetValue(flag);
+                string requiredName = inputs.GetValue(name);
+                int defaultCount = inputs.GetValue(count);
+                bool requiredFlag = inputs.GetValue(enabled);
+                return optionalText is null && optionalNumber is null && optionalFlag is null
+                    && requiredName.Length > 0 && defaultCount > 0 && !requiredFlag;
+            });
+            result = await command.RunAsync(controls, context =>
+            {
+                string? optionalText = context.GetValue(text);
+                int? optionalNumber = context.GetValue(number);
+                bool? optionalFlag = context.GetValue(flag);
+                string requiredName = context.GetValue(name);
+                int defaultCount = context.GetValue(count);
+                bool requiredFlag = context.GetValue(enabled);
+                context.WriteLine($"{requiredName}:{defaultCount}:{requiredFlag}:{optionalText}:{optionalNumber}:{optionalFlag}");
+            });
+        }
+        else if (scenario == "invalid")
         {
             result = await Rafter.Command(" ").RunAsync(controls, context => context.WriteLine("NOT EXECUTED"));
         }
