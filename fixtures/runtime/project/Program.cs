@@ -1,1 +1,1 @@
-return await Scenario.RunAsync(args);
+return await RuntimeCapture.RunAsync(args);

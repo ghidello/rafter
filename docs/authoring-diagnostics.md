@@ -75,8 +75,9 @@ Older SDKs and other editor hosts are unverified.
 
 Tests exercise semantic diagnostics through Roslyn and actual package-only compiler builds. The regular-project
 design-time check resolves the package's analyzer and namespace import through MSBuild. These checks establish
-compiler and design-time asset discovery; interactive IDE squiggles/completion have not been inspected and remain a
-milestone verification item. No editor-specific plugin is required by the package.
+compiler and design-time asset discovery. The subsequent [milestone review](milestone-review.md) verifies live VS Code
+diagnostics and completion for both project and file-app consumers. Pixel-level styling and other editor hosts remain
+unverified. No editor-specific plugin is required by the package.
 
 Local verification on 2026-10-21: the full regression suite passed 370 tests, with 0 failures and 0 skips. This includes
 30 semantic analyzer cases and the isolated package workflow. Local packing also succeeded without warnings.

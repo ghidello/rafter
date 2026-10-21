@@ -47,6 +47,13 @@ jobs:
       - name: Pack local runtime and analyzers
         run: dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --no-build --no-restore --output artifacts/packages
 
+      - name: Review redirected runtime output
+        shell: pwsh
+        run: |
+          dotnet build fixtures/runtime/project/Consumer.csproj --configuration Release
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./tools/Verify-RuntimeTerminal.ps1 -RedirectedOnly
+
       - name: Retain evaluation evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

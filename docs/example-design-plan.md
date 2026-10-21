@@ -859,8 +859,9 @@ Initial package behavior:
   dependencies. Local project references need their own development setup because they do not consume the packaged assets.
 - Verify actual file-based apps, regular C# project consumers, design-time assets, and the opt-out using a built package.
   File-based apps use a generated project, as described in the [SDK guide](https://learn.microsoft.com/en-us/dotnet/core/sdk/file-based-apps),
-  and the package mechanism is now exercised by isolated consumer checks. Interactive editor feedback remains unverified.
+  and the package mechanism is now exercised by isolated consumer checks. Live VS Code diagnostics and completion are
+  verified in the [milestone review](milestone-review.md).
 
 The [local package](local-package.md) implements this default; development examples use equivalent build assets and
 omit the explicit imports. Namespace imports do not flow through transitive project references. Public publication
-and editor-host compatibility beyond the recorded design-time checks remain separate gates.
+and editor-host compatibility beyond the recorded VS Code baseline remain separate gates.

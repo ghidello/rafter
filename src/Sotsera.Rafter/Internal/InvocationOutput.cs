@@ -15,10 +15,15 @@ internal sealed class InvocationOutput
     public InvocationOutput(InvocationHost host, InvocationArguments arguments)
     {
         _arguments = arguments;
+        // Both handles paint the same terminal. Keep each render/chunk together, including its ANSI prefix/reset.
+        // Redirected destinations retain independent gates so a blocked pipe cannot hold the other stream's gate.
+        var terminalGate = !host.OutputRedirected && !host.ErrorRedirected ? new SemaphoreSlim(1, 1) : null;
         _output = new(host.Output,
-            DestinationPolicy.Detect(host.Output, host.OutputRedirected, arguments.Plain, host.NoColor), host.Width);
+            DestinationPolicy.Detect(host.Output, host.OutputRedirected, arguments.Plain, host.NoColor), host.Width,
+            gate: terminalGate);
         _error = new(host.Error,
-            DestinationPolicy.Detect(host.Error, host.ErrorRedirected, arguments.Plain, host.NoColor), host.Width);
+            DestinationPolicy.Detect(host.Error, host.ErrorRedirected, arguments.Plain, host.NoColor), host.Width,
+            gate: terminalGate);
     }
 
     public void WriteLine(string? text) => _output.Literal((text ?? "") + Environment.NewLine, "  | ");

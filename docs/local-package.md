@@ -82,7 +82,7 @@ The automated package test builds the actual nupkg and verifies its manifest/fil
 fresh file app and a regular project with no Rafter source/project references. It checks diagnostics, import opt-out,
 runtime checks with diagnostics disabled, design-time asset resolution, and the import boundary through a project reference.
 CI retains a separately packed artifact under `packages/` alongside test reports. The diagnostic reference records
-the limits of static coverage and remaining interactive editor verification.
+the limits of static coverage; the [milestone review](milestone-review.md) records live VS Code diagnostics and completion.
 
 References: [SDK Using items](https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#using),
 [NuGet build asset scopes](https://learn.microsoft.com/en-us/nuget/concepts/msbuild-props-and-targets),

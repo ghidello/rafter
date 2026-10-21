@@ -1,0 +1,8 @@
+{
+  "name": "rafter-authoring-probe",
+  "displayName": "Rafter authoring verification fixture",
+  "publisher": "sotsera",
+  "version": "0.0.0",
+  "engines": { "vscode": ">=1.100.0" },
+  "description": "Local extension-test harness; not a user extension or published package."
+}

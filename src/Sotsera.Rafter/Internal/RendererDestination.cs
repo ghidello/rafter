@@ -20,7 +20,7 @@ internal sealed class RendererDestination
     private readonly DestinationPolicy _policy;
     private readonly IAnsiConsole _console;
     private readonly AnsiWriter _ansi;
-    private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly SemaphoreSlim _gate;
     private bool _lineStart = true;
     private bool _completed;
     private Exception? _failure;
@@ -28,8 +28,9 @@ internal sealed class RendererDestination
     public Exception? Failure => _failure;
 
     public RendererDestination(TextWriter writer, DestinationPolicy policy, int width = 80,
-        Dictionary<string, string>? environment = null)
+        Dictionary<string, string>? environment = null, SemaphoreSlim? gate = null)
     {
+        _gate = gate ?? new SemaphoreSlim(1, 1);
         _writer = writer;
         _policy = policy;
         _console = AnsiConsole.Create(new AnsiConsoleSettings

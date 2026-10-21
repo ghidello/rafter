@@ -11,7 +11,7 @@ are proposals, not additional accepted requirements. The [minimal runtime](minim
 invocations; [typed inputs](typed-inputs.md) and [callback targets](targets.md) are now implemented too.
 The [process slice](process-runtime.md) now implements owned Windows processes. Initial
 [authoring diagnostics](authoring-diagnostics.md) and a [local package](local-package.md) are also implemented;
-interactive editor verification remains pending.
+actual output and live VS Code authoring feedback are verified in the [milestone review](milestone-review.md).
 The [dependency review](dependency-decisions.md) records the initial shortlist and compatibility checks to complete
 before adopting packages. Dependency selection is part of readiness, not an incidental scaffolding choice.
 
@@ -178,7 +178,8 @@ value/reference lookups; do not approximate those guarantees with tests of runti
 
 The local package enables automatic namespace imports for direct C# consumers, with `RafterImplicitUsings=false`
 as the opt-out. Fresh file apps and regular projects verify both settings; examples have equivalent local development
-imports. The MSBuild design-time assets are checked, while actual editor squiggles/completion remain unverified.
+imports. MSBuild design-time assets and live VS Code diagnostics/completion are checked; the
+[milestone review](milestone-review.md) records the selected editor baseline and remaining limits.
 
 ### Delivery baseline
 
@@ -221,22 +222,23 @@ the scoped issues, with links here and to design notes rather than parallel copi
 | [Typed inputs and validation (#11)](https://github.com/sotsera/rafter/issues/11) | [Implemented runtime](typed-inputs.md): options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
 | [Target graphs (#13)](https://github.com/sotsera/rafter/issues/13) | [Callback target example](targets.md) runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. The process slice adds the build/test workflow. |
 | [Execute and own external processes (#15)](https://github.com/sotsera/rafter/issues/15) | [Windows implementation](process-runtime.md), real child fixtures, isolated consumers, runnable examples, and explicit platform limits. |
-| [Authoring diagnostics and local package (#17)](https://github.com/sotsera/rafter/issues/17) | Initial analyzer positives and false-positive checks, fresh package-only consumers, import/opt-out behavior, and design-time asset resolution. Interactive editor feedback remains pending. |
+| [Authoring diagnostics and local package (#17)](https://github.com/sotsera/rafter/issues/17) | Initial analyzer positives and false-positive checks, fresh package-only consumers, import/opt-out behavior, and design-time asset resolution. Live editor feedback is covered by #19. |
+| [Output and editor review (#19)](https://github.com/sotsera/rafter/issues/19) | [Runtime terminal/redirected output, narrow help, Ctrl+C, and live VS Code diagnostics/completion](milestone-review.md), with a terminal write coordination fix and explicit platform limits. |
 
 The sequence is a proposal. Target scheduling can be verified with simple callback fixtures before the process slice;
 the combined build/test example is an integration acceptance case after both are available.
 
 ## Milestone completion checklist
 
-- [ ] Resolve the decision groups needed by the chosen scope and link their accepted rules from the design plan.
+- [x] Resolve the decision groups needed by the chosen Windows scope and link their accepted rules from the design plan.
 - [x] Select the SDK/target baseline and needed dependencies, record compatibility evidence, and pin adopted versions.
 - [x] Establish GitHub identity/workflow and create the scoped evaluation issues before coding begins.
 - [x] Run all seven examples through the actual file-app host, with suitable isolated fixtures and documented commands.
 - [x] Verify public compile-time guarantees and the selected initial analyzers, including legitimate split configuration.
 - [x] Verify success, rejection, exceptions, and process lifetime cases with appropriate integration checks on Windows.
-- [ ] Review actual terminal and redirected output against the selected human and agent presentation requirements.
-- [ ] Verify a local package from fresh file-app and project consumers, including editor behavior for the chosen setup.
-- [ ] Record source, platform, commands, and observed outcomes; leave unexecuted checks pending.
+- [x] Review actual terminal and redirected output against the selected human and agent presentation requirements.
+- [x] Verify a local package from fresh file-app and project consumers, including editor behavior for the chosen VS Code setup.
+- [x] Record source, platform, commands, and observed outcomes in the [review](milestone-review.md); leave unexecuted checks pending.
 
 ## Later work
 

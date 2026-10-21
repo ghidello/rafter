@@ -3,5 +3,6 @@
 #:property PublishAot=false
 #:property TreatWarningsAsErrors=true
 #:include ../Scenario.cs
+#:include ../RuntimeCapture.cs
 
-return await Scenario.RunAsync(args);
+return await RuntimeCapture.RunAsync(args);

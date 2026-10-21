@@ -39,6 +39,9 @@ and an automatic namespace import. The [local package](docs/local-package.md) pr
 fresh file apps and regular projects; public publication and process ownership on other platforms remain separate work.
 See [example prerequisites](examples/README.md) before running build-oriented scripts.
 
+The [milestone review](docs/milestone-review.md) records actual Windows terminal output and live VS Code diagnostics
+and completion. Writes to a shared terminal are coordinated so stdout/stderr cannot split a Rafter prefix or style sequence.
+
 The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-based and project-consumer checks
 through xUnit v3 and Microsoft.Testing.Platform. It also verifies the runtime through a production project reference.
 The [parser evaluation](docs/parser-evaluation.md) records executable System.CommandLine compatibility checks and

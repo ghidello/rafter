@@ -6,6 +6,16 @@ internal static class Scenario
     {
         var scenario = args.FirstOrDefault() ?? "sync";
         var controls = args.Skip(1).ToArray();
+        if (scenario == "review-child")
+        {
+            Console.WriteLine("  Child [red]literal[/] output.");
+            Console.Error.WriteLine("Child diagnostic.");
+            return int.Parse(controls[0]);
+        }
+        if (scenario.StartsWith("review-", StringComparison.Ordinal))
+        {
+            return await ReviewAsync(scenario, controls);
+        }
         var command = Rafter.Command("Print a greeting.");
         var output = Console.Out;
         var error = Console.Error;
@@ -131,5 +141,47 @@ internal static class Scenario
             await File.WriteAllTextAsync(resultPath, result.ToString(System.Globalization.CultureInfo.InvariantCulture));
         }
         return result;
+    }
+
+    private static async Task<int> ReviewAsync(string scenario, string[] controls)
+    {
+        var command = Rafter.Command("Review actual runtime output with dependencies and child processes.");
+        var name = command.Option<string>("name",
+                "Name with literal [red]brackets[/], Unicode 界面, and a long description that wraps.")
+            .Aliases("n", "recipient")
+            .Default("Ada")
+            .Validate("Name must not be blank.", value => !string.IsNullOrWhiteSpace(value));
+        command.Option<bool>("enabled", "Enable the sample behavior.").Default(false);
+        command.Validate("Review combined input rules without executing them during help.", _ => true);
+        var build = command.Target("build", "Run a deterministic child fixture.")
+            .Run(async context =>
+        {
+            var executable = scenario == "review-launch" ? "rafter-missing-review-tool" : "dotnet";
+            var process = context.Process(executable)
+                .Arguments(typeof(Scenario).Assembly.Location, "review-child", scenario is "review-help" or "review-success" ? "0" : "1")
+                .Environment("RAFTER_CAPTURE", "");
+            if (scenario == "review-continue")
+            {
+                process.OnFailure(_ => ProcessFailureAction.Continue);
+            }
+            if (scenario == "review-fail")
+            {
+                process.OnFailure(_ => ProcessFailureAction.Fail);
+            }
+            if (scenario == "review-handler")
+            {
+                process.OnFailure(_ => throw new InvalidOperationException("Handler failed.", new ArgumentException("Inner cause.")));
+            }
+            await process.RunAsync();
+            context.WriteLine("Result for " + context.GetValue(name) + ".");
+        });
+        var test = command.Target("test", "Run after build.")
+            .DependsOn(build)
+            .Run(context =>
+        {
+            context.WriteLine("Next target ran.");
+        });
+        var verify = command.Target("verify", "Review both target bodies.").DependsOn(build, test);
+        return await command.RunAsync(controls, verify);
     }
 }

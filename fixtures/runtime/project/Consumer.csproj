@@ -15,5 +15,6 @@
   <ItemGroup>
     <ProjectReference Include="../../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
     <Compile Include="../Scenario.cs" Link="Scenario.cs" />
+    <Compile Include="../RuntimeCapture.cs" Link="RuntimeCapture.cs" />
   </ItemGroup>
 </Project>
