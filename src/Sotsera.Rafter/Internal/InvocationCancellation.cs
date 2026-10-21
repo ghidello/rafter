@@ -10,6 +10,7 @@ internal sealed class InvocationCancellation : IDisposable
     private bool _requested;
 
     public CancellationToken Token => _source.Token;
+    public ShutdownWindow Processes { get; } = new();
 
     public bool Requested
     {
@@ -33,6 +34,10 @@ internal sealed class InvocationCancellation : IDisposable
         {
             if (_requested)
             {
+                if (!_stopped)
+                {
+                    Processes.Request(force: true);
+                }
                 return;
             }
             _requested = true;
@@ -42,6 +47,7 @@ internal sealed class InvocationCancellation : IDisposable
                 // start user registrations or write notifications into destinations that are closing.
                 return;
             }
+            Processes.Request();
             _callbacks = _source.CancelAsync();
             try
             {

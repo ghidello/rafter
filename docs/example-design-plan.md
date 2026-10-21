@@ -67,18 +67,18 @@ into smaller scopes when needed; agreement on basic inputs, for example, does no
 | Topic | Drafted | Agreed | Implemented | Verified |
 | --- | --- | --- | --- | --- |
 | Minimal script | ✓ | ✓ | ✓ | ✓ |
-| Roots and paths | — | — | — | — |
+| Roots and paths | Partial | Partial | Partial | Partial |
 | Typed inputs | ✓ | Partial | Partial | Partial |
 | Input validation | ✓ | ✓ | ✓ | ✓ |
 | Environment inputs | — | — | — | — |
-| Targets and dependencies | ✓ | ✓ | Partial | Partial |
+| Targets and dependencies | ✓ | ✓ | ✓ | ✓ |
 | Conditional execution | — | — | — | — |
-| Output and diagnostics | Partial | Partial | — | — |
+| Output and diagnostics | Partial | Partial | Partial | Partial |
 | Failures | — | — | — | — |
-| External processes | ✓ | — | — | — |
+| External processes | ✓ | Partial | Partial | Partial |
 | Reusable process settings | — | — | — | — |
 | Captured output | — | — | — | — |
-| Cancellation and timeouts | — | — | — | — |
+| Cancellation and timeouts | Partial | Partial | Partial | Partial |
 | Cleanup and shared resources | — | — | — | — |
 | Sensitive values | — | — | — | — |
 | Complete workflow | — | — | — | — |
@@ -190,7 +190,7 @@ full exception details, and plain output retains all wording without color. This
 The topic is partially drafted and agreed. The new [HTML comparison](output-preview.html) contains 23 illustrative
 scenarios with terminal/plain, stream, verbosity, and width controls. Remaining diagnostic wording
 remains proposed for review. The [minimal runtime](minimal-runtime.md) now verifies body-only output and help;
-[target output](targets.md) is now implemented too; processes remain pending. Historical previews and synthetic
+[target output](targets.md) and [Windows process output](process-runtime.md) are implemented too. Historical previews and synthetic
 fixtures are not runtime evidence.
 
 ### Minimal script
@@ -285,7 +285,8 @@ runtime failure or forced termination. No exit result can be promised when the p
 
 Cancellation uses exit `130` when cleanup succeeds and no unhandled or recorded execution failure remains. Execution
 failures and unconfirmed process/output settlement take precedence with exit `1`, as described below. Timeout policy
-remains open. Managed body cancellation is implemented; process cancellation remains pending.
+remains open. Managed body cancellation and Windows owned-process cancellation are implemented; see the
+[process runtime](process-runtime.md) for verification and platform limits.
 
 #### Help and validation
 
@@ -313,7 +314,8 @@ resolving relative paths against the command root and using absolute paths direc
 root or the script process's working directory. See the external-process notes and root guide for examples.
 
 Explicit root syntax, source-directory discovery, path validation, and executable-path resolution remain open.
-Per-invocation root capture is implemented and verified. The broader path/process topic remains pending.
+Per-invocation root capture and child working directories are implemented and verified on Windows.
+Explicit/source roots and broader path APIs remain pending.
 
 ### Invalid values and repeated callback configuration
 
@@ -529,9 +531,10 @@ Agreed cross-input validation:
 
 Scenarios: display the installed .NET SDK version, inspect a failed build while retaining command failure, and build
 from a child-specific working directory with an environment override.
-The syntax drafts are [examples/processes.cs](../examples/processes.cs) and
+The runnable Windows examples are [examples/processes.cs](../examples/processes.cs) and
 [examples/process-failure.cs](../examples/process-failure.cs), plus
-[examples/process-working-directory.cs](../examples/process-working-directory.cs). Implementation and verification are pending.
+[examples/process-working-directory.cs](../examples/process-working-directory.cs). See the
+[process runtime record](process-runtime.md) for implementation, verification, and remaining platform/settings scope.
 
 Agreed basic syntax:
 
@@ -546,6 +549,11 @@ Agreed basic syntax:
   the command root, script process working directory, or parent shell directory.
 - Children inherit the script process's environment by default. `.Environment(name, value)` explicitly sets or
   overrides a variable for that child only, without changing the script process's or parent shell's environment.
+- Each environment name may be configured once on a child process builder; repeated calls for that name are rejected,
+  even with the same value. Names are case-insensitive on Windows. Overriding an inherited variable is allowed, and
+  separate child builders may choose different values for the same name.
+- `WorkingDirectory` and `AcceptExitCodes` may each be called once per builder. Repeated calls are rejected.
+  Accepted-code lists must be non-null and nonempty; repeated codes within one list are ignored.
 - Command options are not automatically exported as environment variables. Authors can explicitly pass an option's
   value to a child environment setting when needed.
 
@@ -609,14 +617,13 @@ Agreed process exception boundary:
 
 Open questions:
 
-- What detailed diagnostic presentation applies to launch/configuration/output exceptions, and when are handled
-  process failures reported? What are the detailed child shutdown and timeout policies?
-- How should accepted-code configuration be validated, and what additional result information is useful?
-- What path validation, executable resolution, stream handling, and other process settings should be exposed?
+- What configurable timeout policy and additional result information are useful beyond the implemented basic result?
+- What additional executable-resolution controls, stream encodings, and other process settings should be exposed?
 - Should environment removal or starting with an empty environment be supported, and with what syntax?
 
 The command-level exception containment contract applies to the outer invocation. Process `RunAsync()` intentionally
-throws within the callback for the `Throw` action; these are separate API boundaries. Implementation is pending.
+throws within the callback for the `Throw` action; these are separate API boundaries. The
+[Windows implementation](process-runtime.md) verifies this boundary with real processes.
 
 ### Completion of owned process scopes
 
@@ -673,7 +680,8 @@ of its process operations remain outstanding:
 
 Track the complete operation, including descendant cleanup and output handling, not just the main process's running
 state. The runtime check detects unfinished operations; it cannot prove that an already-completed task was awaited.
-It therefore complements the analyzer rather than replacing it. Implementation and verification remain pending.
+It therefore complements the analyzer rather than replacing it. The runtime tracker is implemented and verified in
+the [process slice](process-runtime.md); the analyzer remains pending.
 
 ### Cancellation and owned child processes
 
@@ -758,14 +766,14 @@ Research basis, checked 2026-10-19:
 
 Still discuss cleanup-error propagation and external
 cancellation-token entry points. These policies are not inferred from the old implementation.
-Implementation and real-process verification remain pending.
+Windows ownership and real-process verification are recorded in [process-runtime.md](process-runtime.md).
 
 ### Targets and dependencies
 
-Scenario: build a project and then run its tests through a dependency-only grouping target. The process-based draft is
+Scenario: build a project and then run its tests through a dependency-only grouping target. The runnable Windows example is
 [examples/dependencies.cs](../examples/dependencies.cs). The [callback-based target slice](targets.md) implements
-sequential graph execution now, demonstrated by [examples/targets.cs](../examples/targets.cs). External-process
-integration and analyzer coverage remain pending.
+sequential graph execution, also demonstrated by [examples/targets.cs](../examples/targets.cs). External-process
+integration is verified by the [process slice](process-runtime.md); analyzer coverage remains pending.
 
 Agreed execution shape:
 
@@ -833,7 +841,8 @@ Agreed nonempty invocation contract:
 - Compiler enforcement of argument presence does not replace runtime validation of nulls, ownership, and graph validity.
 
 The target and dependency design above is agreed. Callback-based graph execution is implemented and verified in the
-[target runtime record](targets.md); analyzer coverage and the build/test process workflow remain pending.
+[target runtime record](targets.md); the build/test workflow is verified in the [process record](process-runtime.md).
+Analyzer coverage remains pending.
 
 ### Proposed automatic namespace import
 

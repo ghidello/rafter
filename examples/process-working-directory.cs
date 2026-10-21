@@ -1,4 +1,7 @@
-// Syntax draft: external processes are not implemented yet.
+#!/usr/bin/env dotnet
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
+#:property PublishAot=false
+
 // Assumes the command root contains a src directory with a buildable project or solution.
 using Sotsera.Rafter;
 

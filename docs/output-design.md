@@ -293,7 +293,7 @@ The control-flow, exit-code semantics, and following reporting behavior are agre
   Do not preemptively print a framework error or stack trace. This does not require detecting catch blocks, and it
   does not hide independent failures or cleanup uncertainty. The fixture assumes all owned work settled successfully.
 
-Both examples are synthetic variants of `process-failure.cs`, not changes to that draft's existing `Fail` policy.
+Both examples are synthetic variants of `process-failure.cs`, not changes to that example's existing `Fail` policy.
 Quiet preserves child and script output but hides the successful lifecycle summary. A failed child writing to stderr
 does not contradict invocation exit `0` after successful recovery.
 

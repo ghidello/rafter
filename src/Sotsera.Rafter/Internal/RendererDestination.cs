@@ -60,6 +60,11 @@ internal sealed class RendererDestination
         try
         {
             ThrowIfCompleted();
+            if (!_lineStart)
+            {
+                // A framework message starts its own line after a child's unterminated stderr chunk.
+                _writer.Write(Environment.NewLine);
+            }
             var layoutLineStart = true;
             var wroteContent = false;
             var width = Math.Max(1, _console.Profile.Width - indentation);

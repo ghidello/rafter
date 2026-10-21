@@ -104,8 +104,72 @@ internal sealed class InvocationOutput
 
     public void Exception(Exception exception, string scope)
     {
+        if (exception is ProcessFailureException rejected)
+        {
+            ProcessRejected(rejected, ProcessFailureAction.Throw);
+            return;
+        }
+        if (exception is ProcessLaunchException launch)
+        {
+            _error.Framework("  " + launch.Message, new Style(Color.Red));
+            _error.Framework("  " + launch.InnerException!.Message, Style.Plain);
+            _error.Framework("  Working directory: " + launch.Directory, Style.Plain);
+            return;
+        }
+        if (exception is ProcessHandlerException handler)
+        {
+            _error.Framework("  " + handler.Message, new Style(Color.Red));
+            ProcessExit(handler.Failure);
+            _error.Literal(handler.InnerException + Environment.NewLine, "  ");
+            return;
+        }
+        if (exception is ProcessCompletionException completion)
+        {
+            _error.Framework("  " + completion.Message, new Style(Color.Red));
+            if (completion.ExitCode is { } code)
+            {
+                _error.Framework($"  Observed exit code: {code}", Style.Plain);
+            }
+            if (completion.InnerException is { } cause)
+            {
+                _error.Framework("  " + cause.Message, Style.Plain);
+            }
+            return;
+        }
         _error.Framework($"  {scope} failed", new Style(Color.Red));
         _error.Literal(exception.ToString() + Environment.NewLine, "  ");
+    }
+
+    public void ProcessStarted(string executable, string directory)
+    {
+        if (!_arguments.Quiet)
+        {
+            _error.Framework("  Process | " + executable, new Style(decoration: Decoration.Bold));
+            if (_arguments.Verbose)
+            {
+                _error.Framework("  Working directory: " + directory, Style.Plain);
+            }
+        }
+    }
+
+    public void ProcessOutput(string text, bool error) => (error ? _error : _output).Literal(text);
+
+    public void ProcessRejected(ProcessFailureException failure, ProcessFailureAction action)
+    {
+        var heading = action == ProcessFailureAction.Continue ? "Process failure handled" : "Process failed";
+        _error.Framework($"  {heading} | {failure.Executable}",
+            new Style(action == ProcessFailureAction.Continue ? Color.Yellow : Color.Red));
+        ProcessExit(failure);
+        if (action != ProcessFailureAction.Throw)
+        {
+            _error.Framework($"  Action: {action}", Style.Plain);
+        }
+    }
+
+    private void ProcessExit(ProcessFailureException failure)
+    {
+        _error.Framework($"  Exit code: {failure.Result.ExitCode} | accepted: {string.Join(", ", failure.AcceptedExitCodes)}",
+            Style.Plain);
     }
 
     public void Summary(int code, TimeSpan elapsed, TargetExecution? targets = null)

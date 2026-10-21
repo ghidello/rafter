@@ -9,7 +9,7 @@ requiring another broad redesign. Some observable behavior still needs decisions
 The [example design plan](example-design-plan.md) remains the source of agreed API behavior. Recommendations below
 are proposals, not additional accepted requirements. The [minimal runtime](minimal-runtime.md) implements body-only
 invocations; [typed inputs](typed-inputs.md) and [callback targets](targets.md) are now implemented too.
-Processes, analyzers, and packaging remain pending.
+The [process slice](process-runtime.md) now implements owned Windows processes. Analyzers and packaging remain pending.
 The [dependency review](dependency-decisions.md) records the initial shortlist and compatibility checks to complete
 before adopting packages. Dependency selection is part of readiness, not an incidental scaffolding choice.
 
@@ -27,8 +27,8 @@ before adopting packages. Dependency selection is part of readiness, not an inci
 
 No obsolete command `.Run(...)`, `context.Output`, or `context.Value(...)` calls remain in these drafts. Explicit
 namespace imports remain intentionally: automatic imports are still a packaging proposal. Package/project reference
-directives are present in minimal.cs, options.cs, validation.cs, and the added callback-based targets.cs.
-The four process-based examples remain drafts until process execution is implemented.
+directives are present in all seven examples and the added callback-based targets.cs. All eight are exercised as
+actual file apps; the process-based examples currently require Windows.
 
 Important boundaries to preserve during implementation:
 
@@ -217,8 +217,8 @@ the scoped issues, with links here and to design notes rather than parallel copi
 | --- | --- |
 | [Minimal invocation (#9)](https://github.com/sotsera/rafter/issues/9) | [Implemented body-only runtime](minimal-runtime.md), separate runtime/test boundaries, real minimal file app and regular consumer, sync/awaited async bodies, root capture, help, description errors, contained exceptions, and managed cancellation. Analyzer project and packaging remain in their later slice. |
 | [Typed inputs and validation (#11)](https://github.com/sotsera/rafter/issues/11) | [Implemented runtime](typed-inputs.md): options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
-| [Target graphs (#13)](https://github.com/sotsera/rafter/issues/13) | [Callback target example](targets.md) runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. The build/test process example remains pending. |
-| Execute and own external processes | Real child fixtures verify tokens, cwd, environment isolation, accepted/rejected exits, all failure actions, launch/output errors, and selected interruption/settlement behavior. |
+| [Target graphs (#13)](https://github.com/sotsera/rafter/issues/13) | [Callback target example](targets.md) runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. The process slice adds the build/test workflow. |
+| [Execute and own external processes (#15)](https://github.com/sotsera/rafter/issues/15) | [Windows implementation](process-runtime.md), real child fixtures, isolated consumers, runnable examples, and explicit platform limits. |
 | Deliver authoring diagnostics and local package | Analyzer positives and false-positive checks, fresh package-only file-app/project consumers, selected namespace-import behavior, and editor feedback are verified. |
 
 The sequence is a proposal. Target scheduling can be verified with simple callback fixtures before the process slice;
@@ -229,9 +229,9 @@ the combined build/test example is an integration acceptance case after both are
 - [ ] Resolve the decision groups needed by the chosen scope and link their accepted rules from the design plan.
 - [ ] Select the SDK/target baseline and needed dependencies, record compatibility evidence, and pin adopted versions.
 - [x] Establish GitHub identity/workflow and create the scoped evaluation issues before coding begins.
-- [ ] Run all seven examples through the actual file-app host, with suitable isolated fixtures and documented commands.
+- [x] Run all seven examples through the actual file-app host, with suitable isolated fixtures and documented commands.
 - [ ] Verify public compile-time guarantees and the selected analyzers, including legitimate split configuration.
-- [ ] Verify success, rejection, exceptions, and process lifetime cases with appropriate integration checks.
+- [x] Verify success, rejection, exceptions, and process lifetime cases with appropriate integration checks on Windows.
 - [ ] Review actual terminal and redirected output against the selected human and agent presentation requirements.
 - [ ] Verify a local package from fresh file-app and project consumers, including editor behavior for the chosen setup.
 - [ ] Record source, platform, commands, and observed outcomes; leave unexecuted checks pending.
@@ -244,6 +244,7 @@ fallback inputs, child environment removal/clean mode, additional input types, e
 sensitive-value features, asynchronous input resolution, parallel targets, and machine-readable output formats.
 
 Basic interruption and owned-process settlement are agreed requirements for the first process slice; they are distinct from
-the deferred configurable timeout and cleanup APIs. Implementation and platform verification remain pending.
+the deferred configurable timeout and cleanup APIs. The Windows implementation and checks are recorded in
+[process-runtime.md](process-runtime.md).
 Cross-platform validation beyond the selected baseline and public
 publication are separate gates, not implied by local milestone completion.

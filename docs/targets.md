@@ -2,7 +2,8 @@
 
 Issue [#13](https://github.com/sotsera/rafter/issues/13) implements callback-based target graphs on the typed-input
 runtime. [targets.cs](../examples/targets.cs) prepares a greeting and then prints it through a dependency-only group.
-The original [dependencies.cs](../examples/dependencies.cs) build/test workflow still requires external processes.
+The [process slice](process-runtime.md) now runs the [dependencies.cs](../examples/dependencies.cs) build/test workflow
+on Windows and stops later targets after an unhandled process error, recorded `Fail`, or unfinished process work.
 
 ## Authoring and execution
 

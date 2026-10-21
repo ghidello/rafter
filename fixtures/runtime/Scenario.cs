@@ -32,6 +32,14 @@ internal static class Scenario
             var group = command.Target("group", "Run both bodies.").DependsOn(first, second);
             result = await command.RunAsync(controls, group, second, first);
         }
+        else if (scenario == "process")
+        {
+            result = await command.RunAsync(controls, async context =>
+            {
+                var process = await context.Process("dotnet").Arguments("--version").RunAsync();
+                context.WriteLine($"Process result: {process.ExitCode}:{process.Succeeded}");
+            });
+        }
         else if (scenario == "typed")
         {
             var text = command.Option<string>("text", "Optional text.");

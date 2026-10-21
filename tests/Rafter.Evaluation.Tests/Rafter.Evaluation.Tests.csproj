@@ -48,6 +48,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+    <ProjectReference Include="../../fixtures/processes/ProcessProbe.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -66,6 +67,18 @@
     <None Include="../../examples/validation.cs" Link="Fixtures/examples/validation.cs"
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/targets.cs" Link="Fixtures/examples/targets.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/processes.cs" Link="Fixtures/examples/processes.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/process-failure.cs" Link="Fixtures/examples/process-failure.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/process-working-directory.cs" Link="Fixtures/examples/process-working-directory.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/dependencies.cs" Link="Fixtures/examples/dependencies.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../fixtures/workflow/**"
+          Exclude="../../fixtures/workflow/**/bin/**;../../fixtures/workflow/**/obj/**"
+          Link="Fixtures/%(RecursiveDir)%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../Directory.Packages.props" Link="Fixtures/Directory.Packages.props"
           CopyToOutputDirectory="PreserveNewest" />

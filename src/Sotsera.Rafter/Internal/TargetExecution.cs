@@ -21,9 +21,11 @@ internal sealed class TargetExecution(TargetPlan plan)
             Current = target;
             output.TargetStarted(target, Plan.DependencySuffix(target));
             var elapsed = Stopwatch.StartNew();
-            var task = target.Body(context)
-                ?? throw new InvalidOperationException($"Target '{target.Name}' returned a null task.");
-            await task.ConfigureAwait(false);
+            await context.RunBodyAsync(target.Body, $"Target '{target.Name}'").ConfigureAwait(false);
+            if (context.ProcessFailure)
+            {
+                return;
+            }
             if (output.Failure is { } failure)
             {
                 ExceptionDispatchInfo.Capture(failure).Throw();

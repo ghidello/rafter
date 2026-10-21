@@ -26,8 +26,16 @@ dotnet run --file examples/targets.cs -- --name Ada
 dotnet run --file examples/targets.cs -- --help
 ```
 
-Processes, analyzers, and packaging remain separate work. The four process-based examples are still syntax drafts,
-including the build/test dependency workflow.
+The [process runtime](docs/process-runtime.md) adds owned Windows child processes, separate output streams,
+child directory/environment settings, failure actions, and cancellation with descendant cleanup:
+
+```powershell
+dotnet run --file examples/processes.cs -- --quiet
+dotnet run --file examples/dependencies.cs -- --project fixtures/workflow/sample-tests/BuildSample.Tests.csproj
+```
+
+All eight examples now run through project references. Analyzers, packaging, and process ownership on other platforms
+remain separate work. See [example prerequisites](examples/README.md) before running build-oriented scripts.
 
 The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-based and project-consumer checks
 through xUnit v3 and Microsoft.Testing.Platform. It also verifies the runtime through a production project reference.

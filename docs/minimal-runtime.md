@@ -115,7 +115,8 @@ The scaffold-dotnet-test-project skill led to reusing the existing test project 
 reference. No placeholder solution or analyzer project was added. csharp-scripts guided real file-app project references
 and explicit managed execution; run-tests guided native MTP and TRX reporting. The checked-in fixtures are retained.
 
-Typed inputs/validators, target graphs, external processes and descendant settlement, child ANSI policy, analyzers,
-automatic imports, and local NuGet packaging remain pending. The runtime project is deliberately non-packable at this
+Subsequent slices implement [typed inputs/validators](typed-inputs.md), [target graphs](targets.md), and
+[Windows processes and descendant settlement](process-runtime.md). Child ANSI policy, analyzers, automatic imports,
+and local NuGet packaging remain pending. The runtime project is deliberately non-packable at this
 stage. Native AOT and Linux/macOS compatibility need their own verification. No production startup budget is claimed
 from the evaluation benchmarks or the elapsed number in this transcript.

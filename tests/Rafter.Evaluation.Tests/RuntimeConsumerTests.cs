@@ -38,6 +38,11 @@ public sealed class RuntimeConsumerTests
         asynchronous.StandardOutput.Should().Be("Async body finished." + Environment.NewLine);
         asynchronous.StandardError.Should().BeEmpty();
 
+        var process = await consumer.RunAsync("process", "--quiet");
+        process.ExitCode.Should().Be(0);
+        process.StandardOutput.Should().Contain("10.0.").And.Contain("Process result: 0:True");
+        process.StandardError.Should().BeEmpty();
+
         var help = await consumer.RunAsync("failure", "--help");
         help.ExitCode.Should().Be(0);
         help.StandardError.Should().BeEmpty();

@@ -1,4 +1,7 @@
-// Syntax draft: typed inputs and external processes are not implemented yet.
+#!/usr/bin/env dotnet
+#:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
+#:property PublishAot=false
+
 using Sotsera.Rafter;
 
 var command = Rafter.Command("Build a project and inspect an unsuccessful result before leaving the body.");

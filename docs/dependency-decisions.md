@@ -13,7 +13,7 @@ for exact versions, resolved dependencies, and observed results. Existing test-t
 | SDK and target framework | .NET 10 SDK 10.0.402, C# 14, and net10.0, with Windows x64 verification first. | Configured for the harness and minimal runtime; see their recorded results. |
 | CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 adopted for runtime controls and dynamic string/int/bool inputs; see the typed-input record. |
 | Terminal rendering | Use `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. | 0.57.2 adopted for runtime output and dynamic help, with Ansi 0.57.2 as its only transitive package. |
-| Process execution | Start the assessment with framework process APIs plus platform ownership mechanisms. Evaluate a wrapper only if it fits ownership at launch, signalling, and output settlement. | Mechanism and any package remain pending. |
+| Process execution | BCL streams/tasks plus Windows Job Object and process-creation interop. | [Implemented and checked on Windows](process-runtime.md); no extra runtime package. Other platforms remain unverified. |
 | Analyzer development | Use Roslyn APIs; select compatible `Microsoft.CodeAnalysis` packages for the analyzer project and its host baseline. | Proposed tooling direction; versions and packaging pending. |
 | Tests | xUnit v3, Microsoft.Testing.Platform, and AwesomeAssertions, as specified in `AGENTS.md`. | xunit.v3.mtp-v2 4.0.2, MTP 2.5.1, AwesomeAssertions 9.6.0; local native-MTP run passed. |
 | Dependency injection, hosting, logging, filesystem helpers | Do not introduce a framework package without a concrete need in the first examples. Start with direct composition and framework APIs where sufficient. | Proposed initial restraint, not a permanent exclusion. |
@@ -90,7 +90,9 @@ settlement requirements. Do not adopt or reject it without checking those integr
 Use the [Aspire review](aspire-process-shutdown-review.md) and agreed
 [ownership policy](example-design-plan.md#completion-of-owned-process-scopes) as evaluation criteria. Native interop or
 a supervisor may still be needed. A wrapper must reduce work without weakening the contract or requiring a duplicate
-process-launch layer. This decision can follow the command/input slice, but must precede process implementation.
+process-launch layer. The [Windows implementation](process-runtime.md) uses direct native creation with a job attribute,
+scoped Ctrl+Break where supported, asynchronous BCL named pipes, and independent ownership verification. No wrapper
+package is needed for this implementation; this does not claim that CliWrap is incompatible in general.
 
 ## Selection and version gate
 

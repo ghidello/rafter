@@ -1,7 +1,8 @@
 # Rafter roots and paths
 
 Agreed design for the new Rafter. The [minimal runtime](minimal-runtime.md) implements per-invocation root capture;
-process/path APIs and explicit roots remain pending. The captured root is currently internal to the invocation.
+the [process runtime](process-runtime.md) implements child working directories and environment overrides on Windows.
+Explicit roots remain pending. The captured root is currently internal to the invocation.
 
 ## Default root
 
@@ -57,6 +58,11 @@ await context.Process("dotnet")
 With a command root of `C:\work\sample`, this starts the child in `C:\work\sample\src`. The setting changes neither
 the script process's working directory nor the parent shell's directory. It also leaves the command root unchanged.
 See the [working-directory example](../examples/process-working-directory.cs).
+
+The process builder rejects a second `WorkingDirectory` call, even with the same path. An executable path containing
+a separator or drive prefix also resolves against the captured root. Bare executable names use Windows direct-launch
+lookup, including the script process's PATH; a child PATH override does not change executable lookup. Argument tokens
+are passed unchanged, so relative paths inside arguments are interpreted by the child from its own working directory.
 
 ## Explicit roots
 

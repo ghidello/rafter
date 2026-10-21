@@ -1,10 +1,27 @@
 # Rafter examples
 
-[minimal.cs](minimal.cs), [options.cs](options.cs), [validation.cs](validation.cs), and [targets.cs](targets.cs) run
-against the new runtime through their project references. The other four scripts remain syntax drafts for external
-processes, including the build/test workflow in [dependencies.cs](dependencies.cs). The target-only example uses real
-callbacks to prepare and print a greeting. See the [design plan](../docs/example-design-plan.md) for accepted decisions
-and open topics.
+All eight examples run against the new runtime through project references. The process examples currently require
+Windows; the target-only example prepares and prints a greeting without child processes. See the
+[design plan](../docs/example-design-plan.md) for accepted decisions and open topics.
+
+| Example | Prerequisites |
+| --- | --- |
+| [minimal.cs](minimal.cs), [options.cs](options.cs), [validation.cs](validation.cs), [targets.cs](targets.cs) | .NET 10 SDK; use `--help` for declared inputs. |
+| [processes.cs](processes.cs) | Windows and `dotnet` on the script process's executable search path. |
+| [process-failure.cs](process-failure.cs) | `--project` identifies a buildable project; a failed build demonstrates `Fail` returning its result. |
+| [process-working-directory.cs](process-working-directory.cs) | Launch from a directory containing `src` with a buildable project or solution. |
+| [dependencies.cs](dependencies.cs) | `--project` identifies a test project; uses .NET 10 native Microsoft.Testing.Platform mode. |
+
+The [workflow fixture](../fixtures/workflow/) supplies a small library and a one-test project. From the repository root:
+
+```powershell
+dotnet run --file examples/process-failure.cs -- --project fixtures/workflow/src/BuildSample.csproj
+dotnet run --file examples/dependencies.cs -- --project fixtures/workflow/sample-tests/BuildSample.Tests.csproj
+```
+
+To exercise `process-working-directory.cs`, launch the file by its absolute path from `fixtures/workflow`.
+The script location does not change the captured invocation root. The integration suite copies these fixtures into
+temporary directories and also verifies intentionally broken builds and failing tests.
 
 Use block lambdas for command and target bodies, even when the body contains one statement. Keep short predicates
 and value-returning callbacks inline. Use `return;` only when a body needs to exit early, as in

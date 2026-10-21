@@ -76,6 +76,7 @@ public sealed class Command
         InvocationCancellation? cancellation = null;
         IDisposable? subscription = null;
         TargetExecution? targetExecution = null;
+        ProcessInvocation? processes = null;
         var code = 1;
         var executed = false;
         var reported = new HashSet<Exception>(ReferenceEqualityComparer.Instance);
@@ -196,7 +197,8 @@ public sealed class Command
                     {
                         output.Invalid("Invalid input", validation.Diagnostics);
                     }
-                    var context = new RafterContext(host.RootDirectory, output, cancellation.Token, arguments.Values);
+                    processes = new(cancellation, output);
+                    var context = new RafterContext(host.RootDirectory, output, cancellation.Token, arguments.Values, processes);
                     try
                     {
                         if (validation.Exception is { } validationException)
@@ -226,11 +228,9 @@ public sealed class Command
                             }
                             else
                             {
-                                var task = body!(context)
-                                    ?? throw new InvalidOperationException("The command body returned a null task.");
-                                await task.ConfigureAwait(false);
+                                await context.RunBodyAsync(body!, "The command body").ConfigureAwait(false);
                             }
-                            code = 0;
+                            code = processes.Failed ? 1 : 0;
                         }
                     }
                     catch (OperationCanceledException exception) when (
@@ -272,6 +272,14 @@ public sealed class Command
 
         if (output is not null)
         {
+            if (processes is { Failed: true })
+            {
+                code = 1;
+                foreach (var diagnostic in processes.Diagnostics)
+                {
+                    Report(diagnostic, "Process execution");
+                }
+            }
             if (output.Failure is { } failure)
             {
                 Report(failure, "Output");
