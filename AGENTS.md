@@ -1,9 +1,10 @@
 # Working on Rafter
 
 Start with the [example design plan](docs/example-design-plan.md) for the current discussion topics and progress.
-Use the [first milestone review](docs/first-working-examples.md) for proposed scope and issue outlines; do not treat
-its unresolved recommendations as accepted requirements.
+Use the [first milestone record](docs/first-working-examples.md) and [completion summary](docs/milestone-review.md)
+for the delivered Windows baseline; do not treat their future recommendations as accepted requirements.
 Use Markdown for project documents. Keep proposed syntax distinct from agreed behavior and implemented capabilities.
+Use the [documentation index](docs/README.md) for current development entry points and historical evaluation records.
 
 ## Project direction and references
 

@@ -1,4 +1,32 @@
-# First working examples: output and editor review
+# First working examples: completion summary
+
+Completed on 2026-10-21. The [First working examples milestone](https://github.com/sotsera/rafter/milestone/1)
+delivered the selected Windows x64 baseline; its nine assigned issues are closed. Option-policy diagnostics
+([#21](https://github.com/sotsera/rafter/issues/21)) and mixed-launcher process isolation
+([#23](https://github.com/sotsera/rafter/issues/23)) were completed as follow-ups, with the latter merged through
+[PR #24](https://github.com/sotsera/rafter/pull/24) at `eda306513ee9cd0154d6712fc3821569348d398e`.
+
+| Delivered area | Scope and evidence |
+| --- | --- |
+| Runnable authoring | All eight [examples](../examples/README.md) run as real C# file apps; regular project consumers are also verified. |
+| Commands and inputs | Sync/async bodies, invocation roots, help and exit codes; string/int/bool options, aliases, required/default/optional values, and individual/combined validation. See [minimal runtime](minimal-runtime.md) and [typed inputs](typed-inputs.md). |
+| Workflows and processes | Sequential target graphs, grouping and deduplication; Windows process ownership, separate streams, child settings, failure actions, Ctrl+C and descendant cleanup. See [targets](targets.md) and [process runtime](process-runtime.md). |
+| Presentation | Human terminal output, clean redirected streams, help, quiet/verbose/plain modes, and `NO_COLOR`. The actual-runtime review below passed 38 terminal cases; CI runs 23 redirected cases. |
+| Authoring and packaging | Four [analyzers](authoring-diagnostics.md), a [local package](local-package.md), automatic imports with an opt-out, and live VS Code feedback for file apps and projects. |
+
+The final implementation commit `1e466b2` passed **413 tests, zero failed/skipped**, locally and in both
+[upstream CI](https://github.com/sotsera/rafter/actions/runs/39607738575) and
+[fork CI](https://github.com/ghidello/rafter/actions/runs/39607837933). Both hosted runs passed 23 redirected-output
+checks, built without warnings/errors, and packed successfully. The
+[post-merge main run](https://github.com/sotsera/rafter/actions/runs/39614972315) also passed. Actual Ctrl+C recorded
+invocation exit `130` and no remaining child. Detailed reproduction and historical evidence limits are retained in
+the [process investigation](process-test-isolation.md).
+
+This is a completed first milestone, with public publication, additional platforms, AOT, and later product capabilities
+still outside its scope. The [repository organization review](repository-review.md) records the next maintenance
+discussion; it proposes changes without treating them as implemented.
+
+## Original output and editor review
 
 Review date: 2026-10-21. [Issue #19](https://github.com/sotsera/rafter/issues/19), starting from merged PR #18
 (`ad36178c662a79d8502254ef129f1a779926bde1`). The source changes in this review add repeatable evidence tooling and fix
@@ -101,6 +129,7 @@ failed attempts are not counted as verification.
 ## Remaining boundaries
 
 The initial Windows examples, package integration, selected diagnostics, output review, and selected editor feedback
-are covered. Deferred work includes repeated/conflicting configuration and empty-target analyzers, code fixes, child
+are covered. RAF004 subsequently added bounded repeated/conflicting option-policy checks. Broader configuration and
+empty-target analyzers remain deferred, together with code fixes, child
 ANSI policy, additional platforms, AOT, public publication, and the later capabilities listed in the design plan.
 The milestone establishes a working baseline; it does not imply those deferred features or compatibility gates are done.

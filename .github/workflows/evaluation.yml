@@ -36,13 +36,13 @@ jobs:
           "ImageOS=$env:ImageOS ImageVersion=$env:ImageVersion" | Out-File artifacts/runner-image.txt
 
       - name: Restore
-        run: dotnet restore tests/Rafter.Evaluation.Tests/Rafter.Evaluation.Tests.csproj
+        run: dotnet restore Rafter.slnx
 
       - name: Build
-        run: dotnet build tests/Rafter.Evaluation.Tests/Rafter.Evaluation.Tests.csproj --configuration Release --no-restore -bl:artifacts/build.binlog
+        run: dotnet build Rafter.slnx --configuration Release --no-restore -bl:artifacts/build.binlog
 
       - name: Run evaluation
-        run: dotnet test --project tests/Rafter.Evaluation.Tests/Rafter.Evaluation.Tests.csproj --configuration Release --no-build --report-trx --results-directory artifacts/test-results
+        run: dotnet test --solution Rafter.slnx --configuration Release --no-build --report-trx --results-directory artifacts/test-results
 
       - name: Pack local runtime and analyzers
         run: dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --no-build --no-restore --output artifacts/packages

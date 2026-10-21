@@ -33,8 +33,9 @@ the next topic. Agreements can be revised when implementation or actual use reve
 ## GitHub issue workflow
 
 The [repository workflow](github-workflow.md) now records verified identities, PR/merge rules, current enforcement,
-and the [First working examples milestone](https://github.com/sotsera/rafter/milestone/1). Evaluation issues #1–#3 are
-published upstream; the later runtime issues remain to be scoped as the evaluations conclude.
+and the completed [First working examples milestone](https://github.com/sotsera/rafter/milestone/1). Its evaluation
+and runtime issues are closed; the [completion summary](milestone-review.md) records the selected Windows baseline.
+Later product topics still need their own discussion and scoped issues.
 
 Keep the initial syntax discussions, decisions, and open questions in Markdown. Introduce GitHub issues after agreeing
 on the first group of examples and before implementation begins. Do not create one issue per topic in advance;

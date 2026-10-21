@@ -1,10 +1,12 @@
 # Rafter first working examples
 
-Proposed implementation milestone, following a consistency review of the seven current example drafts.
+Completed Windows x64 milestone, closed on 2026-10-21 after all nine assigned issues were completed. The
+[completion summary](milestone-review.md) records the delivered scope, final 413-test baseline, and linked CI evidence.
+The planning discussion below preserves how that scope was selected; future recommendations remain proposals.
 
 The examples form a coherent first implementation scope: declare a command and inputs, validate them, execute a body
 or a target graph, and run external tools with explicit failure handling. The public syntax fits together without
-requiring another broad redesign. Some observable behavior still needs decisions before its implementation begins.
+requiring another broad redesign. The decisions needed for the selected first milestone are now implemented and verified.
 
 The [example design plan](example-design-plan.md) remains the source of agreed API behavior. Recommendations below
 are proposals, not additional accepted requirements. The [minimal runtime](minimal-runtime.md) implements body-only
@@ -12,16 +14,17 @@ invocations; [typed inputs](typed-inputs.md) and [callback targets](targets.md) 
 The [process slice](process-runtime.md) now implements owned Windows processes. Initial
 [authoring diagnostics](authoring-diagnostics.md) and a [local package](local-package.md) are also implemented;
 actual output and live VS Code authoring feedback are verified in the [milestone review](milestone-review.md).
-The [dependency review](dependency-decisions.md) records the initial shortlist and compatibility checks to complete
-before adopting packages. Dependency selection is part of readiness, not an incidental scaffolding choice.
+The [dependency review](dependency-decisions.md) records the initial shortlist; the linked executable evaluations and
+[SDK baseline](sdk-and-platform-baseline.md) record the adopted dependencies and compatibility evidence.
 
-## Review of the current drafts
+## Review of the working examples
 
-| Draft | Purpose and consistency finding |
+| Example | Purpose and consistency finding |
 | --- | --- |
 | [minimal.cs](../examples/minimal.cs) | Runnable with a project reference to the new runtime: required description, direct output, and a body supplied to `RunAsync`. |
 | [options.cs](../examples/options.cs) | Required and defaulted inputs read through `GetValue`. No extra target or stored command body is needed. |
 | [validation.cs](../examples/validation.cs) | Individual rules, cross-input rules, and an omitted optional input fit in one example. Ordinary rejection and thrown-validator behavior are specified. |
+| [targets.cs](../examples/targets.cs) | Callback bodies, a shared dependency, and a body-free group demonstrate sequential graph execution without external tools. |
 | [processes.cs](../examples/processes.cs) | An awaited process whose result can be ignored. The completion message demonstrates default stopping on failure. |
 | [process-failure.cs](../examples/process-failure.cs) | `Fail` records failure but returns the result, allowing explicit inspection and return. It does not imply successful command completion. |
 | [process-working-directory.cs](../examples/process-working-directory.cs) | Relative child working directory and child-only environment overrides match the root policy. |
@@ -45,11 +48,11 @@ Important boundaries to preserve during implementation:
 The target example's build and test commands now accept an explicit project input and are exercised with an isolated
 library/test fixture using the selected SDK and native MTP runner. Success, failed builds, and failed tests are verified.
 
-## Proposed milestone scope
+## Delivered milestone scope
 
-Make the seven drafts run as real file-based C# applications and demonstrate the same public API in a regular C#
-consumer project. Use isolated fixtures for build/test examples. Produce a local package for consumer and analyzer
-verification; publication is outside the milestone.
+The seven original drafts and added callback-target example run as real file-based C# applications. Regular C#
+consumers exercise the same public API, with isolated fixtures for build/test scenarios. A local package supports
+consumer and analyzer verification; public publication remains outside this milestone.
 
 Include:
 
@@ -67,7 +70,7 @@ Include:
 The cancellation and owned-process behavior is agreed in the design plan and verified on Windows by the process slice.
 Other platforms still need their own ownership implementation and evidence.
 
-## Decisions needed before the affected implementation
+## Design decisions and evaluation record
 
 These groups consolidate the remaining choices. They do not require reopening the accepted syntax.
 
@@ -213,7 +216,7 @@ the examples.
 The initial [evaluation issues](github-workflow.md#published-initial-work) are complete. Minimal invocation is scoped in
 [#9](https://github.com/sotsera/rafter/issues/9), and typed inputs/validation in
 [#11](https://github.com/sotsera/rafter/issues/11), and callback target graphs in
-[#13](https://github.com/sotsera/rafter/issues/13); the remaining rows are outlines. Detailed acceptance checklists live in
+[#13](https://github.com/sotsera/rafter/issues/13). The delivered slices are listed below. Detailed acceptance checklists live in
 the scoped issues, with links here and to design notes rather than parallel copies of the same checklist.
 
 | Work item | Concrete completion evidence |

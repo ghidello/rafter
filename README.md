@@ -2,6 +2,13 @@
 
 Rafter is being built afresh through small C# automation examples.
 
+The **First working examples** milestone is complete for the selected Windows x64 baseline. Read the
+[completion summary](docs/milestone-review.md) for delivered capabilities, the 413-test baseline, and platform limits.
+The [repository review](docs/repository-review.md) maps the folders and records proposed organization improvements.
+
+Open [Rafter.slnx](Rafter.slnx) from this repository root to work on the runtime, analyzers, and main test suite.
+Use the [documentation index](docs/README.md) for current guides, development commands, and historical evaluations.
+
 The first [runtime slice](docs/minimal-runtime.md) runs body-only commands with validation, help, direct output,
 exception containment, and cooperative managed cancellation. Try the real [minimal example](examples/minimal.cs):
 
@@ -51,7 +58,7 @@ The [renderer evaluation](docs/renderer-evaluation.md) records real terminal che
 between Spectre.Console, its Ansi-only package, and framework output.
 
 See the [example design plan](docs/example-design-plan.md) for the working approach, topic checklist, and open questions.
-The [first working examples milestone](docs/first-working-examples.md) proposes the initial implementation scope and remaining decisions.
+The [first working examples record](docs/first-working-examples.md) preserves the delivered scope and its design decisions.
 The [dependency review](docs/dependency-decisions.md) lists candidate packages and the checks needed before adoption.
 The [SDK and platform review](docs/sdk-and-platform-baseline.md) recommends the build baseline and verification order.
 The [GitHub workflow](docs/github-workflow.md) identifies upstream, the development fork, and the published evaluation issues.
