@@ -50,12 +50,12 @@ Local environment: Windows 10.0.26220 x64, SDK 10.0.402, managed net10.0 executi
 The existing native-MTP test entry point reports **Passed: 166, Failed: 0, Skipped: 0**: 109 previous evaluation cases
 and 57 runtime/consumer cases. The final Release build has zero warnings/errors. The PR records GitHub CI evidence.
 
-- [Invocation tests](../tests/Rafter.Evaluation.Tests/InvocationTests.cs) cover validation/help ordering, controls,
+- [Invocation tests](../tests/Rafter.Tests/Commands/InvocationTests.cs) cover validation/help ordering, controls,
   safe diagnostics, literal output, full sync/async exceptions, null tasks, independent invocation state, cancellation
   settlement/failure precedence, delayed flushes, writer failures, ownership, and runtime NO_COLOR styling.
-- [Host tests](../tests/Rafter.Evaluation.Tests/RuntimeHostTests.cs) change the actual process working directory in an
+- [Host tests](../tests/Rafter.Tests/Commands/RuntimeHostTests.cs) change the actual process working directory in an
   isolated test collection, proving capture at invocation entry and retention after a later host change.
-- [Consumer tests](../tests/Rafter.Evaluation.Tests/RuntimeConsumerTests.cs) build and run actual file-app and ordinary
+- [Consumer tests](../tests/Rafter.Tests/Consumers/RuntimeConsumerTests.cs) build and run actual file-app and ordinary
   project consumers in temporary workspaces outside the checkout. They execute sync/awaited async bodies, help,
   declaration errors, and nested failures; build-negative cases prove missing description/body rejection.
   The actual minimal.cs file is also built and run unchanged from its copied workspace.
@@ -75,8 +75,8 @@ dotnet run --file examples/minimal.cs -- --quiet
 For interactive cancellation, build the regular consumer and run it in a terminal, then press Ctrl+C:
 
 ```powershell
-dotnet build fixtures/runtime/project/Consumer.csproj --configuration Release
-dotnet fixtures/runtime/project/bin/Release/net10.0/Consumer.dll cancel --plain
+dotnet build tests/testassets/consumers/runtime/project/Consumer.csproj --configuration Release
+dotnet tests/testassets/consumers/runtime/project/bin/Release/net10.0/Consumer.dll cancel --plain
 ```
 
 The fixture's optional RAFTER_FIXTURE_RESULT environment variable names a file to record the invocation result.

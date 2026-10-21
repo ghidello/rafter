@@ -17,14 +17,14 @@ use a package reference with a configured local feed, or supply equivalent proje
 | [process-working-directory.cs](process-working-directory.cs) | Launch from a directory containing `src` with a buildable project or solution. |
 | [dependencies.cs](dependencies.cs) | `--project` identifies a test project; uses .NET 10 native Microsoft.Testing.Platform mode. |
 
-The [workflow fixture](../fixtures/workflow/) supplies a small library and a one-test project. From the repository root:
+The [workflow fixture](../tests/testassets/workflows/) supplies a small library and a one-test project. From the repository root:
 
 ```powershell
-dotnet run --file examples/process-failure.cs -- --project fixtures/workflow/src/BuildSample.csproj
-dotnet run --file examples/dependencies.cs -- --project fixtures/workflow/sample-tests/BuildSample.Tests.csproj
+dotnet run --file examples/process-failure.cs -- --project tests/testassets/workflows/src/BuildSample.csproj
+dotnet run --file examples/dependencies.cs -- --project tests/testassets/workflows/sample-tests/BuildSample.Tests.csproj
 ```
 
-To exercise `process-working-directory.cs`, launch the file by its absolute path from `fixtures/workflow`.
+To exercise `process-working-directory.cs`, launch the file by its absolute path from `tests/testassets/workflows`.
 The script location does not change the captured invocation root. The integration suite copies these fixtures into
 temporary directories and also verifies intentionally broken builds and failing tests.
 
@@ -32,5 +32,5 @@ Use block lambdas for command and target bodies, even when the body contains one
 and value-returning callbacks inline. Use `return;` only when a body needs to exit early, as in
 [process-failure.cs](process-failure.cs).
 
-Runnable [runtime consumers](../fixtures/runtime/) verify the implemented API in file apps and ordinary projects.
-The separate [baseline consumers](../fixtures/consumers/) verify the SDK and consumer execution environment.
+Runnable [runtime consumers](../tests/testassets/consumers/runtime/) verify the implemented API in file apps and ordinary projects.
+The separate [baseline consumers](../tests/testassets/consumers/host/) verify the SDK and consumer execution environment.

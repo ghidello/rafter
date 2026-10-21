@@ -1,13 +1,13 @@
 <Solution>
-  <Folder Name="/fixtures/" />
-  <Folder Name="/fixtures/processes/">
-    <Project Path="fixtures/processes/ProcessProbe.csproj" />
-  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Sotsera.Rafter.Analyzers/Sotsera.Rafter.Analyzers.csproj" />
     <Project Path="src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Rafter.Evaluation.Tests/Rafter.Evaluation.Tests.csproj" />
+    <Project Path="tests/Rafter.Tests/Rafter.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/testassets/" />
+  <Folder Name="/tests/testassets/processes/">
+    <Project Path="tests/testassets/processes/ProcessProbe.csproj" />
   </Folder>
 </Solution>

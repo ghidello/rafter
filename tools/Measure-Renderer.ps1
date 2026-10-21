@@ -40,8 +40,8 @@ $consumers = @()
 $builds = @()
 foreach ($variant in @('framework', 'ansi', 'full')) {
     foreach ($hostKind in @('file-app', 'project')) {
-        $target = if ($hostKind -eq 'file-app') { "fixtures/renderer/$variant/probe.cs" }
-                  else { "fixtures/renderer/$variant/project/Consumer.csproj" }
+        $target = if ($hostKind -eq 'file-app') { "tests/testassets/evaluations/renderer/$variant/probe.cs" }
+                  else { "tests/testassets/evaluations/renderer/$variant/project/Consumer.csproj" }
         $restore = Invoke-Probe @('restore', $target)
         $build = Invoke-Probe @('build', $target, '--configuration', 'Release', '--no-restore', '--disable-build-servers')
         $builds += [pscustomobject]@{
@@ -50,7 +50,7 @@ foreach ($variant in @('framework', 'ansi', 'full')) {
         }
         [string[]]$command = if ($hostKind -eq 'file-app') {
             @('run', '--file', $target, '--configuration', 'Release', '--no-build', '--')
-        } else { @("fixtures/renderer/$variant/project/bin/Release/net10.0/Consumer.dll") }
+        } else { @("tests/testassets/evaluations/renderer/$variant/project/bin/Release/net10.0/Consumer.dll") }
         $consumers += [pscustomobject]@{ Variant = $variant; Host = $hostKind; Command = $command }
     }
 }

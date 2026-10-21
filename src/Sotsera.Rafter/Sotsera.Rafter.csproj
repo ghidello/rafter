@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Rafter.Evaluation.Tests" />
+    <InternalsVisibleTo Include="Rafter.Tests" />
   </ItemGroup>
 
   <ItemGroup>

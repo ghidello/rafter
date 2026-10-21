@@ -7,7 +7,7 @@ $repository = Split-Path $PSScriptRoot -Parent
 Set-Location -LiteralPath $repository
 $evidenceDirectory = Join-Path $repository 'artifacts/renderer/terminal'
 New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
-$assembly = Join-Path $repository 'fixtures/renderer/full/project/bin/Release/net10.0/Consumer.dll'
+$assembly = Join-Path $repository 'tests/testassets/evaluations/renderer/full/project/bin/Release/net10.0/Consumer.dll'
 if (-not (Test-Path -LiteralPath $assembly)) { throw 'Build the full renderer project consumer first.' }
 $cases = @()
 

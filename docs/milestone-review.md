@@ -99,7 +99,7 @@ passed and the isolated editor exited. Public API references:
 ## Reproduce and evidence
 
 ```powershell
-dotnet build fixtures/runtime/project/Consumer.csproj --configuration Release
+dotnet build tests/testassets/consumers/runtime/project/Consumer.csproj --configuration Release
 ./tools/Verify-RuntimeTerminal.ps1
 # For headless CI:
 ./tools/Verify-RuntimeTerminal.ps1 -RedirectedOnly

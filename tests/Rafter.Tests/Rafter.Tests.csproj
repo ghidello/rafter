@@ -1,0 +1,52 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>14.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <IsPackable>false</IsPackable>
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" PrivateAssets="all" />
+    <PackageReference Include="Spectre.Console" PrivateAssets="all" />
+    <PackageReference Include="System.CommandLine" PrivateAssets="all" />
+    <PackageReference Include="xunit.v3.mtp-v2" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../testassets/evaluations/parser/CandidateAdapter.cs" Link="Evaluation/Parser/CandidateAdapter.cs" />
+    <Compile Include="../testassets/evaluations/parser/ParserCandidate.cs" Link="Evaluation/Parser/ParserCandidate.cs" />
+    <Compile Include="../testassets/evaluations/renderer/shared/RendererDestination.cs" Link="Evaluation/Renderer/RendererDestination.cs" />
+    <Compile Include="../testassets/evaluations/renderer/shared/HelpSamples.cs" Link="Evaluation/Renderer/HelpSamples.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+    <ProjectReference Include="../../src/Sotsera.Rafter.Analyzers/Sotsera.Rafter.Analyzers.csproj" />
+    <ProjectReference Include="../testassets/processes/ProcessProbe.csproj" />
+  </ItemGroup>
+
+  <!-- Isolated consumers receive the same relative source layout as this repository. -->
+  <ItemGroup>
+    <None Include="../testassets/**"
+          Exclude="../testassets/**/bin/**;../testassets/**/obj/**"
+          Link="Workspace/tests/testassets/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/**"
+          Exclude="../../src/**/bin/**;../../src/**/obj/**"
+          Link="Workspace/src/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/*.cs;../../examples/Directory.Build.targets"
+          Link="Workspace/examples/%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../global.json;../../NuGet.Config;../../Directory.Packages.props"
+          Link="Workspace/%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

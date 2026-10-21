@@ -50,7 +50,8 @@ their own instructions in [local packaging](local-package.md) and the [milestone
 The [example design plan](example-design-plan.md) owns accepted API decisions and the broader topic inventory.
 The [first working examples record](first-working-examples.md) preserves the completed milestone's selected scope.
 Later capabilities remain separate work; a completed example group does not establish every reference feature or
-platform. Follow-up organization uses `tests/testassets/` for maintained test/tool inputs; those moves are a later PR.
+platform. Maintained test/tool inputs now live under [tests/testassets](../tests/testassets/README.md); its inventory
+identifies automated and optional-tool callers. The main suite is `tests/Rafter.Tests/`, grouped by responsibility.
 
 ## Evaluation and investigation history
 

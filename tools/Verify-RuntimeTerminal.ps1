@@ -7,8 +7,8 @@ if (-not $RedirectedOnly -and ([Console]::IsOutputRedirected -or [Console]::IsEr
 $repository = Split-Path $PSScriptRoot -Parent
 $evidence = Join-Path $repository 'artifacts/runtime-review'
 New-Item -ItemType Directory -Path $evidence -Force | Out-Null
-$assembly = Join-Path $repository 'fixtures/runtime/project/bin/Release/net10.0/Consumer.dll'
-if (-not (Test-Path -LiteralPath $assembly)) { throw 'Build fixtures/runtime/project/Consumer.csproj in Release first.' }
+$assembly = Join-Path $repository 'tests/testassets/consumers/runtime/project/bin/Release/net10.0/Consumer.dll'
+if (-not (Test-Path -LiteralPath $assembly)) { throw 'Build tests/testassets/consumers/runtime/project/Consumer.csproj in Release first.' }
 $results = @()
 
 function Invoke-ReviewCase([string]$Scenario, [string]$Mode, [bool]$RedirectOutput, [bool]$RedirectError, [int]$Expected) {

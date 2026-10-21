@@ -4,7 +4,12 @@ Reviewed on 2026-10-21 for [issue #25](https://github.com/sotsera/rafter/issues/
 [first milestone](milestone-review.md). This is a structural review of files, project references, package contents,
 fixture consumers, and CI entry points. It is not a new correctness audit of every method. Recommendations below
 were initially proposed. The approved sequence and navigation implementation are recorded below; test/asset moves
-and the later organization work remain separate changes.
+and later organization work are delivered separately.
+
+The current layout now has one `tests/Rafter.Tests/` project grouped by responsibility, with maintained executable
+inputs under [tests/testassets](../tests/testassets/README.md). [Issue #28](https://github.com/sotsera/rafter/issues/28)
+records the coordinated rename/move; the tables below retain the original review baseline rather than rewriting its
+historical counts. Documentation/tool grouping and generated-evidence policy remain scoped in issue #29.
 
 ## What is actually in the checkout
 
@@ -134,3 +139,38 @@ Navigation verification on 2026-10-21 listed the exact `Rafter.slnx` and confirm
 then passed **413 tests, zero failed/skipped**. This verifies the new solution's test discovery, not just its build.
 The report is under `artifacts/test-results/navigation/`. All 79 local file targets in the four navigation documents
 resolved, and the solution project paths exist. Subsequent CI evidence is recorded in the delivery PR.
+
+## Test and asset organization delivered
+
+[Issue #28](https://github.com/sotsera/rafter/issues/28) keeps one
+[Rafter.Tests project](../tests/Rafter.Tests/Rafter.Tests.csproj), grouped into Commands, Inputs, Targets, Processes,
+Authoring, Output, Consumers, Evaluation, and Infrastructure. The solution still contains the same four maintained
+projects. Friend-assembly configuration and the process probe's test runtimeconfig path use the renamed assembly.
+The [test-asset inventory](../tests/testassets/README.md) identifies the automated and optional-tool callers for all
+43 retained assets. Only three asset files changed content, to adjust their relative production-project references;
+the other 40 are byte-identical to the pre-move files.
+
+The copied consumer workspace now mirrors repository paths instead of flattening several asset trees into
+`Fixtures/`. Root SDK, NuGet, and central package configuration is copied once. The working-directory example is
+launched from the copied workflow directory, preserving the behavior exercised by its integration test. No runtime
+policy, dependency version, test assertion, or old reference material changed.
+
+Local Windows x64 verification on 2026-10-21 with SDK 10.0.402:
+
+- `dotnet test --solution Rafter.slnx --configuration Release --report-trx --results-directory artifacts/test-results/testassets-first`
+  passed **413 tests, zero failed/skipped**. Comparing the previous navigation TRX with this report found the same
+  413 case identities after accounting for renamed namespaces and moved entrypoint arguments. This includes real
+  file-app/project/package consumers and process ownership/cancellation cases.
+- Both moved review consumers built in Release with **zero warnings/errors**. `tools/Verify-RuntimeTerminal.ps1`
+  passed **38 cases**, and `tools/Verify-RendererTerminal.ps1` passed **18 cases**, in an actual pseudoterminal.
+- `tools/Measure-Renderer.ps1 -Samples 1` built and ran all six renderer/host combinations. This was a path and
+  execution smoke check, not a replacement performance conclusion. Prior runtime/renderer evidence was copied to
+  `artifacts/testassets-organization/prior-evidence/` before these tools wrote their usual output locations.
+- The runtime/analyzer NuGet package packed successfully with the existing package configuration. The editor tool
+  and its generated package-only probe have no moved-asset references and were unchanged; VS Code was not rerun.
+- The Markdown file-target inventory checked **409 targets**. Only the same nine documented archival targets under
+  `reference/output/` were unresolved; all current targets resolved. This does not verify external URLs or anchors.
+
+Raw reports remain ignored under `artifacts/`; the delivery PR records CI against its exact commit. Pre-existing
+generated output at the former fixture/test paths is preserved. Its cleanup and evidence-retention policy remain
+part of [issue #29](https://github.com/sotsera/rafter/issues/29).

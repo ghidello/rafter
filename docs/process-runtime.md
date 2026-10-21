@@ -122,10 +122,11 @@ requesting work from an already-running external service does not place that ser
 ## Verification
 
 On the local Windows x64 host, the full regression run including the file-app consumer additions passed:
-**Passed: 338, Failed: 0, Skipped: 0**, with no build warnings. Command:
+**Passed: 338, Failed: 0, Skipped: 0**, with no build warnings. The command below uses the current project path;
+the recorded result predates the repository reorganization:
 
 ```powershell
-dotnet test --project tests/Rafter.Evaluation.Tests/Rafter.Evaluation.Tests.csproj --configuration Release --report-trx --results-directory artifacts/test-results
+dotnet test --project tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --report-trx --results-directory artifacts/test-results
 ```
 
 The scoped signalling check records `Scoped console signal supported: True` on the local host; its child exited zero

@@ -38,7 +38,7 @@ child directory/environment settings, failure actions, and cancellation with des
 
 ```powershell
 dotnet run --file examples/processes.cs -- --quiet
-dotnet run --file examples/dependencies.cs -- --project fixtures/workflow/sample-tests/BuildSample.Tests.csproj
+dotnet run --file examples/dependencies.cs -- --project tests/testassets/workflows/sample-tests/BuildSample.Tests.csproj
 ```
 
 All eight examples now run through project references with [authoring diagnostics](docs/authoring-diagnostics.md)

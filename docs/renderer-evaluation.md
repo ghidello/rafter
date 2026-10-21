@@ -6,7 +6,7 @@ synchronization, and literal output. The evaluation does not implement the Rafte
 
 ## Integration established by the probe
 
-[RendererDestination.cs](../fixtures/renderer/shared/RendererDestination.cs) uses Spectre's public Paragraph/IRenderable
+[RendererDestination.cs](../tests/testassets/evaluations/renderer/shared/RendererDestination.cs) uses Spectre's public Paragraph/IRenderable
 layout and AnsiWriter APIs. Each destination has its own writer, policy, layout profile, and gate. Capabilities are
 detected against the actual Console.Out or Console.Error before any recording wrapper is added. Redirection and plain
 mode override styling; default profile enrichers are disabled even when CI/GITHUB_ACTIONS is present.
@@ -34,7 +34,7 @@ and terminal prefixes. Plain mode remains stronger. See the [accepted output des
 ## Executed checks
 
 The existing project now reports **Passed: 109, Failed: 0, Skipped: 0** locally: 83 prior cases and 26 renderer cases.
-[RendererTests.cs](../tests/Rafter.Evaluation.Tests/RendererTests.cs) covers:
+[RendererTests.cs](../tests/Rafter.Tests/Evaluation/RendererTests.cs) covers:
 
 - All three accepted help examples at 100 and 48 columns, in plain and styled form, including long aliases, literal
   brackets, combining marks, wide characters, and an emoji sequence. Content, punctuation, alias order, blank lines,

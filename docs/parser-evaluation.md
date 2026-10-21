@@ -18,14 +18,14 @@ meaning must be decided if positional or pass-through input is introduced; it is
 
 ## Fixtures and skills
 
-- [CandidateAdapter.cs](../fixtures/parser/CandidateAdapter.cs) is the fixed evaluation adapter shared by the tests and
-  [probe.cs](../fixtures/parser/probe.cs). It is not a generic declaration API, command runner, or shipping library.
-- [ParserCandidate.cs](../fixtures/parser/ParserCandidate.cs) exposes an unadapted schema for baseline comparisons.
-- [ParserTests.cs](../tests/Rafter.Evaluation.Tests/ParserTests.cs) checks accepted behavior and runs the real file app.
-  [ParserBaselineTests.cs](../tests/Rafter.Evaluation.Tests/ParserBaselineTests.cs) records incompatible package defaults.
-- The existing consumer launcher copies the parser fixture into its own temporary workspace. The centrally pinned
-  Directory.Packages.props is copied beside that fixture, so `#:package System.CommandLine` resolves the same version
-  outside the checkout. No source reference to the old Rafter repository is used.
+- [CandidateAdapter.cs](../tests/testassets/evaluations/parser/CandidateAdapter.cs) is the fixed evaluation adapter shared by the tests and
+  [probe.cs](../tests/testassets/evaluations/parser/probe.cs). It is not a generic declaration API, command runner, or shipping library.
+- [ParserCandidate.cs](../tests/testassets/evaluations/parser/ParserCandidate.cs) exposes an unadapted schema for baseline comparisons.
+- [ParserTests.cs](../tests/Rafter.Tests/Evaluation/ParserTests.cs) checks accepted behavior and runs the real file app.
+  [ParserBaselineTests.cs](../tests/Rafter.Tests/Evaluation/ParserBaselineTests.cs) records incompatible package defaults.
+- The consumer launcher copies the parser asset and root `Directory.Packages.props` into a temporary workspace,
+  preserving repository-relative paths. `#:package System.CommandLine` therefore resolves the same centrally pinned
+  version outside the checkout. No source reference to the old Rafter repository is used.
 - **csharp-scripts** guided the real managed file app, narrow includes, SDK verification, and isolation from parent
   build configuration. The checked-in fixture is retained as regression evidence.
 - **run-tests** confirmed native MTP syntax, the existing test project, and TRX reporting. No new test project was needed,

@@ -62,24 +62,25 @@ rules and before the body; synchronous user predicates cannot be forcibly interr
 
 The existing Windows native-MTP harness includes:
 
-- [Runtime tests](../tests/Rafter.Evaluation.Tests/TypedInputTests.cs) for declarations, repeated policies, aliases,
+- [Runtime tests](../tests/Rafter.Tests/Inputs/TypedInputTests.cs) for declarations, repeated policies, aliases,
   presence/defaults, grammar and diagnostic privacy, rule ordering, exceptions, snapshots, ownership, cancellation,
   and help at 48/100 columns.
-- [Consumer tests](../tests/Rafter.Evaluation.Tests/TypedInputConsumerTests.cs) building and running both actual
+- [Consumer tests](../tests/Rafter.Tests/Consumers/TypedInputConsumerTests.cs) building and running both actual
   examples in isolated workspaces, plus compiler failures for optional-to-nonnullable assignments, unavailable
   policy methods after finalization, and output facilities on the validation context.
-- [Shared consumer scenarios](../fixtures/runtime/Scenario.cs) proving the typed API in file apps and ordinary
+- [Shared consumer scenarios](../tests/testassets/consumers/runtime/Scenario.cs) proving the typed API in file apps and ordinary
   projects, with explicit optional/nonnullable assignments in both contexts.
 
 Local verification on 2026-10-21: Windows x64, SDK 10.0.402, managed net10.0. Release build completed with
 **0 warnings and 0 errors**. The full native-MTP suite reports **Passed: 231, Failed: 0, Skipped: 0**, including
 65 additional cases and the extended existing consumers. Both consumer forms treat warnings as errors.
 
-Commands used from the repository root:
+Equivalent commands from the repository root use the current project path; the recorded results above predate
+the repository reorganization:
 
 ```powershell
-dotnet build tests/Rafter.Evaluation.Tests/Rafter.Evaluation.Tests.csproj --configuration Release --no-restore -bl:artifacts/build.binlog
-dotnet test --project tests/Rafter.Evaluation.Tests/Rafter.Evaluation.Tests.csproj --configuration Release --no-build --report-trx --results-directory artifacts/test-results
+dotnet build tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --no-restore -bl:artifacts/build.binlog
+dotnet test --project tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --no-build --report-trx --results-directory artifacts/test-results
 ```
 
 A real Windows pseudoterminal run of options.cs help confirmed blue names, lavender type hints, and muted commas.
