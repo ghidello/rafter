@@ -28,7 +28,7 @@ remains blocked until the foreign child exits. With Rafter's explicit handle lis
 alive. Both cases passed locally. This proves the interference mechanism; it does not prove which handle or process
 caused each historical failure.
 
-## Harness correction and remaining runtime boundary
+## Harness correction in PR #22
 
 The tests that launch native Rafter processes now share an xUnit collection with `DisableParallelization = true`.
 They do not overlap unrelated SDK-consumer launchers in the test host. Tests still explicitly launch multiple Rafter
@@ -40,11 +40,8 @@ With this isolation, the full local suite passed **405 tests**, with no failures
 reproduction also passed independently. The PR records hosted CI results for this correction separately from the
 two earlier failed attempts.
 
-This is test-harness isolation, not a runtime interoperability fix. Applications that mix Rafter launches with other
-broad-inheritance launchers in the same host can encounter the same exposure. A per-Rafter lock cannot coordinate an
-unrelated launcher's private lock. Avoid overlapping those launch paths; use Rafter consistently or isolate the external
-launcher. Issue #23 remains open for supported interoperability design and further failure evidence. A clean CI run
-does not establish that arbitrary mixed launchers are safe.
+That correction isolated the harness; it did not fix runtime interoperability. A per-Rafter lock cannot coordinate an
+unrelated launcher's private lock. Issue #23 retained that runtime work, addressed by the implementation below.
 
 No upstream source was copied. The implementation references above explain the observed OS behavior.
 
@@ -58,4 +55,58 @@ five-second failures share that cause.
 
 The fixture now publishes its complete PID file through a same-directory rename before emitting output. Hold and
 graceful-stop modes use the same readiness publication. The output-failure test now requires the PID file and verifies
-that process exited; the previous optional check is removed. No production runtime behavior changes.
+that process exited; the previous optional check is removed. Those PR #22 changes did not alter production behavior.
+
+## Runtime handle isolation for issue #23
+
+Rafter now creates its local stdio handles without inheritance. A suspended copy of the host executable holds the
+inheritable duplicates in a separate handle table. The target uses that helper as its nominal parent and inherits
+only the listed stdio handles. Another launcher in the script process therefore cannot inherit Rafter's temporary
+copies, even if it launches precisely while those copies exist. This follows Microsoft's
+[suspended-helper guidance](https://devblogs.microsoft.com/oldnewthing/20200306-00/?p=103538) and the documented
+[parent-process and handle-list attributes](https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-updateprocthreadattribute).
+No upstream code was copied or new package introduced.
+
+The helper joins the private kill-on-close job at creation. The target inherits that job before executing code;
+breakaway remains disabled. Rafter terminates and waits for the helper before returning from launch. Failed
+preparation or target creation also stops it; closing the job remains final cleanup. The helper's main thread is
+never resumed. There is no persistent helper or process-wide cache. Remote duplicate values are never closed as
+local handles; terminating the helper releases its copies together.
+
+The accepted tradeoff is one extra process per launch and a different reported parent PID. A local alternating
+measurement against merged commit `37e2fd2` used 20 samples per implementation after five warmup pairs. Median native
+launch time was **2.49 ms before** and **6.18 ms with isolation** (ranges 2.29–3.48 and 5.68–9.95 ms). This includes
+helper termination but excludes waiting for the target's exit; it is a local observation, not a latency guarantee.
+Measurement source and TRX are retained locally under `artifacts/issue23` and `artifacts/test-results/issue23-measurement`.
+
+### Windowless-host correction
+
+The first full prototype run passed 411/412 tests but failed the owner-crash fixture: its child exited with Windows
+status `0xC0000142` before publishing readiness. The failing owner had a nonempty console process list but a null
+console window handle. An experimental delay before donor termination did not fix it. Using headless creation for
+that case did; the delay was removed. Rafter now requires both a console window and a console process list before
+choosing shared-console creation/signalling. A pseudoconsole still provides a message-only window, as documented by
+[GetConsoleWindow](https://learn.microsoft.com/en-us/windows/console/getconsolewindow). Windowless hosts take the
+immediate-force path; a separate explicit-detach fixture remains covered.
+
+### Regression coverage and evidence
+
+The deterministic mixed-launcher test starts a foreign `System.Diagnostics.Process` after all donor stdio copies
+exist and before target creation. While that foreign child remains alive, Rafter must settle both output streams
+exactly for normal output, large dual-stream output, graceful stop, forced stop, and a surviving descendant. The tests
+also verify that the donor has exited before launch returns, including missing executables and preparation failures.
+A redirected-input host verifies stdin delivery. The original two-case broad-inheritance reproduction remains as a
+baseline; its intentionally inheritable host pipe is why the test collection still disables outside parallelization.
+Explicit Rafter concurrency and mixed-launcher overlap remain enabled inside tests.
+
+The local full suite passed **413 tests, zero failed/skipped**. An earlier run exposed a UTF-8 mismatch in the new
+stdin fixture's writer; it now explicitly matches the probe's UTF-8 reader. After a final cleanup change prevented
+restarting a failed donor wait from `Dispose`, all ten inheritance/input/cleanup cases passed again. Direct console
+execution passed all four native process checks, with scoped graceful signalling confirmed. The broader process
+checks cover owner death, breakaway denial, headless shutdown, cancellation, second interrupts, and concurrent work.
+
+A pseudoterminal input check returned `console:hello console` with exit zero. Actual Ctrl+C recorded invocation result
+`130` and left no running child (the PowerShell wrapper reported exit 1). All 38 terminal/output review cases passed,
+and local packaging succeeded. Hosted CI for the final commit is recorded in the issue/PR when complete.
+No shutdown deadline or cancellation exit-code assertion was weakened. These checks establish the demonstrated
+inheritance fix; they do not retroactively identify the exact causes of the two historical CI failures.

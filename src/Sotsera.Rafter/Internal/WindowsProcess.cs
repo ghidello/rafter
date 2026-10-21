@@ -18,8 +18,10 @@ internal sealed class WindowsProcess : IOwnedProcess
     private const uint CreateUnicodeEnvironment = 0x00000400;
     private const uint CreateNewProcessGroup = 0x00000200;
     private const uint CreateNoWindow = 0x08000000;
+    private const uint CreateSuspended = 0x00000004;
     private const nuint AttributeJobList = 0x2000D;
     private const nuint AttributeHandleList = 0x20002;
+    private const nuint AttributeParentProcess = 0x20000;
     private readonly KernelHandle _job;
     private readonly KernelHandle _process;
     private readonly uint _group;
@@ -65,7 +67,7 @@ internal sealed class WindowsProcess : IOwnedProcess
     }
 
     public static WindowsProcess Start(string executable, string[] arguments, string directory,
-        IReadOnlyDictionary<string, string> overrides)
+        IReadOnlyDictionary<string, string> overrides, Action<int>? handlesPrepared = null)
     {
         using var stdout = new OutputPipe();
         using var stderr = new OutputPipe();
@@ -79,15 +81,22 @@ internal sealed class WindowsProcess : IOwnedProcess
             limits.Basic.LimitFlags = KillOnJobClose; // Breakaway remains disabled.
             Check(Native.SetInformationJobObject(job, 9, ref limits,
                 (uint)Marshal.SizeOf<Native.ExtendedLimits>()));
-            using var attributes = new Attributes(job, stdin, stdout.Client.SafePipeHandle, stderr.Client.SafePipeHandle);
+            // CREATE_NO_WINDOW hosts can appear in a console process list without an inheritable console window.
+            // A pseudoconsole still supplies a message-only window; it retains the normal scoped-signal path.
+            var console = Native.GetConsoleWindow() != IntPtr.Zero && Native.GetConsoleProcessList(new uint[1], 1) != 0;
+            using var donor = new HandleDonor(job, console);
+            var input = donor.Copy(stdin);
+            var output = donor.Copy(stdout.Client.SafePipeHandle);
+            var error = donor.Copy(stderr.Client.SafePipeHandle);
+            // Handles in this list belong to the nominal parent, not to this process.
+            using var attributes = new Attributes(null, donor.Process, [input, output, error]);
             var startup = new Native.StartupInfoEx();
             startup.Startup.Size = Marshal.SizeOf<Native.StartupInfoEx>();
             startup.Startup.Flags = UseStandardHandles;
-            startup.Startup.Input = stdin.DangerousGetHandle();
-            startup.Startup.Output = stdout.Client.SafePipeHandle.DangerousGetHandle();
-            startup.Startup.Error = stderr.Client.SafePipeHandle.DangerousGetHandle();
+            startup.Startup.Input = input;
+            startup.Startup.Output = output;
+            startup.Startup.Error = error;
             startup.Attributes = attributes.Pointer;
-            var console = Native.GetConsoleProcessList(new uint[1], 1) != 0;
             var flags = ExtendedStartupInfoPresent | CreateUnicodeEnvironment | CreateNewProcessGroup;
             if (!console)
             {
@@ -95,10 +104,12 @@ internal sealed class WindowsProcess : IOwnedProcess
             }
             var environment = EnvironmentBlock(overrides);
             var commandLine = new StringBuilder(string.Join(" ", new[] { executable }.Concat(arguments).Select(Quote)));
+            handlesPrepared?.Invoke(donor.Id);
             Check(Native.CreateProcessW(null, commandLine, IntPtr.Zero, IntPtr.Zero, true, flags,
                 environment, directory, ref startup, out var info));
             process = new(info.Process);
             using var thread = new KernelHandle(info.Thread);
+            donor.Stop();
             return new(job, process, info.ProcessId, console, stdout.TakeServer(), stderr.TakeServer());
         }
         catch
@@ -127,7 +138,7 @@ internal sealed class WindowsProcess : IOwnedProcess
         var input = Native.GetStdHandle(-10);
         if (input != IntPtr.Zero && input != new IntPtr(-1))
         {
-            if (Native.DuplicateHandle(new IntPtr(-1), input, new IntPtr(-1), out var copy, 0, true, 2))
+            if (Native.DuplicateHandle(new IntPtr(-1), input, new IntPtr(-1), out var copy, 0, false, 2))
             {
                 return copy;
             }
@@ -138,7 +149,7 @@ internal sealed class WindowsProcess : IOwnedProcess
                 throw new Win32Exception(error);
             }
         }
-        var security = new Native.SecurityAttributes { Length = Marshal.SizeOf<Native.SecurityAttributes>(), Inherit = true };
+        var security = new Native.SecurityAttributes { Length = Marshal.SizeOf<Native.SecurityAttributes>() };
         var empty = Native.CreateFileW("NUL", 0x80000000, 3, ref security, 3, 0, IntPtr.Zero);
         Check(!empty.IsInvalid);
         return empty;
@@ -196,7 +207,7 @@ internal sealed class WindowsProcess : IOwnedProcess
             _server = new(name, PipeDirection.In, 1, PipeTransmissionMode.Byte,
                 PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly);
             Client = new(".", name, PipeDirection.Out, PipeOptions.None,
-                System.Security.Principal.TokenImpersonationLevel.Anonymous, HandleInheritability.Inheritable);
+                System.Security.Principal.TokenImpersonationLevel.Anonymous, HandleInheritability.None);
             var connected = _server.WaitForConnectionAsync();
             try
             {
@@ -233,32 +244,97 @@ internal sealed class WindowsProcess : IOwnedProcess
         }
     }
 
+    // A suspended process holds inheritable copies outside the caller's handle table. It never executes code.
+    // Both it and the target belong to the same kill-on-close job from creation; the target inherits that job.
+    private sealed class HandleDonor : IDisposable
+    {
+        private bool _stopAttempted;
+        public KernelHandle Process { get; }
+        public int Id { get; }
+
+        public HandleDonor(KernelHandle job, bool console)
+        {
+            using var attributes = new Attributes(job, null, []);
+            var startup = new Native.StartupInfoEx();
+            startup.Startup.Size = Marshal.SizeOf<Native.StartupInfoEx>();
+            startup.Attributes = attributes.Pointer;
+            var executable = Environment.ProcessPath
+                ?? throw new InvalidOperationException("The host executable path is unavailable.");
+            var flags = ExtendedStartupInfoPresent | CreateUnicodeEnvironment | CreateSuspended | CreateNewProcessGroup;
+            if (!console)
+            {
+                flags |= CreateNoWindow;
+            }
+            Check(Native.CreateProcessW(executable, new StringBuilder(Quote(executable)), IntPtr.Zero, IntPtr.Zero,
+                false, flags, EnvironmentBlock(new Dictionary<string, string>()), Directory.GetCurrentDirectory(),
+                ref startup, out var info));
+            Process = new(info.Process);
+            using var thread = new KernelHandle(info.Thread);
+            Id = checked((int)info.ProcessId);
+        }
+
+        public IntPtr Copy(SafeHandle handle)
+        {
+            Check(Native.DuplicateHandleToProcess(new IntPtr(-1), handle, Process, out var copy, 0, true, 2));
+            // This value is valid only in the donor. Terminating the donor releases all its copies.
+            return copy;
+        }
+
+        public void Stop()
+        {
+            if (!_stopAttempted)
+            {
+                // Do not restart this wait from Dispose if confirmation fails. The owning job then closes.
+                _stopAttempted = true;
+                Check(Native.TerminateProcess(Process, 0));
+                if (Native.WaitForSingleObject(Process, 5000) != 0)
+                {
+                    throw new IOException("The temporary handle donor did not confirm termination.");
+                }
+            }
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                Stop();
+            }
+            finally
+            {
+                Process.Dispose();
+            }
+        }
+    }
+
     private sealed class Attributes : IDisposable
     {
-        private readonly IntPtr _handles;
-        private readonly IntPtr _jobs;
+        private readonly List<IntPtr> _values = [];
         private bool _initialized;
         public IntPtr Pointer { get; }
 
-        public Attributes(KernelHandle job, KernelHandle input, SafePipeHandle output, SafePipeHandle error)
+        public Attributes(KernelHandle? job, KernelHandle? parent, IntPtr[] handles)
         {
+            var count = (job is null ? 0 : 1) + (parent is null ? 0 : 1) + (handles.Length == 0 ? 0 : 1);
             nuint size = 0;
-            Native.InitializeProcThreadAttributeList(IntPtr.Zero, 2, 0, ref size);
+            Native.InitializeProcThreadAttributeList(IntPtr.Zero, count, 0, ref size);
             Pointer = Marshal.AllocHGlobal(checked((int)size));
-            _handles = Marshal.AllocHGlobal(IntPtr.Size * 3);
-            _jobs = Marshal.AllocHGlobal(IntPtr.Size);
             try
             {
-                Check(Native.InitializeProcThreadAttributeList(Pointer, 2, 0, ref size));
+                Check(Native.InitializeProcThreadAttributeList(Pointer, count, 0, ref size));
                 _initialized = true;
-                Marshal.WriteIntPtr(_jobs, job.DangerousGetHandle());
-                Marshal.WriteIntPtr(_handles, input.DangerousGetHandle());
-                Marshal.WriteIntPtr(_handles, IntPtr.Size, output.DangerousGetHandle());
-                Marshal.WriteIntPtr(_handles, IntPtr.Size * 2, error.DangerousGetHandle());
-                Check(Native.UpdateProcThreadAttribute(Pointer, 0, AttributeJobList, _jobs, (nuint)IntPtr.Size,
-                    IntPtr.Zero, IntPtr.Zero));
-                Check(Native.UpdateProcThreadAttribute(Pointer, 0, AttributeHandleList, _handles, (nuint)(IntPtr.Size * 3),
-                    IntPtr.Zero, IntPtr.Zero));
+                if (job is not null)
+                {
+                    Add(AttributeJobList, [job.DangerousGetHandle()]);
+                }
+                if (parent is not null)
+                {
+                    Add(AttributeParentProcess, [parent.DangerousGetHandle()]);
+                }
+                if (handles.Length > 0)
+                {
+                    Add(AttributeHandleList, handles);
+                }
             }
             catch
             {
@@ -274,8 +350,19 @@ internal sealed class WindowsProcess : IOwnedProcess
                 Native.DeleteProcThreadAttributeList(Pointer);
             }
             Marshal.FreeHGlobal(Pointer);
-            Marshal.FreeHGlobal(_handles);
-            Marshal.FreeHGlobal(_jobs);
+            foreach (var value in _values)
+            {
+                Marshal.FreeHGlobal(value);
+            }
+        }
+
+        private void Add(nuint attribute, IntPtr[] handles)
+        {
+            var size = checked(IntPtr.Size * handles.Length);
+            var value = Marshal.AllocHGlobal(size);
+            _values.Add(value);
+            Marshal.Copy(handles, 0, value, handles.Length);
+            Check(Native.UpdateProcThreadAttribute(Pointer, 0, attribute, value, (nuint)size, IntPtr.Zero, IntPtr.Zero));
         }
     }
 
@@ -394,6 +481,8 @@ internal sealed class WindowsProcess : IOwnedProcess
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool TerminateJobObject(KernelHandle job, uint code);
         [DllImport("kernel32.dll", SetLastError = true)]
+        internal static extern bool TerminateProcess(KernelHandle process, uint code);
+        [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool InitializeProcThreadAttributeList(IntPtr list, int count, uint flags, ref nuint size);
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool UpdateProcThreadAttribute(IntPtr list, uint flags, nuint attribute, IntPtr value, nuint size, IntPtr previous, IntPtr returned);
@@ -412,10 +501,15 @@ internal sealed class WindowsProcess : IOwnedProcess
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern uint GetConsoleProcessList([Out] uint[] processes, uint size);
         [DllImport("kernel32.dll")]
+        internal static extern IntPtr GetConsoleWindow();
+        [DllImport("kernel32.dll")]
         internal static extern IntPtr GetStdHandle(int kind);
         [DllImport("kernel32.dll", SetLastError = true)]
         internal static extern bool DuplicateHandle(IntPtr sourceProcess, IntPtr source, IntPtr targetProcess,
             out KernelHandle target, uint access, bool inherit, uint options);
+        [DllImport("kernel32.dll", EntryPoint = "DuplicateHandle", SetLastError = true)]
+        internal static extern bool DuplicateHandleToProcess(IntPtr sourceProcess, SafeHandle source, KernelHandle targetProcess,
+            out IntPtr target, uint access, bool inherit, uint options);
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         internal static extern KernelHandle CreateFileW(string name, uint access, uint share,
             ref SecurityAttributes security, uint creation, uint flags, IntPtr template);

@@ -17,6 +17,15 @@ public static class Program
         var mode = args[1];
         switch (mode)
         {
+            case "stdin":
+                Console.Write((Console.IsInputRedirected ? "redirected:" : "console:") + Console.ReadLine());
+                return 0;
+            case "stdin-host":
+                return await Rafter.Command("Preserve inherited input.").RunAsync(["--plain", "--quiet"], async context =>
+                {
+                    await context.Process("dotnet").Arguments("exec", "--runtimeconfig", runtime,
+                        Assembly.GetExecutingAssembly().Location, runtime, "stdin").RunAsync();
+                });
             case "owned-host":
                 var command = Rafter.Command("Own a long-running fixture child.");
                 var result = await command.RunAsync(["--plain"], async context =>

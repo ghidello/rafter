@@ -4,9 +4,9 @@ Work is tracked in [issue #15](https://github.com/sotsera/rafter/issues/15). The
 process and build/test examples through project references. The accepted product contract remains in the
 [example design plan](example-design-plan.md#external-processes).
 
-The current Windows implementation has a [mixed-launcher inheritance limitation](process-test-isolation.md): another
-broad-inheritance launcher in the same host can inherit temporary pipe handles if its launch overlaps Rafter's launch.
-The integration harness isolates those paths; runtime interoperability remains tracked in issue #23.
+The Windows launcher keeps its inheritable handles outside the script process so overlapping broad-inheritance
+launchers cannot retain Rafter's output pipes. The [mixed-launcher investigation](process-test-isolation.md) records
+the reproduction, implementation, verification, and temporary-helper tradeoffs for issue #23.
 
 ## Current API
 
@@ -65,13 +65,24 @@ its owning body has finished. Detecting discarded tasks that already completed s
 ## Windows ownership
 
 The implementation uses BCL APIs and Windows interop; it adds no runtime package. Each launch creates a private,
-non-inherited Job Object with kill-on-close enabled and breakaway disabled. The job is assigned during process
-creation, before child code runs, using `PROC_THREAD_ATTRIBUTE_JOB_LIST`. A handle list limits inherited handles to
-standard input/output/error. Output uses asynchronous named-pipe readers so pending reads can be interrupted.
+non-inherited Job Object with kill-on-close enabled and breakaway disabled. A suspended copy of the host executable
+is created in that job using `PROC_THREAD_ATTRIBUTE_JOB_LIST`; it never executes application code. Rafter duplicates
+stdio handles into this helper as inheritable, then uses it as `PROC_THREAD_ATTRIBUTE_PARENT_PROCESS` for the target.
+The target inherits the job at creation, before executing code, and an explicit handle list selects only stdio.
+All handles Rafter creates in the script process remain non-inheritable. Output uses asynchronous named-pipe readers
+so pending reads can be interrupted.
+
+The helper is terminated and its exit confirmed before launch returns, including failed launches. The job also
+provides kill-on-close protection if the owner dies. This adds one temporary process per launch; the target's reported
+parent PID is the helper's PID, not the script's. The helper adds no executable/package deployment dependency. Its
+termination wait is bounded at five seconds; failure aborts launch and closes the owning job. This launch-stage wait
+does not change the process shutdown grace or output-drain deadlines below.
 
 The root's exit code and the job's active-process count are observed separately. Root exit starts cleanup of remaining
 descendants; root exit alone cannot complete the operation. Scoped Ctrl+Break is attempted for the dedicated process
-group when the caller has a console. Without a supported scoped signal, forceful job termination starts immediately.
+group when the caller has a console window (including a pseudoconsole's message-only window). `CREATE_NO_WINDOW`
+hosts can report a console process list without such a window; they use headless creation and immediate forceful
+shutdown. Without a supported scoped signal, forceful job termination starts immediately.
 
 Invocation cancellation shares one five-second grace window across its operations. A second interrupt ends grace.
 Forceful termination is followed by a separate shared five-second verification/drain budget. Normal root exit also
