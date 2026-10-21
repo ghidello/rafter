@@ -7,6 +7,7 @@ using Xunit;
 namespace Rafter.Evaluation.Tests;
 
 [SupportedOSPlatform("windows")]
+[Collection("Native process handles")]
 public sealed class ProcessObservationTests
 {
     [Theory]

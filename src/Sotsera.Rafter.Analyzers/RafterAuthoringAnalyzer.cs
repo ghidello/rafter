@@ -30,7 +30,8 @@ public sealed class RafterAuthoringAnalyzer : DiagnosticAnalyzer
         description: "A discarded process task can outlive its owning command or target body.",
         helpLinkUri: "https://github.com/sotsera/rafter/blob/main/docs/authoring-diagnostics.md#raf003");
 
-    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => [_blankDescription, _nullableOption, _discardedProcess];
+    public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+        [_blankDescription, _nullableOption, _discardedProcess, OptionPolicyAnalysis.Rule];
 
     public override void Initialize(AnalysisContext context)
     {
@@ -46,6 +47,12 @@ public sealed class RafterAuthoringAnalyzer : DiagnosticAnalyzer
             if (command is null || process is null)
             {
                 return;
+            }
+
+            if (option is not null)
+            {
+                start.RegisterOperationAction(operationContext =>
+                    OptionPolicyAnalysis.Analyze(operationContext, option, command, factory), OperationKind.Block);
             }
 
             start.RegisterOperationAction(operationContext =>

@@ -8,6 +8,7 @@ using RafterProcessResult = Sotsera.Rafter.ProcessResult;
 
 namespace Rafter.Evaluation.Tests;
 
+[Collection("Native process handles")]
 public sealed class ProcessTests
 {
     [Fact]
@@ -414,10 +415,8 @@ public sealed class ProcessTests
             })).Should().Be(1);
             handlerCalled.Should().BeFalse();
             host.Error.ToString().Should().Contain("Output incomplete");
-            if (File.Exists(ready))
-            {
-                HasExited(int.Parse(File.ReadAllText(ready))).Should().BeTrue();
-            }
+            File.Exists(ready).Should().BeTrue("the fixture publishes its PID before emitting the failing output");
+            HasExited(int.Parse(File.ReadAllText(ready))).Should().BeTrue();
         }
         finally
         {
@@ -676,6 +675,7 @@ public sealed class ProcessTests
 
         public void Dispose()
         {
+            TestContext.Current.TestOutputHelper?.WriteLine("Rafter stdout:\n{0}\nRafter stderr:\n{1}", Output, Error);
             Output.Dispose();
             Error.Dispose();
         }

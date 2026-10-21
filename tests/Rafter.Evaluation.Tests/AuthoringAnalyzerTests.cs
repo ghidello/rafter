@@ -173,6 +173,134 @@ public sealed class AuthoringAnalyzerTests
         (await AnalyzeAsync(generated)).Should().BeEmpty();
     }
 
+    [Theory]
+    [InlineData("Required()", "Required()")]
+    [InlineData("Default(1)", "Default(1)")]
+    [InlineData("Default(1)", "Default(2)")]
+    [InlineData("Required()", "Default(0)")]
+    [InlineData("Default(0)", "Required()")]
+    public async Task Repeated_and_conflicting_policies_report_the_later_call_and_link_the_first(string first, string second)
+    {
+        var source = $$"""
+            using Sotsera.Rafter;
+            var command = Rafter.Command("Example.");
+            var option = command.Option<int>("count", "Count.");
+            option.{{first}};
+            option.{{second}};
+            """;
+        var diagnostic = (await AnalyzeAsync(source)).Should().ContainSingle().Subject;
+        diagnostic.Id.Should().Be("RAF004");
+        diagnostic.Severity.Should().Be(DiagnosticSeverity.Error);
+        diagnostic.Location.SourceSpan.Start.Should().Be(source.LastIndexOf("option.", StringComparison.Ordinal));
+        diagnostic.AdditionalLocations.Should().ContainSingle().Which.SourceSpan.Start
+            .Should().Be(source.IndexOf("option.", StringComparison.Ordinal));
+        diagnostic.GetMessage().Should().Contain("'option'").And.Contain(first.Split('(')[0])
+            .And.Contain(second.Split('(')[0]);
+    }
+
+    [Theory]
+    [InlineData("var required = option.Required();", "var defaulted = option.Default(0);")]
+    [InlineData("_ = option.Required();", "_ = option.Required();")]
+    [InlineData("var required = (option.Required());", "((Option<int>)option).Required();")]
+    [InlineData("option.Default(value: 0);", "option.Default(value: 0);")]
+    [InlineData("option.Required(); var other = command.Option<int>(\"other\", \"Other.\");", "option.Required();")]
+    public async Task Policy_tracking_accepts_stored_handles_discards_wrappers_and_independent_declarations(
+        string first, string second)
+    {
+        var source = $$"""
+            using Sotsera.Rafter;
+            var command = Rafter.Command("Example.");
+            var option = command.Option<int>("count", "Count.");
+            {{first}}
+            {{second}}
+            """;
+        (await AnalyzeAsync(source)).Should().ContainSingle().Which.Id.Should().Be("RAF004");
+    }
+
+    [Theory]
+    [InlineData("option.Required();")]
+    [InlineData("option.Default(0);")]
+    [InlineData("option.Required(); var other = command.Option<int>(\"other\", \"Other.\"); other.Required();")]
+    [InlineData("option.Required(); option = command.Option<int>(\"other\", \"Other.\"); option.Required();")]
+    [InlineData("if (flag) { option.Required(); } else { option.Default(0); }")]
+    [InlineData("option.Required(); if (flag) { option.Required(); }")]
+    [InlineData("for (var i = 0; i < 2; i++) { option.Required(); }")]
+    [InlineData("option.Required(); Helper(); option.Required();")]
+    [InlineData("option.Required(); option.Default(GetDefault());")]
+    [InlineData("var alias = option; option.Required(); alias.Required();")]
+    [InlineData("ref var alias = ref option; option.Required(); alias = command.Option<int>(\"other\", \"Other.\"); option.Required();")]
+    [InlineData("option.Required(); System.Action reset = () => option = command.Option<int>(\"other\", \"Other.\"); reset(); option.Required();")]
+    [InlineData("option.Required(); option?.Required();")]
+    [InlineData("option.Required(); { Helper(); } option.Required();")]
+    [InlineData("option.Required(); return; option.Required();")]
+    [InlineData("option.Required(); option.Aliases(\"c\"); option.Required();")]
+    public async Task Option_policy_boundaries_do_not_guess_about_control_flow_mutation_or_aliases(string statements)
+    {
+        var source = $$"""
+            using Sotsera.Rafter;
+            class Example
+            {
+                void Configure(bool flag)
+                {
+                    var command = Rafter.Command("Example.");
+                    var option = command.Option<int>("count", "Count.");
+                    {{statements}}
+                }
+                void Helper() { }
+                int GetDefault() => 0;
+            }
+            """;
+        (await AnalyzeAsync(source)).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Nested_bodies_are_analyzed_independently_without_combining_executions()
+    {
+        const string source = """
+            using Sotsera.Rafter;
+            var command = Rafter.Command("Example.");
+            var option = command.Option<int>("count", "Count.");
+            option.Required();
+            System.Action configure = () => { option.Required(); option.Default(0); };
+            void Configure() { option.Required(); option.Default(0); }
+            """;
+        var diagnostics = await AnalyzeAsync(source);
+        diagnostics.Should().HaveCount(2).And.OnlyContain(diagnostic => diagnostic.Id == "RAF004");
+    }
+
+    [Fact]
+    public async Task Option_policy_tracking_excludes_fields_parameters_and_unrelated_methods()
+    {
+        const string source = """
+            using Sotsera.Rafter;
+            class Example
+            {
+                Option<int> field = Rafter.Command("Example.").Option<int>("count", "Count.");
+                void Configure(Option<int> option)
+                {
+                    field.Required(); field.Required();
+                    option.Required(); option.Required();
+                    var other = new Other(); other.Required(); other.Required();
+                }
+            }
+            class Other { public void Required() { } }
+            """;
+        (await AnalyzeAsync(source)).Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task Option_policy_errors_respect_suppression_and_generated_code()
+    {
+        const string source = """
+            using Sotsera.Rafter;
+            var command = Rafter.Command("Example.");
+            var option = command.Option<int>("count", "Count.");
+            option.Required(); option.Required();
+            """;
+        (await AnalyzeAsync("#pragma warning disable RAF004\n" + source)).Should().BeEmpty();
+        (await AnalyzeAsync("// <auto-generated/>\n" + source)).Should().BeEmpty();
+    }
+
     private static async Task<ImmutableArray<Diagnostic>> AnalyzeAsync(string source, CSharpCompilationOptions? options = null)
     {
         var tree = CSharpSyntaxTree.ParseText(source, new CSharpParseOptions(LanguageVersion.Latest));

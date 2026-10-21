@@ -68,11 +68,14 @@ public static class Program
                 }
                 return 0;
             case "output-hold":
-                Console.Write("child output");
-                goto case "hold";
             case "hold":
                 Console.CancelKeyPress += (_, signal) => { signal.Cancel = true; };
-                File.WriteAllText(args[2], Environment.ProcessId.ToString());
+                PublishReady(args[2]);
+                if (mode == "output-hold")
+                {
+                    // A failing output sink can stop this process immediately; publish its PID first.
+                    Console.Write("child output");
+                }
                 await Task.Delay(Timeout.InfiniteTimeSpan);
                 return 0;
             case "graceful":
@@ -83,7 +86,7 @@ public static class Program
                     Console.Write("graceful stop");
                     stopped.TrySetResult();
                 };
-                File.WriteAllText(args[2], Environment.ProcessId.ToString());
+                PublishReady(args[2]);
                 await stopped.Task;
                 return 0;
             case "tree":
@@ -103,6 +106,20 @@ public static class Program
                 }
             default:
                 throw new ArgumentException("Unknown probe mode.");
+        }
+    }
+
+    private static void PublishReady(string path)
+    {
+        var pending = path + ".pending";
+        try
+        {
+            File.WriteAllText(pending, Environment.ProcessId.ToString());
+            File.Move(pending, path);
+        }
+        finally
+        {
+            File.Delete(pending);
         }
     }
 

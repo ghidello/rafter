@@ -4,6 +4,10 @@ Work is tracked in [issue #15](https://github.com/sotsera/rafter/issues/15). The
 process and build/test examples through project references. The accepted product contract remains in the
 [example design plan](example-design-plan.md#external-processes).
 
+The current Windows implementation has a [mixed-launcher inheritance limitation](process-test-isolation.md): another
+broad-inheritance launcher in the same host can inherit temporary pipe handles if its launch overlaps Rafter's launch.
+The integration harness isolates those paths; runtime interoperability remains tracked in issue #23.
+
 ## Current API
 
 The [process example](../examples/processes.cs) uses the real Windows implementation:

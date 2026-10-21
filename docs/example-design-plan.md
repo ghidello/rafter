@@ -326,7 +326,7 @@ Agreed declaration rules:
 - Null callbacks are invalid, including command/target bodies, validation predicates, and process failure handlers.
 - Calling `.Required()` more than once or `.Default(...)` more than once on an option is invalid, even when the
   repeated default is identical. Mixing those policies is also invalid. Initial validation catches separate calls
-  through a retained original handle; a future analyzer should report repetitions it can prove statically.
+  through a retained original handle; [RAF004](authoring-diagnostics.md#raf004) reports supported straight-line repetitions.
 - Calling `.Run(...)` twice on the same target is invalid; do not silently replace or combine target bodies.
 - Calling `.OnFailure(...)` twice on the same process configuration is invalid; do not silently replace handlers.
 - Collection-style methods such as `.Aliases(...)` and `.Validate(...)` continue to append according to their own
@@ -469,8 +469,9 @@ Agreed:
 
 Possible additions and open details:
 
-- A code fix could remove nullable syntax where safe. A future analyzer should flag provable repeated or conflicting
-  policies through separate statements; detection across arbitrary helpers is not a static guarantee.
+- A code fix could remove nullable syntax where safe. [RAF004](authoring-diagnostics.md#raf004) now flags repeated or
+  conflicting policies through the same local in supported straight-line statements. Broader flow and alias analysis
+  remain deferred; detection across arbitrary helpers is not a static guarantee.
 - Further input types remain open. The initial typed handles, runtime policy checks, and nullable-type warning RAF002
   are implemented; nullable reference type annotations cannot be detected at runtime.
 

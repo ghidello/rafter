@@ -24,6 +24,8 @@ Copy-Item -LiteralPath (Join-Path $repository 'global.json') -Destination "$work
 @'
 var command = Rafter.Command("");
 var name = command.Option<string?>("name", "Name.");
+name.Required();
+name.Default("Ada");
 return await command.RunAsync(args, context =>
 {
     _ = context.Process("must-never-launch").RunAsync();

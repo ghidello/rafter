@@ -53,6 +53,7 @@ Milestone: [First working examples](https://github.com/sotsera/rafter/milestone/
 | [#15: Implement owned Windows process execution](https://github.com/sotsera/rafter/issues/15) | Run external tools and build/test examples with explicit failure actions, launch-time descendant ownership, and settled output/cancellation. | Completed through PR #16. |
 | [#17: Deliver initial authoring diagnostics and a local package](https://github.com/sotsera/rafter/issues/17) | Bundle bounded authoring diagnostics and automatic namespace imports; verify package-only file apps and project consumers. | Completed in PR #18; editor checks are covered by #19. |
 | [#19: Review runtime output and editor authoring feedback](https://github.com/sotsera/rafter/issues/19) | Verify actual terminal output and live VS Code feedback; correct concrete presentation defects. | [Recorded local review](milestone-review.md); CI evidence belongs to its focused PR. |
+| [#21: Diagnose repeated and conflicting option presence policies](https://github.com/sotsera/rafter/issues/21) | Add conservative authoring errors for separate policy calls on the same local. | [RAF004 scope](authoring-diagnostics.md#raf004); package/runtime fallback and verification evidence in its focused PR. |
 
 The issues contain the detailed acceptance checklists. Keep design rationale and accepted behavior in Markdown;
 record execution results and scoped completion in the issues/PRs without maintaining duplicate checklists.

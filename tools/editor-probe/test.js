@@ -21,7 +21,7 @@ exports.run = async function () {
             let diagnostics = [];
             do {
                 diagnostics = vscode.languages.getDiagnostics(document.uri);
-                if (['RAF001', 'RAF002', 'RAF003'].every(id => diagnostics.some(item => diagnosticId(item) === id))) {
+                if (['RAF001', 'RAF002', 'RAF003', 'RAF004'].every(id => diagnostics.some(item => diagnosticId(item) === id))) {
                     break;
                 }
                 await new Promise(resolve => setTimeout(resolve, 500));
@@ -30,7 +30,7 @@ exports.run = async function () {
                 id: diagnosticId(item), severity: item.severity, message: item.message,
                 line: item.range.start.line + 1, column: item.range.start.character + 1
             })) };
-            for (const [id, severity] of [['RAF001', 0], ['RAF002', 1], ['RAF003', 0]]) {
+            for (const [id, severity] of [['RAF001', 0], ['RAF002', 1], ['RAF003', 0], ['RAF004', 0]]) {
                 const passed = diagnostics.some(item => diagnosticId(item) === id && item.severity === severity);
                 result.checks.push({ file: sourcePath, name: `${id} live diagnostic`, passed });
             }

@@ -120,6 +120,8 @@ public sealed class PackageConsumerTests
             using Sotsera.Rafter;
             var command = Rafter.Command("");
             var name = command.Option<string?>("name", "Name.");
+            name.Required();
+            name.Default("Ada");
             return await command.RunAsync(args, context =>
             {
                 _ = context.Process("must-never-launch").RunAsync();
@@ -129,15 +131,28 @@ public sealed class PackageConsumerTests
         var rejected = await consumer.CompileAsync();
         rejected.ExitCode.Should().NotBe(0);
         var diagnostics = rejected.StandardOutput + rejected.StandardError;
-        diagnostics.Should().Contain("error RAF001").And.Contain("warning RAF002").And.Contain("error RAF003");
+        diagnostics.Should().Contain("error RAF001").And.Contain("warning RAF002").And.Contain("error RAF003")
+            .And.Contain("error RAF004");
         diagnostics.Should().NotContain("AD0001").And.NotContain("CS8032").And.NotContain("CS9057");
 
-        await File.WriteAllTextAsync(sourcePath, directives + "#pragma warning disable RAF001, RAF002, RAF003\n" + invalid,
+        const string suppression = "#pragma warning disable RAF001, RAF002, RAF003, RAF004\n";
+        await File.WriteAllTextAsync(sourcePath, directives + suppression + invalid,
             TestContext.Current.CancellationToken);
         (await consumer.CompileAsync()).ExitCode.Should().Be(0);
         var runtimeValidation = await consumer.RunAsync("--quiet");
         runtimeValidation.ExitCode.Should().Be(2);
         runtimeValidation.StandardError.Should().Contain("Command description must contain non-whitespace text.");
+
+        // A valid command description leaves the policy conflict as the only invalid declaration.
+        var invalidPolicy = invalid.Replace("Rafter.Command(\"\")", "Rafter.Command(\"Package consumer.\")");
+        await File.WriteAllTextAsync(sourcePath, directives + suppression + invalidPolicy,
+            TestContext.Current.CancellationToken);
+        (await consumer.CompileAsync()).ExitCode.Should().Be(0);
+        var policyValidation = await consumer.RunAsync("--quiet");
+        policyValidation.ExitCode.Should().Be(2);
+        policyValidation.StandardError.Should().Contain("Required or Default may be configured only once.")
+            .And.NotContain("Process launch failed");
+        policyValidation.StandardOutput.Should().BeEmpty();
 
         // The consumer has no project/source references to Rafter and restores its own fresh package cache.
         var cache = Path.Combine(consumer.WorkingDirectory, ".packages");

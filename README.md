@@ -37,6 +37,7 @@ dotnet run --file examples/dependencies.cs -- --project fixtures/workflow/sample
 All eight examples now run through project references with [authoring diagnostics](docs/authoring-diagnostics.md)
 and an automatic namespace import. The [local package](docs/local-package.md) provides the same authoring support to
 fresh file apps and regular projects; public publication and process ownership on other platforms remain separate work.
+Authoring diagnostics also catch repeated or conflicting option presence policies in supported straight-line code.
 See [example prerequisites](examples/README.md) before running build-oriented scripts.
 
 The [milestone review](docs/milestone-review.md) records actual Windows terminal output and live VS Code diagnostics
