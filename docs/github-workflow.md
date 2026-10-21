@@ -50,7 +50,8 @@ Milestone: [First working examples](https://github.com/sotsera/rafter/milestone/
 | [#9: Implement minimal command invocation and body-only output](https://github.com/sotsera/rafter/issues/9) | Run the first real script with help, output, exception containment, and managed cancellation. | Completed through PR #10. |
 | [#11: Implement typed inputs, value lookup, and validation](https://github.com/sotsera/rafter/issues/11) | Run options.cs and validation.cs with typed handles, dynamic help, and invocation-local values. | Completed through PR #12. |
 | [#13: Implement sequential targets and dependency graphs](https://github.com/sotsera/rafter/issues/13) | Run callback targets with graph validation, ordering, groups, failure handling, and help/output. | Completed through PR #14. |
-| [#15: Implement owned Windows process execution](https://github.com/sotsera/rafter/issues/15) | Run external tools and build/test examples with explicit failure actions, launch-time descendant ownership, and settled output/cancellation. | Implemented in its focused PR; see the process runtime record. |
+| [#15: Implement owned Windows process execution](https://github.com/sotsera/rafter/issues/15) | Run external tools and build/test examples with explicit failure actions, launch-time descendant ownership, and settled output/cancellation. | Completed through PR #16. |
+| [#17: Deliver initial authoring diagnostics and a local package](https://github.com/sotsera/rafter/issues/17) | Bundle bounded authoring diagnostics and automatic namespace imports; verify package-only file apps and project consumers. | Implementation and verification in its focused PR; interactive editor checks remain pending. |
 
 The issues contain the detailed acceptance checklists. Keep design rationale and accepted behavior in Markdown;
 record execution results and scoped completion in the issues/PRs without maintaining duplicate checklists.

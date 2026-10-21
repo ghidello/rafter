@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="AwesomeAssertions" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
     <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" PrivateAssets="all" />
     <PackageReference Include="Spectre.Console" PrivateAssets="all" />
     <PackageReference Include="System.CommandLine" PrivateAssets="all" />
@@ -48,6 +49,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+    <ProjectReference Include="../../src/Sotsera.Rafter.Analyzers/Sotsera.Rafter.Analyzers.csproj" />
     <ProjectReference Include="../../fixtures/processes/ProcessProbe.csproj" />
   </ItemGroup>
 
@@ -56,11 +58,17 @@
           Exclude="../../src/Sotsera.Rafter/**/bin/**;../../src/Sotsera.Rafter/**/obj/**"
           Link="Fixtures/src/Sotsera.Rafter/%(RecursiveDir)%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../src/Sotsera.Rafter.Analyzers/**"
+          Exclude="../../src/Sotsera.Rafter.Analyzers/**/bin/**;../../src/Sotsera.Rafter.Analyzers/**/obj/**"
+          Link="Fixtures/src/Sotsera.Rafter.Analyzers/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../fixtures/runtime/**"
           Exclude="../../fixtures/runtime/**/bin/**;../../fixtures/runtime/**/obj/**"
           Link="Fixtures/fixtures/runtime/%(RecursiveDir)%(Filename)%(Extension)"
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/minimal.cs" Link="Fixtures/examples/minimal.cs"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="../../examples/Directory.Build.targets" Link="Fixtures/examples/Directory.Build.targets"
           CopyToOutputDirectory="PreserveNewest" />
     <None Include="../../examples/options.cs" Link="Fixtures/examples/options.cs"
           CopyToOutputDirectory="PreserveNewest" />

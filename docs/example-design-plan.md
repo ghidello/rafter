@@ -229,8 +229,8 @@ Open questions:
 - Timeout policies and broader process cancellation remain in their dedicated topic. Cooperative managed cancellation
   is implemented for the body-only invocation.
 
-The body-only scope and [target invocation form](targets.md) are implemented and verified. Analyzer authoring feedback
-remains separate work.
+The body-only scope and [target invocation form](targets.md) are implemented and verified. Initial
+[analyzer authoring feedback](authoring-diagnostics.md) is included in the local package.
 
 #### Description validation
 
@@ -238,15 +238,15 @@ Initial runtime validation in `RunAsync` is agreed. It checks the final descript
 reports invalid descriptions through a concise diagnostic and exit code `2`, rather than an unhandled exception.
 This remains necessary for dynamic values, disabled analyzers, and consumers that bypass static checks.
 
-Proposed authoring diagnostics:
+Initial authoring diagnostic:
 
-Add an analyzer to give authoring-time feedback for description arguments that are provably null, empty, or whitespace.
-For those definite violations, the proposed severity is an error. Include constant expressions rather than checking
-only string literals. Do not reject a dynamic expression merely because its value cannot be determined statically.
+RAF001 reports an error for description arguments whose compiler constant value is null, empty, or whitespace.
+It includes constant expressions rather than checking only string literals. Dynamic expressions are left to runtime
+validation rather than rejected merely because their values cannot be determined statically.
 
 Requiring the description argument at command creation handles omission through the API itself, without analyzing
-fluent call sequences. The analyzer proposal concerns invalid argument values. Analyzer scope, severity, packaging,
-and exact diagnostic wording remain pending agreement. Command description validation is implemented; analyzers are not.
+fluent call sequences. The initial implementation uses the proposed error severity across commands, options, targets,
+and validation rules. See [diagnostic coverage and limits](authoring-diagnostics.md#raf001).
 
 #### Invocation behavior
 
@@ -346,7 +346,7 @@ errors are not initial command declaration failures with exit `2`.
 Scenario: print a personalized greeting with a required name, defaulted repeat count, and defaulted uppercase flag.
 The runnable example is [examples/options.cs](../examples/options.cs), including declarations and the greeting body.
 The [typed-input runtime record](typed-inputs.md) describes the string/int/bool implementation and verification.
-Additional types and analyzer feedback remain pending.
+Additional types remain pending; the initial nullable-type warning is described in [authoring diagnostics](authoring-diagnostics.md).
 
 Agreed declaration syntax and behavior:
 
@@ -471,7 +471,7 @@ Possible additions and open details:
 
 - A code fix could remove nullable syntax where safe. A future analyzer should flag provable repeated or conflicting
   policies through separate statements; detection across arbitrary helpers is not a static guarantee.
-- Further input types and analyzer implementation remain open. The initial typed handles and runtime policy checks
+- Further input types remain open. The initial typed handles, runtime policy checks, and nullable-type warning RAF002
   are implemented; nullable reference type annotations cannot be detected at runtime.
 
 #### Future asynchronous value resolution
@@ -681,7 +681,7 @@ of its process operations remain outstanding:
 Track the complete operation, including descendant cleanup and output handling, not just the main process's running
 state. The runtime check detects unfinished operations; it cannot prove that an already-completed task was awaited.
 It therefore complements the analyzer rather than replacing it. The runtime tracker is implemented and verified in
-the [process slice](process-runtime.md); the analyzer remains pending.
+the [process slice](process-runtime.md); [RAF003](authoring-diagnostics.md#raf003) implements the initial analyzer coverage.
 
 ### Cancellation and owned child processes
 
@@ -773,7 +773,7 @@ Windows ownership and real-process verification are recorded in [process-runtime
 Scenario: build a project and then run its tests through a dependency-only grouping target. The runnable Windows example is
 [examples/dependencies.cs](../examples/dependencies.cs). The [callback-based target slice](targets.md) implements
 sequential graph execution, also demonstrated by [examples/targets.cs](../examples/targets.cs). External-process
-integration is verified by the [process slice](process-runtime.md); analyzer coverage remains pending.
+integration is verified by the [process slice](process-runtime.md); empty-target analyzer coverage remains pending.
 
 Agreed execution shape:
 
@@ -844,21 +844,23 @@ The target and dependency design above is agreed. Callback-based graph execution
 [target runtime record](targets.md); the build/test workflow is verified in the [process record](process-runtime.md).
 Analyzer coverage remains pending.
 
-### Proposed automatic namespace import
+### Automatic namespace import
 
 The package can supply an MSBuild `Using` item for `Sotsera.Rafter`, generating a global namespace import so consumer
 scripts do not need an explicit `using Sotsera.Rafter;`. The SDK documents [Using items](https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#using),
 and NuGet supports [package-supplied props and targets](https://learn.microsoft.com/en-us/nuget/concepts/msbuild-props-and-targets).
 
-Proposed packaging behavior:
+Initial package behavior:
 
-- Enable the namespace import for direct C# consumers of the Rafter package, with an explicit opt-out property.
+- Enable the namespace import for direct C# consumers of the Rafter package, with `RafterImplicitUsings=false` as the opt-out.
 - Use package build assets rather than a source generator. Consider a `.targets` file for adding the conditional
   `Using` item after consumer properties are evaluated; a `.props` file can supply default properties if needed.
 - Keep the import scoped to direct package consumers rather than automatically propagating it through transitive
   dependencies. Local project references need their own development setup because they do not consume the packaged assets.
-- Verify actual file-based apps, regular C# project consumers, editor behavior, and the opt-out using a built package.
+- Verify actual file-based apps, regular C# project consumers, design-time assets, and the opt-out using a built package.
   File-based apps use a generated project, as described in the [SDK guide](https://learn.microsoft.com/en-us/dotnet/core/sdk/file-based-apps),
-  so the package mechanism is applicable, but Rafter's package integration is not yet implemented or verified.
+  and the package mechanism is now exercised by isolated consumer checks. Interactive editor feedback remains unverified.
 
-This is a packaging proposal. Current drafts retain their explicit using directives until the approach is adopted.
+The [local package](local-package.md) implements this default; development examples use equivalent build assets and
+omit the explicit imports. Namespace imports do not flow through transitive project references. Public publication
+and editor-host compatibility beyond the recorded design-time checks remain separate gates.

@@ -15,7 +15,7 @@ internal sealed class IsolatedConsumer : IDisposable
 
     public string WorkingDirectory { get; }
 
-    public IsolatedConsumer(string kind, ITestOutputHelper output, string? entryPoint = null)
+    public IsolatedConsumer(string kind, ITestOutputHelper output, string? entryPoint = null, bool copyFixtures = true)
     {
         _kind = kind;
         _output = output;
@@ -23,7 +23,10 @@ internal sealed class IsolatedConsumer : IDisposable
         WorkingDirectory = Path.Combine(_temporaryRoot.FullName, "consumer workspace");
 
         var fixtureRoot = Path.Combine(AppContext.BaseDirectory, "Fixtures");
-        foreach (var source in Directory.EnumerateFiles(fixtureRoot, "*", SearchOption.AllDirectories))
+        var sources = copyFixtures
+            ? Directory.EnumerateFiles(fixtureRoot, "*", SearchOption.AllDirectories)
+            : [Path.Combine(fixtureRoot, "global.json")];
+        foreach (var source in sources)
         {
             var destination = Path.Combine(WorkingDirectory, Path.GetRelativePath(fixtureRoot, source));
             Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
@@ -64,7 +67,7 @@ internal sealed class IsolatedConsumer : IDisposable
         _temporaryRoot.Delete(recursive: true);
     }
 
-    private async Task<ProcessResult> ExecuteAsync(params string[] arguments)
+    internal async Task<ProcessResult> ExecuteAsync(params string[] arguments)
     {
         var startInfo = new ProcessStartInfo("dotnet")
         {

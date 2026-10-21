@@ -9,7 +9,9 @@ requiring another broad redesign. Some observable behavior still needs decisions
 The [example design plan](example-design-plan.md) remains the source of agreed API behavior. Recommendations below
 are proposals, not additional accepted requirements. The [minimal runtime](minimal-runtime.md) implements body-only
 invocations; [typed inputs](typed-inputs.md) and [callback targets](targets.md) are now implemented too.
-The [process slice](process-runtime.md) now implements owned Windows processes. Analyzers and packaging remain pending.
+The [process slice](process-runtime.md) now implements owned Windows processes. Initial
+[authoring diagnostics](authoring-diagnostics.md) and a [local package](local-package.md) are also implemented;
+interactive editor verification remains pending.
 The [dependency review](dependency-decisions.md) records the initial shortlist and compatibility checks to complete
 before adopting packages. Dependency selection is part of readiness, not an incidental scaffolding choice.
 
@@ -25,10 +27,10 @@ before adopting packages. Dependency selection is part of readiness, not an inci
 | [process-working-directory.cs](../examples/process-working-directory.cs) | Relative child working directory and child-only environment overrides match the root policy. |
 | [dependencies.cs](../examples/dependencies.cs) | A required entry target, shared build dependency, and body-free group fit the target overload. There is no extra command body after the graph. |
 
-No obsolete command `.Run(...)`, `context.Output`, or `context.Value(...)` calls remain in these drafts. Explicit
-namespace imports remain intentionally: automatic imports are still a packaging proposal. Package/project reference
-directives are present in all seven examples and the added callback-based targets.cs. All eight are exercised as
-actual file apps; the process-based examples currently require Windows.
+No obsolete command `.Run(...)`, `context.Output`, or `context.Value(...)` calls remain in these examples. Automatic
+namespace imports are provided by development targets matching the local package, with an explicit opt-out.
+Project reference directives are present in all seven examples and the added callback-based targets.cs. All eight
+are exercised as actual file apps; the process-based examples currently require Windows.
 
 Important boundaries to preserve during implementation:
 
@@ -40,9 +42,8 @@ Important boundaries to preserve during implementation:
 - The command root is captured once per invocation. Child settings do not mutate the host process or shell.
 - Input values are prepared before execution; `GetValue` is a lookup, not a computation trigger.
 
-The target example's `dotnet build` and `dotnet test --no-build` commands assume an appropriate project or solution
-in the root. Their exact arguments must be checked against the selected SDK, test runner, and fixture layout during
-scaffolding. A generic syntax example does not establish that those commands work for this repository yet.
+The target example's build and test commands now accept an explicit project input and are exercised with an isolated
+library/test fixture using the selected SDK and native MTP runner. Success, failed builds, and failed tests are verified.
 
 ## Proposed milestone scope
 
@@ -63,8 +64,8 @@ Include:
 - Initial analyzer diagnostics and package integration with concrete, bounded coverage.
 - The minimum cancellation and owned-process lifetime behavior selected before implementing processes.
 
-The cancellation and owned-process behavior is now agreed in the design plan. Its implementation mechanisms and
-platform verification remain pending; the process slice is not complete until those obligations are demonstrated.
+The cancellation and owned-process behavior is agreed in the design plan and verified on Windows by the process slice.
+Other platforms still need their own ownership implementation and evidence.
 
 ## Decisions needed before the affected implementation
 
@@ -165,18 +166,19 @@ An error for clearly discarded process tasks is agreed. Verify ignored calls and
 awaited calls with ignored results, returned tasks, delayed awaits, and awaited `Task.WhenAll`. Avoid speculative
 diagnostics for tasks passed through helpers; broader data-flow coverage remains to be designed.
 
-Nullable option type arguments already require warnings. Proposed additional initial diagnostics: errors for provably
-blank descriptions and warnings for definitely empty targets at invocation. Exact severity and scope need confirmation.
-Check descriptions consistently across commands, options, targets, and validation rules. Limit analysis to cases that
-can be established reliably; valid configuration split across statements or helpers must not be diagnosed speculatively.
+The initial diagnostic set uses errors for constant blank descriptions (RAF001), warnings for nullable option type
+arguments (RAF002), and errors for clearly discarded process tasks (RAF003). Descriptions are checked consistently
+across commands, options, targets, and validation rules. Valid split/helper configuration is not diagnosed speculatively.
+Empty-target and repeated/conflicting-configuration analysis remains separate follow-up work; its exact coverage and
+severity are still to be designed. Runtime checks remain active for all these cases.
 
 Keep the agreed compiler constraints: missing work fails overload resolution, and required/defaulted handles do not
 expose either policy method again. Verify actual compiler behavior for synchronous/asynchronous callbacks and nullable
 value/reference lookups; do not approximate those guarantees with tests of runtime values alone.
 
-Decide whether to adopt the proposed automatic namespace import, enabled for direct C# package consumers with an
-opt-out. If adopted, verify the package in file-based apps and regular projects and provide equivalent local development
-imports. Until then, the drafts' explicit `using` directives remain valid.
+The local package enables automatic namespace imports for direct C# consumers, with `RafterImplicitUsings=false`
+as the opt-out. Fresh file apps and regular projects verify both settings; examples have equivalent local development
+imports. The MSBuild design-time assets are checked, while actual editor squiggles/completion remain unverified.
 
 ### Delivery baseline
 
@@ -219,7 +221,7 @@ the scoped issues, with links here and to design notes rather than parallel copi
 | [Typed inputs and validation (#11)](https://github.com/sotsera/rafter/issues/11) | [Implemented runtime](typed-inputs.md): options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
 | [Target graphs (#13)](https://github.com/sotsera/rafter/issues/13) | [Callback target example](targets.md) runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. The process slice adds the build/test workflow. |
 | [Execute and own external processes (#15)](https://github.com/sotsera/rafter/issues/15) | [Windows implementation](process-runtime.md), real child fixtures, isolated consumers, runnable examples, and explicit platform limits. |
-| Deliver authoring diagnostics and local package | Analyzer positives and false-positive checks, fresh package-only file-app/project consumers, selected namespace-import behavior, and editor feedback are verified. |
+| [Authoring diagnostics and local package (#17)](https://github.com/sotsera/rafter/issues/17) | Initial analyzer positives and false-positive checks, fresh package-only consumers, import/opt-out behavior, and design-time asset resolution. Interactive editor feedback remains pending. |
 
 The sequence is a proposal. Target scheduling can be verified with simple callback fixtures before the process slice;
 the combined build/test example is an integration acceptance case after both are available.
@@ -227,10 +229,10 @@ the combined build/test example is an integration acceptance case after both are
 ## Milestone completion checklist
 
 - [ ] Resolve the decision groups needed by the chosen scope and link their accepted rules from the design plan.
-- [ ] Select the SDK/target baseline and needed dependencies, record compatibility evidence, and pin adopted versions.
+- [x] Select the SDK/target baseline and needed dependencies, record compatibility evidence, and pin adopted versions.
 - [x] Establish GitHub identity/workflow and create the scoped evaluation issues before coding begins.
 - [x] Run all seven examples through the actual file-app host, with suitable isolated fixtures and documented commands.
-- [ ] Verify public compile-time guarantees and the selected analyzers, including legitimate split configuration.
+- [x] Verify public compile-time guarantees and the selected initial analyzers, including legitimate split configuration.
 - [x] Verify success, rejection, exceptions, and process lifetime cases with appropriate integration checks on Windows.
 - [ ] Review actual terminal and redirected output against the selected human and agent presentation requirements.
 - [ ] Verify a local package from fresh file-app and project consumers, including editor behavior for the chosen setup.

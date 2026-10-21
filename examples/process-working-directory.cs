@@ -3,8 +3,6 @@
 #:property PublishAot=false
 
 // Assumes the command root contains a src directory with a buildable project or solution.
-using Sotsera.Rafter;
-
 var command = Rafter.Command("Build the project or solution in the src directory.");
 
 return await command.RunAsync(args, async context =>

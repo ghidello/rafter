@@ -2,8 +2,6 @@
 #:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 #:property PublishAot=false
 
-using Sotsera.Rafter;
-
 var command = Rafter.Command("Describe a range after validating its bounds and optional label.");
 
 var minimum = command.Option<int>("minimum", "The inclusive lower bound.")

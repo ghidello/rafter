@@ -3,8 +3,6 @@
 #:property PublishAot=false
 
 // Uses .NET 10 native Microsoft.Testing.Platform mode, as selected by this repository's global.json.
-using Sotsera.Rafter;
-
 var command = Rafter.Command("Build the project and run its tests.");
 
 var project = command.Option<string>("project", "The test project to build and run.")

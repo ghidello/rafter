@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj' and '$(RafterImplicitUsings)' != 'false'">
+    <Using Include="Sotsera.Rafter" />
+  </ItemGroup>
+</Project>

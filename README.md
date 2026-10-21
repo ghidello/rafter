@@ -34,8 +34,10 @@ dotnet run --file examples/processes.cs -- --quiet
 dotnet run --file examples/dependencies.cs -- --project fixtures/workflow/sample-tests/BuildSample.Tests.csproj
 ```
 
-All eight examples now run through project references. Analyzers, packaging, and process ownership on other platforms
-remain separate work. See [example prerequisites](examples/README.md) before running build-oriented scripts.
+All eight examples now run through project references with [authoring diagnostics](docs/authoring-diagnostics.md)
+and an automatic namespace import. The [local package](docs/local-package.md) provides the same authoring support to
+fresh file apps and regular projects; public publication and process ownership on other platforms remain separate work.
+See [example prerequisites](examples/README.md) before running build-oriented scripts.
 
 The [.NET 10 evaluation harness](docs/evaluation-harness.md) runs real file-based and project-consumer checks
 through xUnit v3 and Microsoft.Testing.Platform. It also verifies the runtime through a production project reference.

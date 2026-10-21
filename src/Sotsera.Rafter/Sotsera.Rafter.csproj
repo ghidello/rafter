@@ -5,7 +5,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 
-    <IsPackable>false</IsPackable>
+    <IsPackable>true</IsPackable>
+    <Version>0.1.0-local</Version>
+    <Authors>Alessandro Ghidini</Authors>
+    <Description>C# automation scripts with typed inputs, target dependencies, and owned process execution.</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/sotsera/rafter</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,5 +22,14 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Rafter.Evaluation.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Sotsera.Rafter.Analyzers/Sotsera.Rafter.Analyzers.csproj"
+                      ReferenceOutputAssembly="false" PrivateAssets="all" />
+    <None Include="../Sotsera.Rafter.Analyzers/bin/$(Configuration)/netstandard2.0/Sotsera.Rafter.Analyzers.dll"
+          Pack="true" PackagePath="analyzers/dotnet/cs/" Visible="false" />
+    <None Include="PACKAGE.md" Pack="true" PackagePath="README.md" />
+    <None Include="build/Sotsera.Rafter.targets" Pack="true" PackagePath="build/net10.0/" />
   </ItemGroup>
 </Project>

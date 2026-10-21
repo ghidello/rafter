@@ -116,7 +116,7 @@ reference. No placeholder solution or analyzer project was added. csharp-scripts
 and explicit managed execution; run-tests guided native MTP and TRX reporting. The checked-in fixtures are retained.
 
 Subsequent slices implement [typed inputs/validators](typed-inputs.md), [target graphs](targets.md), and
-[Windows processes and descendant settlement](process-runtime.md). Child ANSI policy, analyzers, automatic imports,
-and local NuGet packaging remain pending. The runtime project is deliberately non-packable at this
-stage. Native AOT and Linux/macOS compatibility need their own verification. No production startup budget is claimed
+[Windows processes and descendant settlement](process-runtime.md). [Initial analyzers](authoring-diagnostics.md), automatic
+imports, and [local NuGet packaging](local-package.md) are now implemented as a later slice too. Child ANSI policy,
+native AOT, and Linux/macOS compatibility need their own verification. No production startup budget is claimed
 from the evaluation benchmarks or the elapsed number in this transcript.

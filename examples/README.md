@@ -4,6 +4,11 @@ All eight examples run against the new runtime through project references. The p
 Windows; the target-only example prepares and prints a greeting without child processes. See the
 [design plan](../docs/example-design-plan.md) for accepted decisions and open topics.
 
+`Directory.Build.targets` enables the same namespace import and analyzers as the
+[local NuGet package](../docs/local-package.md). The examples therefore omit `using Sotsera.Rafter;`. Set
+`RafterImplicitUsings=false` to opt out and add the explicit import. When copying an example outside this checkout,
+use a package reference with a configured local feed, or supply equivalent project-reference authoring assets.
+
 | Example | Prerequisites |
 | --- | --- |
 | [minimal.cs](minimal.cs), [options.cs](options.cs), [validation.cs](validation.cs), [targets.cs](targets.cs) | .NET 10 SDK; use `--help` for declared inputs. |

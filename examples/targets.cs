@@ -2,8 +2,6 @@
 #:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 #:property PublishAot=false
 
-using Sotsera.Rafter;
-
 var command = Rafter.Command("Prepare and print a greeting through dependent targets.");
 var name = command.Option<string>("name", "The person to greet.").Default("Rafter");
 var greeting = "";

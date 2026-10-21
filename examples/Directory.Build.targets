@@ -1,0 +1,8 @@
+<Project>
+  <!-- Project references do not carry package build/analyzer assets. Match package authoring locally. -->
+  <Import Project="../src/Sotsera.Rafter/build/Sotsera.Rafter.targets" />
+
+  <ItemGroup>
+    <Analyzer Include="$(MSBuildThisFileDirectory)../src/Sotsera.Rafter.Analyzers/bin/$(Configuration)/netstandard2.0/Sotsera.Rafter.Analyzers.dll" />
+  </ItemGroup>
+</Project>

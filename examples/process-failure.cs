@@ -2,8 +2,6 @@
 #:project ../src/Sotsera.Rafter/Sotsera.Rafter.csproj
 #:property PublishAot=false
 
-using Sotsera.Rafter;
-
 var command = Rafter.Command("Build a project and inspect an unsuccessful result before leaving the body.");
 
 var project = command.Option<string>("project", "The project to build.")

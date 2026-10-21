@@ -99,7 +99,9 @@ where scheduling stops. See [example prerequisites](../examples/README.md).
 
 Linux/macOS ownership and native AOT publishing are unverified; process calls on non-Windows platforms fail explicitly
 before launch. Configurable timeouts, capture APIs, reusable settings, child ANSI control, encoding configuration,
-packaging, and analyzers are separate work. Rafter owns processes it creates and their inherited descendants; a tool
+and further analyzer coverage are separate work. [Local packaging](local-package.md) and the initial
+[discarded-process-task diagnostic](authoring-diagnostics.md#raf003) are implemented in the subsequent authoring slice.
+Rafter owns processes it creates and their inherited descendants; a tool
 requesting work from an already-running external service does not place that service in the new Job Object.
 
 ## Verification

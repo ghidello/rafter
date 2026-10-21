@@ -14,13 +14,23 @@ for exact versions, resolved dependencies, and observed results. Existing test-t
 | CLI parsing | Use `System.CommandLine` internally, with Rafter owning invocation, validation ordering, help, and diagnostics. | 2.0.13 adopted for runtime controls and dynamic string/int/bool inputs; see the typed-input record. |
 | Terminal rendering | Use `Spectre.Console` for help layout and framework messages, with explicit literal/plain output paths. | 0.57.2 adopted for runtime output and dynamic help, with Ansi 0.57.2 as its only transitive package. |
 | Process execution | BCL streams/tasks plus Windows Job Object and process-creation interop. | [Implemented and checked on Windows](process-runtime.md); no extra runtime package. Other platforms remain unverified. |
-| Analyzer development | Use Roslyn APIs; select compatible `Microsoft.CodeAnalysis` packages for the analyzer project and its host baseline. | Proposed tooling direction; versions and packaging pending. |
+| Analyzer development | Separate netstandard2.0 assembly using Microsoft.CodeAnalysis.CSharp 4.14.0, private development/test dependency. | [Initial diagnostics](authoring-diagnostics.md) and [local package](local-package.md); package consumers receive no Roslyn runtime dependency. |
 | Tests | xUnit v3, Microsoft.Testing.Platform, and AwesomeAssertions, as specified in `AGENTS.md`. | xunit.v3.mtp-v2 4.0.2, MTP 2.5.1, AwesomeAssertions 9.6.0; local native-MTP run passed. |
 | Dependency injection, hosting, logging, filesystem helpers | Do not introduce a framework package without a concrete need in the first examples. Start with direct composition and framework APIs where sufficient. | Proposed initial restraint, not a permanent exclusion. |
 
 Keep parser and rendering dependencies behind Rafter's public API where practical. Their defaults must not silently
 become Rafter behavior. Analyzer tooling and tests must not become shipping runtime dependencies; verify the resulting
 NuGet dependency graph rather than relying only on project references looking correct.
+
+The analyzer uses stable [Microsoft.CodeAnalysis.CSharp 4.14.0](https://www.nuget.org/packages/Microsoft.CodeAnalysis.CSharp/4.14.0)
+(MIT), deliberately below the current compiler API rather than requiring the latest host. Local SDK 10.0.402 reports
+compiler 5.9.0-1.26505.111; actual package loading is verified against that host. Other compiler/editor versions remain
+unverified. Its netstandard2.0 restore resolves CodeAnalysis.Common 4.14.0, CodeAnalysis.Analyzers 3.11.0,
+Collections.Immutable and Reflection.Metadata 9.0.0, Text.Encoding.CodePages 7.0.0, Memory 4.5.5, Buffers 4.5.1,
+Numerics.Vectors 4.5.0, Runtime.CompilerServices.Unsafe 6.0.0, Threading.Tasks.Extensions 4.5.4, and the framework
+support packages NETStandard.Library 2.0.3 / Microsoft.NETCore.Platforms 1.1.0. These are tooling dependencies;
+only the authored analyzer DLL is included in the runtime package. Unit checks use the same Roslyn API package,
+while real package-consumer builds verify loading under the installed compiler.
 
 ## SDK and verification baseline
 
