@@ -52,7 +52,7 @@ jobs:
         run: |
           dotnet build tests/testassets/consumers/runtime/project/Consumer.csproj --configuration Release
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          ./tools/Verify-RuntimeTerminal.ps1 -RedirectedOnly
+          ./tools/verification/Verify-RuntimeTerminal.ps1 -RedirectedOnly
 
       - name: Retain evaluation evidence
         if: always()

@@ -6,7 +6,7 @@ synchronization, and literal output. The evaluation does not implement the Rafte
 
 ## Integration established by the probe
 
-[RendererDestination.cs](../tests/testassets/evaluations/renderer/shared/RendererDestination.cs) uses Spectre's public Paragraph/IRenderable
+[RendererDestination.cs](../../tests/testassets/evaluations/renderer/shared/RendererDestination.cs) uses Spectre's public Paragraph/IRenderable
 layout and AnsiWriter APIs. Each destination has its own writer, policy, layout profile, and gate. Capabilities are
 detected against the actual Console.Out or Console.Error before any recording wrapper is added. Redirection and plain
 mode override styling; default profile enrichers are disabled even when CI/GITHUB_ACTIONS is present.
@@ -29,12 +29,12 @@ Completion rejects later writes through that destination and never disposes or r
 The fixture has no detached producers, animation, or background output queue.
 
 The nonempty **NO_COLOR** policy was confirmed during this evaluation: suppress Rafter colors while allowing emphasis
-and terminal prefixes. Plain mode remains stronger. See the [accepted output design](output-design.md).
+and terminal prefixes. Plain mode remains stronger. See the [accepted output design](../design/output-design.md).
 
 ## Executed checks
 
 The existing project now reports **Passed: 109, Failed: 0, Skipped: 0** locally: 83 prior cases and 26 renderer cases.
-[RendererTests.cs](../tests/Rafter.Tests/Evaluation/RendererTests.cs) covers:
+[RendererTests.cs](../../tests/Rafter.Tests/Evaluation/RendererTests.cs) covers:
 
 - All three accepted help examples at 100 and 48 columns, in plain and styled form, including long aliases, literal
   brackets, combining marks, wide characters, and an emoji sequence. Content, punctuation, alias order, blank lines,
@@ -46,7 +46,7 @@ The existing project now reports **Passed: 109, Failed: 0, Skipped: 0** locally:
 - Delayed flush, independent destinations, late writes, styled/plain write failures, flush failures, and host ownership.
 - Actual isolated file-app and ordinary-project consumers, redirected stream contents, exit codes, and help on stdout.
 
-Separately, [Verify-RendererTerminal.ps1](../tools/Verify-RendererTerminal.ps1) exercises **18 real Windows pseudoterminal
+Separately, [Verify-RendererTerminal.ps1](../../tools/evaluations/Verify-RendererTerminal.ps1) exercises **18 real Windows pseudoterminal
 cases**: all four stdout/stderr redirection combinations in normal/plain/NO_COLOR modes, plus all three help examples
 at both widths. CI and GITHUB_ACTIONS are set in every case. It checks actual child handle states, preserves captured
 pre-terminal text, and verifies that help leaves stderr empty. Rendering width is explicitly 100 or 48 columns; the
@@ -63,7 +63,7 @@ consumers, not new test projects. Fixtures remain checked in as reproducible evi
 
 ## Cost comparison
 
-[Measure-Renderer.ps1](../tools/Measure-Renderer.ps1) compares three separately built consumers:
+[Measure-Renderer.ps1](../../tools/evaluations/Measure-Renderer.ps1) compares three separately built consumers:
 
 | Variant | Work performed | Modern dependency assemblies |
 | --- | --- | --- |
@@ -93,7 +93,8 @@ measurement follows 100 warm-up writes and covers 1,000 writes. Restore/build ti
 caches and are excluded from runtime timings. First-launch results are noisy; OS caches were not flushed, so these
 are not reproducible OS-cold-cache measurements or startup guarantees. No performance threshold is invented here.
 
-To reproduce, use the [harness test commands](evaluation-harness.md#run-locally), then from the repository root:
+To reproduce with the current layout, use the [development commands](../README.md#developing-this-repository), then
+the [optional evaluation tool commands](../../tools/README.md). The original commands below are retained as history:
 
 ```powershell
 ./tools/Measure-Renderer.ps1
@@ -102,7 +103,8 @@ To reproduce, use the [harness test commands](evaluation-harness.md#run-locally)
 
 The measurement script builds all six consumers. Run the terminal script in a terminal with both parent streams
 attached; it deliberately fails if this condition is not met. If running it alone, first build
-`fixtures/renderer/full/project/Consumer.csproj` in Release. Raw JSON is retained under `artifacts/renderer/`.
+`fixtures/renderer/full/project/Consumer.csproj` in Release. Original raw JSON is retained under `artifacts/renderer/`;
+new runs use the unique directories described in the [evidence policy](../development/generated-files.md).
 
 The measured extra cost buys the help layout already exercised by the tests. Cache renderer state per invocation and
 destination, keep literal writes direct, and avoid capability detection per line. Revisit eager setup in the first

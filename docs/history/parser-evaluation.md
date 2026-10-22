@@ -11,18 +11,18 @@ This is a dependency recommendation for the first implementation slice, not a co
 - Reject colon option separators, response-file expansion, and directives initially. Preserve punctuation inside values.
 - Declared options form boundaries: `--name --help` is missing a name value; `--name=--help` is the literal string.
 
-These decisions are recorded in the [input design](example-design-plan.md#boolean-syntax-and-repeated-scalar-options).
+These decisions are recorded in the [input design](../design/example-design-plan.md#boolean-syntax-and-repeated-scalar-options).
 The fixed probe accepts undeclared option-like strings as values after `--name`; a declared spelling requires attached
 equals syntax to be used as a value. A standalone `--` is rejected in this no-positional-argument probe. Its public
 meaning must be decided if positional or pass-through input is introduced; it is not silently inherited here.
 
 ## Fixtures and skills
 
-- [CandidateAdapter.cs](../tests/testassets/evaluations/parser/CandidateAdapter.cs) is the fixed evaluation adapter shared by the tests and
-  [probe.cs](../tests/testassets/evaluations/parser/probe.cs). It is not a generic declaration API, command runner, or shipping library.
-- [ParserCandidate.cs](../tests/testassets/evaluations/parser/ParserCandidate.cs) exposes an unadapted schema for baseline comparisons.
-- [ParserTests.cs](../tests/Rafter.Tests/Evaluation/ParserTests.cs) checks accepted behavior and runs the real file app.
-  [ParserBaselineTests.cs](../tests/Rafter.Tests/Evaluation/ParserBaselineTests.cs) records incompatible package defaults.
+- [CandidateAdapter.cs](../../tests/testassets/evaluations/parser/CandidateAdapter.cs) is the fixed evaluation adapter shared by the tests and
+  [probe.cs](../../tests/testassets/evaluations/parser/probe.cs). It is not a generic declaration API, command runner, or shipping library.
+- [ParserCandidate.cs](../../tests/testassets/evaluations/parser/ParserCandidate.cs) exposes an unadapted schema for baseline comparisons.
+- [ParserTests.cs](../../tests/Rafter.Tests/Evaluation/ParserTests.cs) checks accepted behavior and runs the real file app.
+  [ParserBaselineTests.cs](../../tests/Rafter.Tests/Evaluation/ParserBaselineTests.cs) records incompatible package defaults.
 - The consumer launcher copies the parser asset and root `Directory.Packages.props` into a temporary workspace,
   preserving repository-relative paths. `#:package System.CommandLine` therefore resolves the same centrally pinned
   version outside the checkout. No source reference to the old Rafter repository is used.
@@ -53,7 +53,8 @@ and 73 adapter cases. One adapter case builds a real file app and launches it ei
 | Extra syntax | Colon separators and directive tokens rejected; version/bundled options absent; an actual existing response file is not expanded and remains a literal when supplied as a string value. |
 | Package defaults | Baseline checks reproduce empty-value loss, help swallowing, lost Boolean error association, error-clearing built-in help, silent directives, and executable-name inference. |
 
-Use the [harness commands](evaluation-harness.md#run-locally) for restore, Release build, and tests. TRX results live at
+Use the [current development commands](../README.md#developing-this-repository) for the maintained suite.
+The original evaluation's TRX results live at
 `artifacts/test-results/Rafter.Evaluation.Tests_net10.0_x64.trx`; CI retains them with the build log. CI results for this
 change are recorded in its PR after execution.
 

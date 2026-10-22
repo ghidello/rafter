@@ -95,6 +95,6 @@ Setup is tracked in [issue #4](https://github.com/sotsera/rafter/issues/4), in t
 Complete it before #1 when practical, so the guidance is available during scaffolding. This is a soft prerequisite:
 installation problems must not block the harness or implementation with ordinary tooling.
 
-The subsequent [skills setup](dotnet-skills-setup.md) installs these three skills at the reviewed revision in
+The subsequent [skills setup](../development/dotnet-skills-setup.md) installs these three skills at the reviewed revision in
 the repository, retains the filter catalog and license, and records discovery verification and updates.
 The review above describes the earlier assessment; installation evidence is in the setup document.

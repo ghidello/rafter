@@ -8,5 +8,5 @@ The run-tests skill's reference-only filter-syntax catalog is supplied at
 [run-tests/references/filter-syntax.md](run-tests/references/filter-syntax.md).
 Read it when filter details are needed; it is not an additional invocable skill.
 
-See [setup and update instructions](../../docs/dotnet-skills-setup.md) for project constraints,
+See [setup and update instructions](../../docs/development/dotnet-skills-setup.md) for project constraints,
 installation scope, discovery verification, and updates.

@@ -6,14 +6,14 @@ We will shape the new Rafter through small, realistic example scripts, discuss t
 implement connected groups of examples. The aim is to make scripts pleasant to write while checking design assumptions
 against working code early.
 
-The original scripts live in [reference/examples](../reference/examples/). They provide scenarios to consider; their
+The original scripts live in [reference/examples](../../reference/examples/). They provide scenarios to consider; their
 APIs and feature set are not requirements for the new implementation. Keep those copies unchanged so comparisons remain
-possible. Current syntax drafts live in [examples](../examples/).
+possible. Current syntax drafts live in [examples](../../examples/).
 
-See [First working examples](first-working-examples.md) for the consistency review, proposed implementation scope,
+See [First working examples](../history/first-working-examples.md) for the consistency review, proposed implementation scope,
 remaining decision groups, and issue outlines. Its recommendations remain proposals until accepted.
 See [Output and help](output-design.md) for the current agreed visual direction and remaining presentation decisions.
-Use the [dependency review](dependency-decisions.md) when choosing the SDK, runtime packages, analyzer tooling, and
+Use the [dependency review](../history/dependency-decisions.md) when choosing the SDK, runtime packages, analyzer tooling, and
 test dependencies before implementation. Its shortlist remains proposed until selection and compatibility checks.
 
 ## Working approach
@@ -32,9 +32,9 @@ the next topic. Agreements can be revised when implementation or actual use reve
 
 ## GitHub issue workflow
 
-The [repository workflow](github-workflow.md) now records verified identities, PR/merge rules, current enforcement,
+The [repository workflow](../development/github-workflow.md) now records verified identities, PR/merge rules, current enforcement,
 and the completed [First working examples milestone](https://github.com/sotsera/rafter/milestone/1). Its evaluation
-and runtime issues are closed; the [completion summary](milestone-review.md) records the selected Windows baseline.
+and runtime issues are closed; the [completion summary](../history/milestone-review.md) records the selected Windows baseline.
 Later product topics still need their own discussion and scoped issues.
 
 Keep the initial syntax discussions, decisions, and open questions in Markdown. Introduce GitHub issues after agreeing
@@ -90,22 +90,22 @@ Several examples cover more than one topic. The links below account for all 23 r
 
 | Topic | Questions to discuss | Reference examples |
 | --- | --- | --- |
-| Minimal script | How much must a greeting declare? Command creation, descriptions, callbacks, invocation, and exit results. | [minimal.cs](../reference/examples/minimal.cs) |
-| Roots and paths | What is the default root? How should invocation, source, and explicit directories affect paths? | [root-invocation.cs](../reference/examples/root-invocation.cs), [root-source.cs](../reference/examples/root-source.cs), [root-explicit.cs](../reference/examples/root-explicit.cs) |
-| Typed inputs | Required, optional, and defaulted values; aliases; flags; strings, integers, enums, and durations; value access and nullability. | [options.cs](../reference/examples/options.cs), [option-types.cs](../reference/examples/option-types.cs), [durations.cs](../reference/examples/durations.cs) |
-| Input validation | Individual checks, relationships between inputs, validation timing, and how multiple rejections are reported. | [validators.cs](../reference/examples/validators.cs), [input-rules.cs](../reference/examples/input-rules.cs) |
-| Environment inputs | Explicit mappings, precedence, empty values, conversion, and help behavior. | [environment.cs](../reference/examples/environment.cs) |
-| Targets and dependencies | Entry selection, execution order, shared dependencies, groups, and invalid graphs. | [dependencies.cs](../reference/examples/dependencies.cs) |
-| Conditional execution | When is a condition evaluated? Does skipping affect a body, its dependencies, or an entire branch? | [conditions.cs](../reference/examples/conditions.cs), [rafter.cs](../reference/examples/rafter.cs) |
-| Output and diagnostics | Results, information, warnings, help, stream routing, and plain, quiet, or verbose output. | [diagnostics.cs](../reference/examples/diagnostics.cs), [minimal.cs](../reference/examples/minimal.cs) |
-| Failures | Expected failures, unexpected exceptions, process failures, exit codes, and stopping subsequent callback statements. | [diagnostics.cs](../reference/examples/diagnostics.cs), [processes.cs](../reference/examples/processes.cs) |
-| External processes | Executables, argument tokens, working directories, child environments, streaming, and process results. | [processes.cs](../reference/examples/processes.cs) |
-| Reusable process settings | Sharing defaults, applying overrides, and resolving input-dependent settings. | [process-configuration.cs](../reference/examples/process-configuration.cs) |
-| Captured output | Reading structured results, optional live echo, capture limits, overflow, and availability of captured data. | [process-capture.cs](../reference/examples/process-capture.cs) |
-| Cancellation and timeouts | Cooperative managed work, child shutdown, grace periods, independent deadlines, and actual completion. | [process-cancellation.cs](../reference/examples/process-cancellation.cs), [process-timeout.cs](../reference/examples/process-timeout.cs), [managed-timeout.cs](../reference/examples/managed-timeout.cs), [cleanup-timeout.cs](../reference/examples/cleanup-timeout.cs) |
-| Cleanup and shared resources | Target and command lifetimes, state shared between steps, cleanup eligibility, and combined failures. | [cleanup.cs](../reference/examples/cleanup.cs), [cleanup-timeout.cs](../reference/examples/cleanup-timeout.cs) |
-| Sensitive values | Declaring sensitive inputs, redacting presentation, raw value access, and the boundaries of protection. | [redaction.cs](../reference/examples/redaction.cs) |
-| Complete workflow | Does the combined API remain readable in a build, test, and optional packaging script? | [rafter.cs](../reference/examples/rafter.cs) |
+| Minimal script | How much must a greeting declare? Command creation, descriptions, callbacks, invocation, and exit results. | [minimal.cs](../../reference/examples/minimal.cs) |
+| Roots and paths | What is the default root? How should invocation, source, and explicit directories affect paths? | [root-invocation.cs](../../reference/examples/root-invocation.cs), [root-source.cs](../../reference/examples/root-source.cs), [root-explicit.cs](../../reference/examples/root-explicit.cs) |
+| Typed inputs | Required, optional, and defaulted values; aliases; flags; strings, integers, enums, and durations; value access and nullability. | [options.cs](../../reference/examples/options.cs), [option-types.cs](../../reference/examples/option-types.cs), [durations.cs](../../reference/examples/durations.cs) |
+| Input validation | Individual checks, relationships between inputs, validation timing, and how multiple rejections are reported. | [validators.cs](../../reference/examples/validators.cs), [input-rules.cs](../../reference/examples/input-rules.cs) |
+| Environment inputs | Explicit mappings, precedence, empty values, conversion, and help behavior. | [environment.cs](../../reference/examples/environment.cs) |
+| Targets and dependencies | Entry selection, execution order, shared dependencies, groups, and invalid graphs. | [dependencies.cs](../../reference/examples/dependencies.cs) |
+| Conditional execution | When is a condition evaluated? Does skipping affect a body, its dependencies, or an entire branch? | [conditions.cs](../../reference/examples/conditions.cs), [rafter.cs](../../reference/examples/rafter.cs) |
+| Output and diagnostics | Results, information, warnings, help, stream routing, and plain, quiet, or verbose output. | [diagnostics.cs](../../reference/examples/diagnostics.cs), [minimal.cs](../../reference/examples/minimal.cs) |
+| Failures | Expected failures, unexpected exceptions, process failures, exit codes, and stopping subsequent callback statements. | [diagnostics.cs](../../reference/examples/diagnostics.cs), [processes.cs](../../reference/examples/processes.cs) |
+| External processes | Executables, argument tokens, working directories, child environments, streaming, and process results. | [processes.cs](../../reference/examples/processes.cs) |
+| Reusable process settings | Sharing defaults, applying overrides, and resolving input-dependent settings. | [process-configuration.cs](../../reference/examples/process-configuration.cs) |
+| Captured output | Reading structured results, optional live echo, capture limits, overflow, and availability of captured data. | [process-capture.cs](../../reference/examples/process-capture.cs) |
+| Cancellation and timeouts | Cooperative managed work, child shutdown, grace periods, independent deadlines, and actual completion. | [process-cancellation.cs](../../reference/examples/process-cancellation.cs), [process-timeout.cs](../../reference/examples/process-timeout.cs), [managed-timeout.cs](../../reference/examples/managed-timeout.cs), [cleanup-timeout.cs](../../reference/examples/cleanup-timeout.cs) |
+| Cleanup and shared resources | Target and command lifetimes, state shared between steps, cleanup eligibility, and combined failures. | [cleanup.cs](../../reference/examples/cleanup.cs), [cleanup-timeout.cs](../../reference/examples/cleanup-timeout.cs) |
+| Sensitive values | Declaring sensitive inputs, redacting presentation, raw value access, and the boundaries of protection. | [redaction.cs](../../reference/examples/redaction.cs) |
+| Complete workflow | Does the combined API remain readable in a build, test, and optional packaging script? | [rafter.cs](../../reference/examples/rafter.cs) |
 
 ## First group of examples
 
@@ -178,7 +178,7 @@ owns all selected work. In the first version, process output identifies the exec
 failure diagnostics include the child working directory. Rafter does not automatically print arguments or environment
 values, even in verbose mode. Explicit selected-argument disclosure with redaction is deferred; script/child output
 and exception details retain their existing policies. Further verbose content and remaining failure transcripts are still open. The old
-[output previews](../reference/output/README.md) are preserved unchanged for comparison.
+[output previews](../../reference/output/README.md) are preserved unchanged for comparison.
 
 Failure detail is agreed: invalid declarations/inputs use grouped diagnostics without stacks; rejected process exits
 identify the applicable target, executable, actual code, and accepted codes without framework stacks. Unexpected callback
@@ -190,14 +190,14 @@ full exception details, and plain output retains all wording without color. This
 
 The topic is partially drafted and agreed. The new [HTML comparison](output-preview.html) contains 23 illustrative
 scenarios with terminal/plain, stream, verbosity, and width controls. Remaining diagnostic wording
-remains proposed for review. The [minimal runtime](minimal-runtime.md) now verifies body-only output and help;
-[target output](targets.md) and [Windows process output](process-runtime.md) are implemented too. Historical previews and synthetic
+remains proposed for review. The [minimal runtime](../guides/minimal-runtime.md) now verifies body-only output and help;
+[target output](../guides/targets.md) and [Windows process output](../guides/process-runtime.md) are implemented too. Historical previews and synthetic
 fixtures are not runtime evidence.
 
 ### Minimal script
 
-Scenario: print a greeting using a single command. [examples/minimal.cs](../examples/minimal.cs) is now runnable
-against the new runtime through a project reference. See [implementation and verification](minimal-runtime.md).
+Scenario: print a greeting using a single command. [examples/minimal.cs](../../examples/minimal.cs) is now runnable
+against the new runtime through a project reference. See [implementation and verification](../guides/minimal-runtime.md).
 
 Agreed:
 
@@ -220,7 +220,7 @@ Agreed:
   awaited user callbacks, and returns an exit code rather than propagating those exceptions to the caller.
 - `Rafter.Command(description)` requires no explicit root. It captures the process working directory when `RunAsync` starts,
   uses that root for Rafter-resolved relative paths, and does not change the process working directory.
-  See [roots and paths](roots-and-paths.md) for the agreed behavior and examples.
+  See [roots and paths](../guides/roots-and-paths.md) for the agreed behavior and examples.
 - Body execution and target execution are separate invocation forms. Target execution does not append an additional
   command body. Both forms share validation, help, root capture, exception containment, and exit-code rules.
 
@@ -230,8 +230,8 @@ Open questions:
 - Timeout policies and broader process cancellation remain in their dedicated topic. Cooperative managed cancellation
   is implemented for the body-only invocation.
 
-The body-only scope and [target invocation form](targets.md) are implemented and verified. Initial
-[analyzer authoring feedback](authoring-diagnostics.md) is included in the local package.
+The body-only scope and [target invocation form](../guides/targets.md) are implemented and verified. Initial
+[analyzer authoring feedback](../guides/authoring-diagnostics.md) is included in the local package.
 
 #### Description validation
 
@@ -247,7 +247,7 @@ validation rather than rejected merely because their values cannot be determined
 
 Requiring the description argument at command creation handles omission through the API itself, without analyzing
 fluent call sequences. The initial implementation uses the proposed error severity across commands, options, targets,
-and validation rules. See [diagnostic coverage and limits](authoring-diagnostics.md#raf001).
+and validation rules. See [diagnostic coverage and limits](../guides/authoring-diagnostics.md#raf001).
 
 #### Invocation behavior
 
@@ -287,7 +287,7 @@ runtime failure or forced termination. No exit result can be promised when the p
 Cancellation uses exit `130` when cleanup succeeds and no unhandled or recorded execution failure remains. Execution
 failures and unconfirmed process/output settlement take precedence with exit `1`, as described below. Timeout policy
 remains open. Managed body cancellation and Windows owned-process cancellation are implemented; see the
-[process runtime](process-runtime.md) for verification and platform limits.
+[process runtime](../guides/process-runtime.md) for verification and platform limits.
 
 #### Help and validation
 
@@ -306,7 +306,7 @@ help behavior independently of how the body accesses input values.
 
 ### Roots and paths
 
-The default root behavior is agreed and documented in [roots and paths](roots-and-paths.md): capture the invocation's
+The default root behavior is agreed and documented in [roots and paths](../guides/roots-and-paths.md): capture the invocation's
 working directory at `RunAsync`, retain it for that run, and resolve Rafter-managed relative paths against it without
 changing the process working directory. Ordinary .NET file operations are unaffected by a Rafter root selection.
 
@@ -327,7 +327,7 @@ Agreed declaration rules:
 - Null callbacks are invalid, including command/target bodies, validation predicates, and process failure handlers.
 - Calling `.Required()` more than once or `.Default(...)` more than once on an option is invalid, even when the
   repeated default is identical. Mixing those policies is also invalid. Initial validation catches separate calls
-  through a retained original handle; [RAF004](authoring-diagnostics.md#raf004) reports supported straight-line repetitions.
+  through a retained original handle; [RAF004](../guides/authoring-diagnostics.md#raf004) reports supported straight-line repetitions.
 - Calling `.Run(...)` twice on the same target is invalid; do not silently replace or combine target bodies.
 - Calling `.OnFailure(...)` twice on the same process configuration is invalid; do not silently replace handlers.
 - Collection-style methods such as `.Aliases(...)` and `.Validate(...)` continue to append according to their own
@@ -345,9 +345,9 @@ errors are not initial command declaration failures with exit `2`.
 ### Typed inputs
 
 Scenario: print a personalized greeting with a required name, defaulted repeat count, and defaulted uppercase flag.
-The runnable example is [examples/options.cs](../examples/options.cs), including declarations and the greeting body.
-The [typed-input runtime record](typed-inputs.md) describes the string/int/bool implementation and verification.
-Additional types remain pending; the initial nullable-type warning is described in [authoring diagnostics](authoring-diagnostics.md).
+The runnable example is [examples/options.cs](../../examples/options.cs), including declarations and the greeting body.
+The [typed-input runtime record](../guides/typed-inputs.md) describes the string/int/bool implementation and verification.
+Additional types remain pending; the initial nullable-type warning is described in [authoring diagnostics](../guides/authoring-diagnostics.md).
 
 Agreed declaration syntax and behavior:
 
@@ -368,7 +368,7 @@ Agreed declaration syntax and behavior:
 - Required/defaulted handles expose non-nullable values; optional handles expose nullable values. For example,
   required/defaulted string and integer inputs return `string` and `int`, while optional inputs return `string?`
   and `int?`. `Option<T>` is the optional declaration handle; `ValueOption<T>` is the finalized required/defaulted
-  handle. See the [lookup signatures](typed-inputs.md#typed-handles-and-lookups) for the implemented initial types.
+  handle. See the [lookup signatures](../guides/typed-inputs.md#typed-handles-and-lookups) for the implemented initial types.
 
 #### Names and aliases
 
@@ -449,8 +449,8 @@ Additional syntax agreed during the parser evaluation:
 - Colon option separators, response-file expansion, and directives are unsupported initially. Colons and equals
   signs inside string values remain literal. An `@file` supplied as a string value does not read that file.
 
-The [parser evaluation](parser-evaluation.md) exercises these rules through direct arrays and a real file app.
-That evaluation verifies a fixed adapter; the [runtime tests](typed-inputs.md#verification) now verify dynamic
+The [parser evaluation](../history/parser-evaluation.md) exercises these rules through direct arrays and a real file app.
+That evaluation verifies a fixed adapter; the [runtime tests](../guides/typed-inputs.md#verification) now verify dynamic
 declarations too. Positional arguments and a standalone `--` remain unsupported in the initial runtime grammar.
 
 #### Input diagnostics and API constraints
@@ -470,7 +470,7 @@ Agreed:
 
 Possible additions and open details:
 
-- A code fix could remove nullable syntax where safe. [RAF004](authoring-diagnostics.md#raf004) now flags repeated or
+- A code fix could remove nullable syntax where safe. [RAF004](../guides/authoring-diagnostics.md#raf004) now flags repeated or
   conflicting policies through the same local in supported straight-line statements. Broader flow and alias analysis
   remain deferred; detection across arbitrary helpers is not a static guarantee.
 - Further input types remain open. The initial typed handles, runtime policy checks, and nullable-type warning RAF002
@@ -498,9 +498,9 @@ No asynchronous option syntax or implementation is selected. Revisit this note w
 ### Input validation
 
 Scenario: validate two defaulted range bounds individually and together, with multiple rules per bound and an optional
-label whose validation is skipped when omitted. The runnable example is [examples/validation.cs](../examples/validation.cs).
+label whose validation is skipped when omitted. The runnable example is [examples/validation.cs](../../examples/validation.cs).
 The individual and cross-input rule design below is implemented for string/int/bool;
-see the [runtime record](typed-inputs.md) for verification and remaining scope.
+see the [runtime record](../guides/typed-inputs.md) for verification and remaining scope.
 
 Agreed individual value validation:
 
@@ -533,10 +533,10 @@ Agreed cross-input validation:
 
 Scenarios: display the installed .NET SDK version, inspect a failed build while retaining command failure, and build
 from a child-specific working directory with an environment override.
-The runnable Windows examples are [examples/processes.cs](../examples/processes.cs) and
-[examples/process-failure.cs](../examples/process-failure.cs), plus
-[examples/process-working-directory.cs](../examples/process-working-directory.cs). See the
-[process runtime record](process-runtime.md) for implementation, verification, and remaining platform/settings scope.
+The runnable Windows examples are [examples/processes.cs](../../examples/processes.cs) and
+[examples/process-failure.cs](../../examples/process-failure.cs), plus
+[examples/process-working-directory.cs](../../examples/process-working-directory.cs). See the
+[process runtime record](../guides/process-runtime.md) for implementation, verification, and remaining platform/settings scope.
 
 Agreed basic syntax:
 
@@ -625,7 +625,7 @@ Open questions:
 
 The command-level exception containment contract applies to the outer invocation. Process `RunAsync()` intentionally
 throws within the callback for the `Throw` action; these are separate API boundaries. The
-[Windows implementation](process-runtime.md) verifies this boundary with real processes.
+[Windows implementation](../guides/process-runtime.md) verifies this boundary with real processes.
 
 ### Completion of owned process scopes
 
@@ -683,7 +683,7 @@ of its process operations remain outstanding:
 Track the complete operation, including descendant cleanup and output handling, not just the main process's running
 state. The runtime check detects unfinished operations; it cannot prove that an already-completed task was awaited.
 It therefore complements the analyzer rather than replacing it. The runtime tracker is implemented and verified in
-the [process slice](process-runtime.md); [RAF003](authoring-diagnostics.md#raf003) implements the initial analyzer coverage.
+the [process slice](../guides/process-runtime.md); [RAF003](../guides/authoring-diagnostics.md#raf003) implements the initial analyzer coverage.
 
 ### Cancellation and owned child processes
 
@@ -742,7 +742,7 @@ returning; deadline expiry alone does not make those operations safe to abandon.
 settle those operations safely is an implementation requirement to verify, not a claim of a ten-second return guarantee.
 
 Implementation direction to investigate, not a platform-support commitment. See the pinned
-[Aspire shutdown review](aspire-process-shutdown-review.md) for its current implementation and differences from Rafter's
+[Aspire shutdown review](../history/aspire-process-shutdown-review.md) for its current implementation and differences from Rafter's
 contract; that research does not automatically adopt Aspire's policies or dependencies.
 
 - On Windows, use a dedicated Job Object per process execution with breakaway disabled and kill-on-close protection.
@@ -768,14 +768,14 @@ Research basis, checked 2026-10-19:
 
 Still discuss cleanup-error propagation and external
 cancellation-token entry points. These policies are not inferred from the old implementation.
-Windows ownership and real-process verification are recorded in [process-runtime.md](process-runtime.md).
+Windows ownership and real-process verification are recorded in [process-runtime.md](../guides/process-runtime.md).
 
 ### Targets and dependencies
 
 Scenario: build a project and then run its tests through a dependency-only grouping target. The runnable Windows example is
-[examples/dependencies.cs](../examples/dependencies.cs). The [callback-based target slice](targets.md) implements
-sequential graph execution, also demonstrated by [examples/targets.cs](../examples/targets.cs). External-process
-integration is verified by the [process slice](process-runtime.md); empty-target analyzer coverage remains pending.
+[examples/dependencies.cs](../../examples/dependencies.cs). The [callback-based target slice](../guides/targets.md) implements
+sequential graph execution, also demonstrated by [examples/targets.cs](../../examples/targets.cs). External-process
+integration is verified by the [process slice](../guides/process-runtime.md); empty-target analyzer coverage remains pending.
 
 Agreed execution shape:
 
@@ -843,7 +843,7 @@ Agreed nonempty invocation contract:
 - Compiler enforcement of argument presence does not replace runtime validation of nulls, ownership, and graph validity.
 
 The target and dependency design above is agreed. Callback-based graph execution is implemented and verified in the
-[target runtime record](targets.md); the build/test workflow is verified in the [process record](process-runtime.md).
+[target runtime record](../guides/targets.md); the build/test workflow is verified in the [process record](../guides/process-runtime.md).
 Analyzer coverage remains pending.
 
 ### Automatic namespace import
@@ -862,8 +862,8 @@ Initial package behavior:
 - Verify actual file-based apps, regular C# project consumers, design-time assets, and the opt-out using a built package.
   File-based apps use a generated project, as described in the [SDK guide](https://learn.microsoft.com/en-us/dotnet/core/sdk/file-based-apps),
   and the package mechanism is now exercised by isolated consumer checks. Live VS Code diagnostics and completion are
-  verified in the [milestone review](milestone-review.md).
+  verified in the [milestone review](../history/milestone-review.md).
 
-The [local package](local-package.md) implements this default; development examples use equivalent build assets and
+The [local package](../guides/local-package.md) implements this default; development examples use equivalent build assets and
 omit the explicit imports. Namespace imports do not flow through transitive project references. Public publication
 and editor-host compatibility beyond the recorded VS Code baseline remain separate gates.

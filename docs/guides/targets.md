@@ -1,8 +1,8 @@
 # Sequential targets and dependencies
 
 Issue [#13](https://github.com/sotsera/rafter/issues/13) implements callback-based target graphs on the typed-input
-runtime. [targets.cs](../examples/targets.cs) prepares a greeting and then prints it through a dependency-only group.
-The [process slice](process-runtime.md) now runs the [dependencies.cs](../examples/dependencies.cs) build/test workflow
+runtime. [targets.cs](../../examples/targets.cs) prepares a greeting and then prints it through a dependency-only group.
+The [process slice](process-runtime.md) now runs the [dependencies.cs](../../examples/dependencies.cs) build/test workflow
 on Windows and stops later targets after an unhandled process error, recorded `Fail`, or unfinished process work.
 
 ## Authoring and execution
@@ -69,11 +69,11 @@ policies also apply to target output. Host writers remain open until invocation 
 
 ## Verification
 
-[Target runtime tests](../tests/Rafter.Tests/Targets/TargetTests.cs) exercise order, shared dependencies, repeated
+[Target runtime tests](../../tests/Rafter.Tests/Targets/TargetTests.cs) exercise order, shared dependencies, repeated
 references, nested groups, a 12,000-level graph, all-declaration validation, cycles, ownership, awaited execution,
 failure/cancellation cleanup, snapshots, overlapping invocations, input integration, and 48/100-column help.
-[Consumer tests](../tests/Rafter.Tests/Consumers/TargetConsumerTests.cs) build and run the actual targets.cs and check
-unsupported invocation shapes at compile time. Existing [runtime consumers](../tests/testassets/consumers/runtime/Scenario.cs) also
+[Consumer tests](../../tests/Rafter.Tests/Consumers/TargetConsumerTests.cs) build and run the actual targets.cs and check
+unsupported invocation shapes at compile time. Existing [runtime consumers](../../tests/testassets/consumers/runtime/Scenario.cs) also
 exercise successful and failed target workflows in both file apps and ordinary projects with warnings as errors.
 
 Local verification on 2026-10-21 used Windows x64, SDK 10.0.402, and managed net10.0 execution. The full native-MTP

@@ -3,10 +3,12 @@ if ([Console]::IsOutputRedirected -or [Console]::IsErrorRedirected) {
     throw 'Run this evidence script in a real terminal or pseudoterminal with both parent streams attached.'
 }
 
-$repository = Split-Path $PSScriptRoot -Parent
+$repository = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location -LiteralPath $repository
-$evidenceDirectory = Join-Path $repository 'artifacts/renderer/terminal'
+$runId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '-' + [Guid]::NewGuid().ToString('N')
+$evidenceDirectory = Join-Path $repository ("artifacts/evidence/evaluations/renderer-terminal/" + $runId)
 New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
+Write-Host "Evidence: $evidenceDirectory"
 $assembly = Join-Path $repository 'tests/testassets/evaluations/renderer/full/project/bin/Release/net10.0/Consumer.dll'
 if (-not (Test-Path -LiteralPath $assembly)) { throw 'Build the full renderer project consumer first.' }
 $cases = @()

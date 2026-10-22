@@ -33,8 +33,8 @@ Upstream had no Actions workflows. The fork's Actions API listed an active histo
 .github/workflows/ci.yml is absent from main, so that record is not a usable current CI definition.
 No branch protection, ruleset, merge settings, or Actions configuration was changed during this setup.
 
-Issue #1 adds the [Windows evaluation workflow](../.github/workflows/evaluation.yml). Its stable job name is
-Windows evaluation; see the [harness record](evaluation-harness.md) for actual run results. Adding this workflow
+Issue #1 adds the [Windows evaluation workflow](../../.github/workflows/evaluation.yml). Its stable job name is
+Windows evaluation; see the [harness record](../history/evaluation-harness.md) for actual run results. Adding this workflow
 does not enable branch protection or make the check required for merging.
 
 ## Published initial work
@@ -42,7 +42,7 @@ does not enable branch protection or make the check required for merging.
 Milestone: [First working examples](https://github.com/sotsera/rafter/milestone/1).
 
 Closed on 2026-10-21 with nine assigned issues completed and no open issues. The
-[completion summary](milestone-review.md) includes the final implementation and verification. Issues #21 and #23 were
+[completion summary](../history/milestone-review.md) includes the final implementation and verification. Issues #21 and #23 were
 additional completed follow-ups; [issue #25](https://github.com/sotsera/rafter/issues/25) tracks this closeout and the
 repository organization review outside the completed milestone.
 
@@ -57,9 +57,9 @@ repository organization review outside the completed milestone.
 | [#13: Implement sequential targets and dependency graphs](https://github.com/sotsera/rafter/issues/13) | Run callback targets with graph validation, ordering, groups, failure handling, and help/output. | Completed through PR #14. |
 | [#15: Implement owned Windows process execution](https://github.com/sotsera/rafter/issues/15) | Run external tools and build/test examples with explicit failure actions, launch-time descendant ownership, and settled output/cancellation. | Completed through PR #16. |
 | [#17: Deliver initial authoring diagnostics and a local package](https://github.com/sotsera/rafter/issues/17) | Bundle bounded authoring diagnostics and automatic namespace imports; verify package-only file apps and project consumers. | Completed in PR #18; editor checks are covered by #19. |
-| [#19: Review runtime output and editor authoring feedback](https://github.com/sotsera/rafter/issues/19) | Verify actual terminal output and live VS Code feedback; correct concrete presentation defects. | Completed through PR #20; [recorded review](milestone-review.md). |
-| [#21: Diagnose repeated and conflicting option presence policies](https://github.com/sotsera/rafter/issues/21) | Add conservative authoring errors for separate policy calls on the same local. | Completed through PR #22; [RAF004 scope and evidence](authoring-diagnostics.md#raf004). |
-| [#23: Investigate mixed-launcher handle inheritance and process settlement](https://github.com/sotsera/rafter/issues/23) | Fix foreign-launcher inheritance of temporary Rafter handles while preserving ownership and settlement. | Completed through PR #24; [investigation and runtime fix](process-test-isolation.md). |
+| [#19: Review runtime output and editor authoring feedback](https://github.com/sotsera/rafter/issues/19) | Verify actual terminal output and live VS Code feedback; correct concrete presentation defects. | Completed through PR #20; [recorded review](../history/milestone-review.md). |
+| [#21: Diagnose repeated and conflicting option presence policies](https://github.com/sotsera/rafter/issues/21) | Add conservative authoring errors for separate policy calls on the same local. | Completed through PR #22; [RAF004 scope and evidence](../guides/authoring-diagnostics.md#raf004). |
+| [#23: Investigate mixed-launcher handle inheritance and process settlement](https://github.com/sotsera/rafter/issues/23) | Fix foreign-launcher inheritance of temporary Rafter handles while preserving ownership and settlement. | Completed through PR #24; [investigation and runtime fix](../history/process-test-isolation.md). |
 
 The issues contain the detailed acceptance checklists. Keep design rationale and accepted behavior in Markdown;
 record execution results and scoped completion in the issues/PRs without maintaining duplicate checklists.
@@ -68,7 +68,7 @@ merged on 2026-10-20 as d85ddb2f6e432d18a740eaa96c050f46fb03c551 and closed the 
 The earlier design work and harness were then merged with #1 in [PR #6](https://github.com/sotsera/rafter/pull/6).
 Installation and discovery were verified locally;
 no CI checks were configured for this PR.
-Later feature issues should follow the [design plan](example-design-plan.md) and its remaining topic discussions.
+Later feature issues should follow the [design plan](../design/example-design-plan.md) and its remaining topic discussions.
 
 The planning documents, syntax drafts, and historical references accompany issue #1's evaluation harness PR.
 Issue references must point to the published PR commit until it merges, then may use main. The harness verifies its

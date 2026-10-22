@@ -1,7 +1,7 @@
 # Typed inputs and validation
 
-Issue [#11](https://github.com/sotsera/rafter/issues/11) makes [options.cs](../examples/options.cs) and
-[validation.cs](../examples/validation.cs) runnable against the new runtime. The initial types are `string`, `int`,
+Issue [#11](https://github.com/sotsera/rafter/issues/11) makes [options.cs](../../examples/options.cs) and
+[validation.cs](../../examples/validation.cs) runnable against the new runtime. The initial types are `string`, `int`,
 and `bool`. The parser and renderer versions remain unchanged; no new dependency is introduced.
 
 ## Typed handles and lookups
@@ -39,7 +39,7 @@ repetitions/conflicts it can prove; no analyzer is shipped here.
 
 Unprefixed single-character names receive `-`; longer names receive `--`. Explicit prefixes are preserved. Aliases
 append in declaration order, ignoring duplicate spellings within an option. Matching is ordinal and case-sensitive.
-The initial grammar follows the [agreed parsing rules](example-design-plan.md#boolean-syntax-and-repeated-scalar-options):
+The initial grammar follows the [agreed parsing rules](../design/example-design-plan.md#boolean-syntax-and-repeated-scalar-options):
 space/equal values, explicit empty strings, bare/explicit Boolean flags, and no repeated scalars. Required checks
 presence, including empty strings, zero, and false. Declared options form value boundaries. Positional arguments,
 standalone `--`, colon separators, bundling, response-file expansion, and directives remain unsupported.
@@ -62,13 +62,13 @@ rules and before the body; synchronous user predicates cannot be forcibly interr
 
 The existing Windows native-MTP harness includes:
 
-- [Runtime tests](../tests/Rafter.Tests/Inputs/TypedInputTests.cs) for declarations, repeated policies, aliases,
+- [Runtime tests](../../tests/Rafter.Tests/Inputs/TypedInputTests.cs) for declarations, repeated policies, aliases,
   presence/defaults, grammar and diagnostic privacy, rule ordering, exceptions, snapshots, ownership, cancellation,
   and help at 48/100 columns.
-- [Consumer tests](../tests/Rafter.Tests/Consumers/TypedInputConsumerTests.cs) building and running both actual
+- [Consumer tests](../../tests/Rafter.Tests/Consumers/TypedInputConsumerTests.cs) building and running both actual
   examples in isolated workspaces, plus compiler failures for optional-to-nonnullable assignments, unavailable
   policy methods after finalization, and output facilities on the validation context.
-- [Shared consumer scenarios](../tests/testassets/consumers/runtime/Scenario.cs) proving the typed API in file apps and ordinary
+- [Shared consumer scenarios](../../tests/testassets/consumers/runtime/Scenario.cs) proving the typed API in file apps and ordinary
   projects, with explicit optional/nonnullable assignments in both contexts.
 
 Local verification on 2026-10-21: Windows x64, SDK 10.0.402, managed net10.0. Release build completed with

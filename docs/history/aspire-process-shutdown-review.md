@@ -95,7 +95,7 @@ Do not inherit Aspire's abandoned-handler escape path or warning-only output-dra
 promises settled work and owned-output success. A hard stop of the script host would require a separately designed
 explicit policy. Also avoid importing the DCP dependency or AppHost-specific lifetime exceptions without a Rafter use case.
 
-Rafter's subsequent [owned-scope completion decision](example-design-plan.md#completion-of-owned-process-scopes)
+Rafter's subsequent [owned-scope completion decision](../design/example-design-plan.md#completion-of-owned-process-scopes)
 requires cleanup of surviving owned descendants even after a normal root exit. Scripts are finite; persistent helpers
 are outside the initial scope. Unconfirmed shutdown is reported as **Termination unknown**, with **Output incomplete**
 reserved for cases where processes stopped but output completion could not be confirmed.

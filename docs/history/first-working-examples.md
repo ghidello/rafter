@@ -8,27 +8,27 @@ The examples form a coherent first implementation scope: declare a command and i
 or a target graph, and run external tools with explicit failure handling. The public syntax fits together without
 requiring another broad redesign. The decisions needed for the selected first milestone are now implemented and verified.
 
-The [example design plan](example-design-plan.md) remains the source of agreed API behavior. Recommendations below
-are proposals, not additional accepted requirements. The [minimal runtime](minimal-runtime.md) implements body-only
-invocations; [typed inputs](typed-inputs.md) and [callback targets](targets.md) are now implemented too.
-The [process slice](process-runtime.md) now implements owned Windows processes. Initial
-[authoring diagnostics](authoring-diagnostics.md) and a [local package](local-package.md) are also implemented;
+The [example design plan](../design/example-design-plan.md) remains the source of agreed API behavior. Recommendations below
+are proposals, not additional accepted requirements. The [minimal runtime](../guides/minimal-runtime.md) implements body-only
+invocations; [typed inputs](../guides/typed-inputs.md) and [callback targets](../guides/targets.md) are now implemented too.
+The [process slice](../guides/process-runtime.md) now implements owned Windows processes. Initial
+[authoring diagnostics](../guides/authoring-diagnostics.md) and a [local package](../guides/local-package.md) are also implemented;
 actual output and live VS Code authoring feedback are verified in the [milestone review](milestone-review.md).
 The [dependency review](dependency-decisions.md) records the initial shortlist; the linked executable evaluations and
-[SDK baseline](sdk-and-platform-baseline.md) record the adopted dependencies and compatibility evidence.
+[SDK baseline](../development/sdk-and-platform-baseline.md) record the adopted dependencies and compatibility evidence.
 
 ## Review of the working examples
 
 | Example | Purpose and consistency finding |
 | --- | --- |
-| [minimal.cs](../examples/minimal.cs) | Runnable with a project reference to the new runtime: required description, direct output, and a body supplied to `RunAsync`. |
-| [options.cs](../examples/options.cs) | Required and defaulted inputs read through `GetValue`. No extra target or stored command body is needed. |
-| [validation.cs](../examples/validation.cs) | Individual rules, cross-input rules, and an omitted optional input fit in one example. Ordinary rejection and thrown-validator behavior are specified. |
-| [targets.cs](../examples/targets.cs) | Callback bodies, a shared dependency, and a body-free group demonstrate sequential graph execution without external tools. |
-| [processes.cs](../examples/processes.cs) | An awaited process whose result can be ignored. The completion message demonstrates default stopping on failure. |
-| [process-failure.cs](../examples/process-failure.cs) | `Fail` records failure but returns the result, allowing explicit inspection and return. It does not imply successful command completion. |
-| [process-working-directory.cs](../examples/process-working-directory.cs) | Relative child working directory and child-only environment overrides match the root policy. |
-| [dependencies.cs](../examples/dependencies.cs) | A required entry target, shared build dependency, and body-free group fit the target overload. There is no extra command body after the graph. |
+| [minimal.cs](../../examples/minimal.cs) | Runnable with a project reference to the new runtime: required description, direct output, and a body supplied to `RunAsync`. |
+| [options.cs](../../examples/options.cs) | Required and defaulted inputs read through `GetValue`. No extra target or stored command body is needed. |
+| [validation.cs](../../examples/validation.cs) | Individual rules, cross-input rules, and an omitted optional input fit in one example. Ordinary rejection and thrown-validator behavior are specified. |
+| [targets.cs](../../examples/targets.cs) | Callback bodies, a shared dependency, and a body-free group demonstrate sequential graph execution without external tools. |
+| [processes.cs](../../examples/processes.cs) | An awaited process whose result can be ignored. The completion message demonstrates default stopping on failure. |
+| [process-failure.cs](../../examples/process-failure.cs) | `Fail` records failure but returns the result, allowing explicit inspection and return. It does not imply successful command completion. |
+| [process-working-directory.cs](../../examples/process-working-directory.cs) | Relative child working directory and child-only environment overrides match the root policy. |
+| [dependencies.cs](../../examples/dependencies.cs) | A required entry target, shared build dependency, and body-free group fit the target overload. There is no extra command body after the graph. |
 
 No obsolete command `.Run(...)`, `context.Output`, or `context.Value(...)` calls remain in these examples. Automatic
 namespace imports are provided by development targets matching the local package, with an explicit opt-out.
@@ -76,15 +76,15 @@ These groups consolidate the remaining choices. They do not require reopening th
 
 ### Output and help
 
-The [output and help design](output-design.md) now records an agreed visual direction: compact sections, consistent
+The [output and help design](../design/output-design.md) now records an agreed visual direction: compact sections, consistent
 indentation, descriptions, timings, one final outcome, and terminal-only content prefixes with clean redirected results.
 The selected flatter layout uses unindented target descriptions and one two-space content gutter. Cancellation-request
 messages use yellow in styled output, retain their wording in plain output, and remain hidden in quiet mode.
 Stream separation, grouped input diagnostics, and separate help sections are also agreed for now. Normal, mutually
 exclusive quiet/verbose modes, and independent plain presentation are agreed; redirected streams automatically use plain.
 
-Review the [new comparison](output-preview.html), built around current examples using the preserved
-[old previews](../reference/output/README.md) as inspiration. Unexpected callback exceptions retain full details in every mode; invalid inputs/declarations and rejected
+Review the [new comparison](../design/output-preview.html), built around current examples using the preserved
+[old previews](../../reference/output/README.md) as inspiration. Unexpected callback exceptions retain full details in every mode; invalid inputs/declarations and rejected
 process exits use the concise diagnostics specified in the output design. Multiple-entry headers and summaries preserve
 requested order, sections follow dependency execution order, and each executed body is counted once. The first version
 shows the executable and the working directory in verbose output or relevant failure diagnostics, but never
@@ -98,11 +98,11 @@ measurements support the choice; child-ANSI policy and other platforms remain se
 
 ### Input and declaration edge cases
 
-Boolean syntax and repeated scalar options are now agreed in the [typed-input design](example-design-plan.md#boolean-syntax-and-repeated-scalar-options):
+Boolean syntax and repeated scalar options are now agreed in the [typed-input design](../design/example-design-plan.md#boolean-syntax-and-repeated-scalar-options):
 a bare Boolean flag supplies `true`; explicit `true`/`false` work with space or equals separators. Omission follows the
 declared policy, and explicit false counts as supplied. Repeated scalar options are invalid even when values match.
 
-Naming is agreed in [Names and aliases](example-design-plan.md#names-and-aliases): lowercase names with hyphen-separated
+Naming is agreed in [Names and aliases](../design/example-design-plan.md#names-and-aliases): lowercase names with hyphen-separated
 segments, case-sensitive name matching, distinct option/target namespaces, reserved Rafter option names, and case-insensitive
 Boolean literals. Fluent aliases and prefix rules are included in the options draft. Repeated alias calls append;
 duplicate spellings on one option are harmless; collisions across options after prefix expansion and malformed aliases
@@ -110,7 +110,7 @@ are declaration errors during initial validation. Repeated CLI occurrences throu
 
 Proposed type scope remains the three types used by the drafts. Descriptions are already required.
 
-The [invalid-value and callback configuration rules](example-design-plan.md#invalid-values-and-repeated-callback-configuration)
+The [invalid-value and callback configuration rules](../design/example-design-plan.md#invalid-values-and-repeated-callback-configuration)
 are agreed: reject null defaults/callbacks, repeated target `.Run(...)`, and repeated process `.OnFailure(...)` calls.
 Aliases and validation rules continue to append. Command/input/target errors are checked during initial command
 validation with exit `2`; process configuration created inside a body is checked when process `RunAsync` begins,
@@ -130,7 +130,7 @@ failures throw inside the body. If unhandled, the outer invocation reports failu
 exit-code handler or fabricate a completed child result. Deliberately catching a process exception handles that failure
 and permits recovery, provided no other failure was recorded. An already recorded `Fail` remains a failure.
 
-The [owned-scope completion policy](example-design-plan.md#completion-of-owned-process-scopes) is also agreed:
+The [owned-scope completion policy](../design/example-design-plan.md#completion-of-owned-process-scopes) is also agreed:
 normally exiting tools do not leave owned helpers behind. Settle descendants and output before returning the root
 result or applying its rejected-exit policy. Use **Termination unknown** when shutdown cannot be confirmed, and
 **Output incomplete** when only output completion is unconfirmed. Persistent helpers are outside the initial scope.
@@ -147,7 +147,7 @@ Also settle:
 - Remaining output-failure presentation. The compact diagnostic layout and action timing are agreed: Continue emits
   its yellow warning; Fail records invocation failure and emits its red diagnostic before returning the result;
   a thrown process-failure diagnostic is deferred until it escapes the body. Final summaries do not repeat diagnostics.
-- Child shutdown and descendant ownership: the [cancellation baseline](example-design-plan.md#cancellation-and-owned-child-processes)
+- Child shutdown and descendant ownership: the [cancellation baseline](../design/example-design-plan.md#cancellation-and-owned-child-processes)
   is agreed (Ctrl+C, context token, no later targets, settlement before exit `130`, and no recovery into success by catching
   cancellation). The shared five-second grace, scoped termination, and separate shared five-second verification/output
   drain budget are accepted initial defaults. A second interrupt skips the grace period but preserves verification.
@@ -155,7 +155,7 @@ Also settle:
   ten seconds. Investigate platform ownership mechanisms using the [Aspire review](aspire-process-shutdown-review.md),
   without inheriting its CLI forced-exit or output-drain compromises.
 
-The [process-awaiting policy](example-design-plan.md#awaiting-process-operations) is agreed: an analyzer error catches
+The [process-awaiting policy](../design/example-design-plan.md#awaiting-process-operations) is agreed: an analyzer error catches
 clearly discarded process tasks, including explicit discards. Runtime tracking detects outstanding process operations
 when their body or target callback finishes, reports an execution error, prevents later targets, and performs the agreed
 cleanup before returning exit `1`, preserving any uncertainty diagnostics. Verify this with real unfinished-process
@@ -191,12 +191,12 @@ tooling, and test/build dependencies. Evaluate parser and renderer compatibility
 packages only against the agreed ownership and settlement requirements. No candidate or version is adopted merely
 by appearing in that review.
 
-The [SDK and platform review](sdk-and-platform-baseline.md) recommends SDK 10.0.402, C# 14, and net10.0, starting
+The [SDK and platform review](../development/sdk-and-platform-baseline.md) recommends SDK 10.0.402, C# 14, and net10.0, starting
 verification on Windows x64. Linux/macOS and native AOT publishing need separate evidence before support claims.
 This is a proposed verification order, not a permanent Windows-only restriction. Verify compatible test/runtime
 packages and apply the documented SDK selection policy when scaffolding; do not copy old pins or acceptance claims.
 
-The [GitHub workflow](github-workflow.md) records the verified canonical repository, fork, acting account, integration
+The [GitHub workflow](../development/github-workflow.md) records the verified canonical repository, fork, acting account, integration
 branch, squash-merge workflow, and actual enforcement. The **First working examples** milestone and evaluation
 issues #1–#3 are published; use #1 to establish the harness before the parser/renderer evaluations.
 
@@ -213,7 +213,7 @@ the examples.
 
 ## Proposed GitHub issue breakdown
 
-The initial [evaluation issues](github-workflow.md#published-initial-work) are complete. Minimal invocation is scoped in
+The initial [evaluation issues](../development/github-workflow.md#published-initial-work) are complete. Minimal invocation is scoped in
 [#9](https://github.com/sotsera/rafter/issues/9), and typed inputs/validation in
 [#11](https://github.com/sotsera/rafter/issues/11), and callback target graphs in
 [#13](https://github.com/sotsera/rafter/issues/13). The delivered slices are listed below. Detailed acceptance checklists live in
@@ -221,10 +221,10 @@ the scoped issues, with links here and to design notes rather than parallel copi
 
 | Work item | Concrete completion evidence |
 | --- | --- |
-| [Minimal invocation (#9)](https://github.com/sotsera/rafter/issues/9) | [Implemented body-only runtime](minimal-runtime.md), separate runtime/test boundaries, real minimal file app and regular consumer, sync/awaited async bodies, root capture, help, description errors, contained exceptions, and managed cancellation. Analyzer project and packaging remain in their later slice. |
-| [Typed inputs and validation (#11)](https://github.com/sotsera/rafter/issues/11) | [Implemented runtime](typed-inputs.md): options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
-| [Target graphs (#13)](https://github.com/sotsera/rafter/issues/13) | [Callback target example](targets.md) runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. The process slice adds the build/test workflow. |
-| [Execute and own external processes (#15)](https://github.com/sotsera/rafter/issues/15) | [Windows implementation](process-runtime.md), real child fixtures, isolated consumers, runnable examples, and explicit platform limits. |
+| [Minimal invocation (#9)](https://github.com/sotsera/rafter/issues/9) | [Implemented body-only runtime](../guides/minimal-runtime.md), separate runtime/test boundaries, real minimal file app and regular consumer, sync/awaited async bodies, root capture, help, description errors, contained exceptions, and managed cancellation. Analyzer project and packaging remain in their later slice. |
+| [Typed inputs and validation (#11)](https://github.com/sotsera/rafter/issues/11) | [Implemented runtime](../guides/typed-inputs.md): options and combined validation examples run; compile checks prove nullability and fluent exclusivity; missing/empty/false/zero inputs, defaults, rule aggregation, and thrown validators follow the selected policies. |
+| [Target graphs (#13)](https://github.com/sotsera/rafter/issues/13) | [Callback target example](../guides/targets.md) runs; reversed selections and shared dependencies run each target once; invalid unused declarations, cycles, ownership, and failure scheduling are verified. The process slice adds the build/test workflow. |
+| [Execute and own external processes (#15)](https://github.com/sotsera/rafter/issues/15) | [Windows implementation](../guides/process-runtime.md), real child fixtures, isolated consumers, runnable examples, and explicit platform limits. |
 | [Authoring diagnostics and local package (#17)](https://github.com/sotsera/rafter/issues/17) | Initial analyzer positives and false-positive checks, fresh package-only consumers, import/opt-out behavior, and design-time asset resolution. Live editor feedback is covered by #19. |
 | [Output and editor review (#19)](https://github.com/sotsera/rafter/issues/19) | [Runtime terminal/redirected output, narrow help, Ctrl+C, and live VS Code diagnostics/completion](milestone-review.md), with a terminal write coordination fix and explicit platform limits. |
 
@@ -252,6 +252,6 @@ sensitive-value features, asynchronous input resolution, parallel targets, and m
 
 Basic interruption and owned-process settlement are agreed requirements for the first process slice; they are distinct from
 the deferred configurable timeout and cleanup APIs. The Windows implementation and checks are recorded in
-[process-runtime.md](process-runtime.md).
+[process-runtime.md](../guides/process-runtime.md).
 Cross-platform validation beyond the selected baseline and public
 publication are separate gates, not implied by local milestone completion.

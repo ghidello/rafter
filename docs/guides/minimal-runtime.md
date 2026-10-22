@@ -1,7 +1,7 @@
 # First working runtime slice
 
 Issue [#9](https://github.com/sotsera/rafter/issues/9), implemented and locally verified on 2026-10-20.
-[examples/minimal.cs](../examples/minimal.cs) now runs against [Sotsera.Rafter](../src/Sotsera.Rafter/Sotsera.Rafter.csproj).
+[examples/minimal.cs](../../examples/minimal.cs) now runs against [Sotsera.Rafter](../../src/Sotsera.Rafter/Sotsera.Rafter.csproj).
 This records the original slice. [Typed inputs and validation](typed-inputs.md) now make two more examples runnable.
 
 ## Implemented contract
@@ -50,12 +50,12 @@ Local environment: Windows 10.0.26220 x64, SDK 10.0.402, managed net10.0 executi
 The existing native-MTP test entry point reports **Passed: 166, Failed: 0, Skipped: 0**: 109 previous evaluation cases
 and 57 runtime/consumer cases. The final Release build has zero warnings/errors. The PR records GitHub CI evidence.
 
-- [Invocation tests](../tests/Rafter.Tests/Commands/InvocationTests.cs) cover validation/help ordering, controls,
+- [Invocation tests](../../tests/Rafter.Tests/Commands/InvocationTests.cs) cover validation/help ordering, controls,
   safe diagnostics, literal output, full sync/async exceptions, null tasks, independent invocation state, cancellation
   settlement/failure precedence, delayed flushes, writer failures, ownership, and runtime NO_COLOR styling.
-- [Host tests](../tests/Rafter.Tests/Commands/RuntimeHostTests.cs) change the actual process working directory in an
+- [Host tests](../../tests/Rafter.Tests/Commands/RuntimeHostTests.cs) change the actual process working directory in an
   isolated test collection, proving capture at invocation entry and retention after a later host change.
-- [Consumer tests](../tests/Rafter.Tests/Consumers/RuntimeConsumerTests.cs) build and run actual file-app and ordinary
+- [Consumer tests](../../tests/Rafter.Tests/Consumers/RuntimeConsumerTests.cs) build and run actual file-app and ordinary
   project consumers in temporary workspaces outside the checkout. They execute sync/awaited async bodies, help,
   declaration errors, and nested failures; build-negative cases prove missing description/body rejection.
   The actual minimal.cs file is also built and run unchanged from its copied workspace.
@@ -65,7 +65,7 @@ and 57 runtime/consumer cases. The final Release build has zero warnings/errors.
   RunAsync's returned **130** separately because the enclosing PowerShell terminal tool reported wrapper exit 1.
   This distinguishes the verified invocation result from that wrapper's exit status.
 
-Run the [harness commands](evaluation-harness.md#run-locally) for build/test. For the real example:
+Run the [current development commands](../README.md#developing-this-repository) for build/test. For the real example:
 
 ```powershell
 dotnet run --file examples/minimal.cs -- --help

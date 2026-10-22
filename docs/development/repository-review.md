@@ -1,15 +1,16 @@
 # Repository organization review
 
 Reviewed on 2026-10-21 for [issue #25](https://github.com/sotsera/rafter/issues/25), after the
-[first milestone](milestone-review.md). This is a structural review of files, project references, package contents,
+[first milestone](../history/milestone-review.md). This is a structural review of files, project references, package contents,
 fixture consumers, and CI entry points. It is not a new correctness audit of every method. Recommendations below
 were initially proposed. The approved sequence and navigation implementation are recorded below; test/asset moves
 and later organization work are delivered separately.
 
 The current layout now has one `tests/Rafter.Tests/` project grouped by responsibility, with maintained executable
-inputs under [tests/testassets](../tests/testassets/README.md). [Issue #28](https://github.com/sotsera/rafter/issues/28)
+inputs under [tests/testassets](../../tests/testassets/README.md). [Issue #28](https://github.com/sotsera/rafter/issues/28)
 records the coordinated rename/move; the tables below retain the original review baseline rather than rewriting its
-historical counts. Documentation/tool grouping and generated-evidence policy remain scoped in issue #29.
+historical counts. Documentation/tool grouping and generated-evidence policy are delivered under
+[issue #29](https://github.com/sotsera/rafter/issues/29), as recorded below.
 
 ## What is actually in the checkout
 
@@ -73,9 +74,9 @@ Their names alone are not evidence of redundant files.
 The follow-up discussion approved three delivery groups: navigation, tests/test assets
 ([#28](https://github.com/sotsera/rafter/issues/28)), then documentation/tools and an evidence-retention policy
 ([#29](https://github.com/sotsera/rafter/issues/29)). Navigation is implemented under
-[issue #27](https://github.com/sotsera/rafter/issues/27): root [Rafter.slnx](../Rafter.slnx) includes both production
+[issue #27](https://github.com/sotsera/rafter/issues/27): root [Rafter.slnx](../../Rafter.slnx) includes both production
 projects, the existing main test suite, and ProcessProbe; CI uses it for restore/build/test. The
-[documentation index](README.md) separates current guidance from evaluation history. The approved asset folder name
+[documentation index](../README.md) separates current guidance from evaluation history. The approved asset folder name
 is **`tests/testassets/`**, replacing the initial `tests/Fixtures/` suggestion in this review. No test/asset files
 have moved in the navigation step.
 
@@ -129,7 +130,7 @@ Counts came from Git's tracked/ignored inventories, not from treating every disk
 references, linked/copied fixture items, package checks, CI definition, tools, and example directives were inspected.
 The original documentation closeout changed no runtime, project, workflow, skill source, or fixture source.
 The subsequent navigation step adds the solution and changes CI's entry point; it preserves project/test/fixture
-sources. The [milestone summary](milestone-review.md) identifies the original implementation baseline and CI runs.
+sources. The [milestone summary](../history/milestone-review.md) identifies the original implementation baseline and CI runs.
 The original closeout's inline-Markdown file-target inventory checked 342 links across 45 tracked Markdown files:
 the only nine unresolved occurrences were those documented archival links under `reference/output/`. All 177 local
 file targets in its seven changed documents resolved. These checks cover neither external URLs nor fragment anchors.
@@ -143,10 +144,10 @@ resolved, and the solution project paths exist. Subsequent CI evidence is record
 ## Test and asset organization delivered
 
 [Issue #28](https://github.com/sotsera/rafter/issues/28) keeps one
-[Rafter.Tests project](../tests/Rafter.Tests/Rafter.Tests.csproj), grouped into Commands, Inputs, Targets, Processes,
+[Rafter.Tests project](../../tests/Rafter.Tests/Rafter.Tests.csproj), grouped into Commands, Inputs, Targets, Processes,
 Authoring, Output, Consumers, Evaluation, and Infrastructure. The solution still contains the same four maintained
 projects. Friend-assembly configuration and the process probe's test runtimeconfig path use the renamed assembly.
-The [test-asset inventory](../tests/testassets/README.md) identifies the automated and optional-tool callers for all
+The [test-asset inventory](../../tests/testassets/README.md) identifies the automated and optional-tool callers for all
 43 retained assets. Only three asset files changed content, to adjust their relative production-project references;
 the other 40 are byte-identical to the pre-move files.
 
@@ -174,3 +175,44 @@ Local Windows x64 verification on 2026-10-21 with SDK 10.0.402:
 Raw reports remain ignored under `artifacts/`; the delivery PR records CI against its exact commit. Pre-existing
 generated output at the former fixture/test paths is preserved. Its cleanup and evidence-retention policy remain
 part of [issue #29](https://github.com/sotsera/rafter/issues/29).
+
+## Documentation, tools, and evidence organization delivered
+
+[Issue #29](https://github.com/sotsera/rafter/issues/29) groups the 28 documents formerly beside the index into
+seven current guides, three design files, four development records, and fourteen historical records. The new
+[generated-files policy](generated-files.md) joins the development group. The [documentation index](../README.md)
+remains the entry point. Short pages at the former diagnostic/package URLs preserve the six distinct links embedded
+in the existing analyzer and package README, including all four diagnostic anchors.
+
+The [tool inventory](../../tools/README.md) separates current runtime/editor verification under `tools/verification/`
+from retained renderer comparisons under `tools/evaluations/`. Each script resolves the repository from its new
+location. The editor probe moves with its harness, unchanged. CI calls the moved redirected-runtime script.
+The tools allocate unique evidence directories, print their paths at startup, and retain any partial results after
+failure. Two successive runtime matrices produced separate manifests without replacing the earlier result.
+
+The retention policy distinguishes rebuildable output from evidence. Local evidence has no automatic expiry; CI's
+existing artifact retention remains fourteen days. No pre-existing generated output or evidence was deleted or moved.
+Historical fenced commands/transcripts are unchanged, including failed attempts and original artifact paths; current
+reproduction instructions live in the tool inventory. The only changes inside `.agents/` and `reference/` are the
+project-authored navigation READMEs' links to moved documents. All five vendored file hashes still match the unchanged
+source manifest, the old examples/output source bytes are unchanged, and the parent discovery junction is unchanged.
+
+Local Windows x64 verification on 2026-10-21 with SDK 10.0.402:
+
+- The two review consumers built in Release with **zero warnings/errors**. The moved runtime script passed
+  **38 terminal cases** and **23 redirected cases**; the latter was also launched from the enclosing workspace to
+  check repository discovery. The moved renderer-terminal script passed **18 cases**.
+- The moved measurement tool built all six renderer/host combinations and recorded twelve fresh-process samples
+  plus six steady-state observations with `-Samples 1`. This is execution verification, not a new performance finding.
+- The moved editor harness passed **12 checks across two consumers**, using VS Code **1.143.0**, C# **2.160.4**, and
+  C# Dev Kit **3.40.215**. Its separate editor exited after reporting the live diagnostics/import/completion results.
+- Local file targets and active Markdown/HTML anchors resolved, including the six embedded package/analyzer URLs.
+  The same nine unresolved archival paths remain under `reference/output/`; external sites and archival anchors were
+  not revalidated. The raw inventory is `artifacts/docs-tools-organization/link-audit.json`.
+- Legacy `artifacts/runtime-review/` and `artifacts/renderer/` files were not modified by these new tool invocations.
+  New run directories are under `artifacts/evidence/`; the editor result, both runtime manifests, terminal renderer
+  manifest, and measurement JSON remain available there.
+
+Production sources, test behavior, SDK/package versions, and solution membership are unchanged. The local full .NET
+suite was not repeated for these path/documentation changes; the delivery PR records the exact-commit Windows CI
+regression result separately. This completes the three agreed organization groups without expanding product scope.

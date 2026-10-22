@@ -57,7 +57,7 @@ await context.Process("dotnet")
 
 With a command root of `C:\work\sample`, this starts the child in `C:\work\sample\src`. The setting changes neither
 the script process's working directory nor the parent shell's directory. It also leaves the command root unchanged.
-See the [working-directory example](../examples/process-working-directory.cs).
+See the [working-directory example](../../examples/process-working-directory.cs).
 
 The process builder rejects a second `WorkingDirectory` call, even with the same path. An executable path containing
 a separator or drive prefix also resolves against the captured root. Bare executable names use Windows direct-launch

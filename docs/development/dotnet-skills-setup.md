@@ -16,11 +16,11 @@ skills or entire plugins. The three initial skills are:
 The source is [dotnet/skills at cbb2bb74cb70e0c5ee49cca10470a92da03d4b25](https://github.com/dotnet/skills/tree/cbb2bb74cb70e0c5ee49cca10470a92da03d4b25).
 Each selected upstream skill directory contains only its SKILL.md at this revision. All three files are retained
 unchanged. The separate reference-only filter-syntax catalog is retained unchanged as
-[run-tests/references/filter-syntax.md](../.agents/skills/run-tests/references/filter-syntax.md).
+[run-tests/references/filter-syntax.md](../../.agents/skills/run-tests/references/filter-syntax.md).
 Read that catalog when run-tests calls for filter details; it is not a fourth invocable skill.
 
-[Source manifest](../.agents/skills/dotnet-skills-source.json) maps every vendored file to its upstream path and SHA-256.
-[MIT notice](../.agents/skills/LICENSE.dotnet-skills) covers the imported instructions and reference.
+[Source manifest](../../.agents/skills/dotnet-skills-source.json) maps every vendored file to its upstream path and SHA-256.
+[MIT notice](../../.agents/skills/LICENSE.dotnet-skills) covers the imported instructions and reference.
 The skill directory enforces LF line endings so Git checkouts preserve the recorded file hashes on Windows too.
 No upstream scripts, plugin manifests, MCP servers, or custom agents are included.
 

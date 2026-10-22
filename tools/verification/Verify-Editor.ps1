@@ -1,11 +1,13 @@
 param([Parameter(Mandatory)][string]$CodeExecutable)
 
 $ErrorActionPreference = 'Stop'
-$repository = Split-Path $PSScriptRoot -Parent
-$root = Join-Path $repository ('artifacts/editor-review-' + [Guid]::NewGuid().ToString('N'))
+$repository = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$runId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '-' + [Guid]::NewGuid().ToString('N')
+$root = Join-Path $repository ('artifacts/evidence/verification/editor/' + $runId)
 $workspace = Join-Path $root 'workspace'
 $profile = Join-Path $root 'profile'
 New-Item -ItemType Directory -Path "$workspace/.vscode", $profile -Force | Out-Null
+Write-Host "Evidence: $root"
 Copy-Item -LiteralPath (Join-Path $repository 'global.json') -Destination "$workspace/global.json"
 @'
 <Project Sdk="Microsoft.NET.Sdk">
@@ -62,7 +64,7 @@ $previousFileApp = $env:RAFTER_EDITOR_FILEAPP
 $env:RAFTER_EDITOR_WORKSPACE = $workspace
 $env:RAFTER_EDITOR_RESULT = Join-Path $root 'result.json'
 $env:RAFTER_EDITOR_FILEAPP = Join-Path $fileApp 'probe.cs'
-$probe = Join-Path $repository 'tools/editor-probe'
+$probe = Join-Path $PSScriptRoot 'editor-probe'
 $launchArgs = @('--new-window', '--skip-welcome', '--skip-release-notes', '--disable-workspace-trust',
     '--disable-telemetry', "--user-data-dir=`"$profile`"", "--extensionDevelopmentPath=`"$probe`"",
     "--extensionTestsPath=`"$probe/test.js`"", "`"$workspace`"")

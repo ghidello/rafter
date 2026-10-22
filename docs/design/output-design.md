@@ -2,16 +2,16 @@
 
 Current design direction, accepted for now on 2026-10-19. Refine it through examples as implementation progresses.
 This replaces the initial proposal and its inline preview. Transcripts below are illustrative, not captured executions.
-The [minimal runtime](minimal-runtime.md) implements body-only output and help; [typed inputs](typed-inputs.md) and
-[targets](targets.md) extend it with dynamic metadata and graph output. [Process output](process-runtime.md) is
-implemented and covered by the [actual runtime review](milestone-review.md).
-The separate [renderer evaluation](renderer-evaluation.md) provides broader executable checks and
-[captured help samples](renderer-samples.md) alongside these illustrative transcripts.
+The [minimal runtime](../guides/minimal-runtime.md) implements body-only output and help; [typed inputs](../guides/typed-inputs.md) and
+[targets](../guides/targets.md) extend it with dynamic metadata and graph output. [Process output](../guides/process-runtime.md) is
+implemented and covered by the [actual runtime review](../history/milestone-review.md).
+The separate [renderer evaluation](../history/renderer-evaluation.md) provides broader executable checks and
+[captured help samples](../history/renderer-samples.md) alongside these illustrative transcripts.
 
 The [example design plan](example-design-plan.md) defines execution behavior and exit codes. The old output explorations
-are preserved in [reference/output](../reference/output/README.md). The new
+are preserved in [reference/output](../../reference/output/README.md). The new
 [output comparison](output-preview.html) applies our current direction. The
-[old interactive comparison](../reference/output/output-design-refresh.html) preserves its **Fixed gutters** inspiration.
+[old interactive comparison](../../reference/output/output-design-refresh.html) preserves its **Fixed gutters** inspiration.
 Historical implementation and verification claims apply only to the old project.
 
 ## Agreed visual direction
@@ -92,7 +92,7 @@ presentation override, and redirected destinations remain plain independently of
 
 ## Minimal success
 
-For [minimal.cs](../examples/minimal.cs):
+For [minimal.cs](../../examples/minimal.cs):
 
 ```text
 Print a greeting.
@@ -107,7 +107,7 @@ Only the greeting is stdout; the heading and final result are stderr. Redirected
 
 ## Target workflow
 
-For [dependencies.cs](../examples/dependencies.cs):
+For [dependencies.cs](../../examples/dependencies.cs):
 
 ```text
 > verify <-- (build, test)
@@ -314,4 +314,4 @@ They use the accepted compact process-diagnostic layout; they do not change exce
 
 Remaining diagnostic wording is proposed for review, not additional
 accepted API requirements. The earlier inline preview remains superseded. The current comparison is a design artifact;
-the runtime renderer and actual terminal verification are recorded in the [milestone review](milestone-review.md).
+the runtime renderer and actual terminal verification are recorded in the [milestone review](../history/milestone-review.md).

@@ -4,8 +4,8 @@ Reviewed 2026-10-20. Recommended baseline for the first working examples: **.NET
 and a single net10.0 runtime-library target**. Start verification on Windows x64, then validate Linux and macOS
 before making corresponding support claims. This is a planning recommendation, not a completed compatibility check.
 No SDK was installed, no global.json or project was created, and no Rafter code was compiled during the initial review.
-Subsequent issue #1 work now implements this baseline for the [evaluation harness](evaluation-harness.md), which records
-the current configuration and observed results. Issue #9 extends it to the [minimal runtime](minimal-runtime.md).
+Subsequent issue #1 work now implements this baseline for the [evaluation harness](../history/evaluation-harness.md), which records
+the current configuration and observed results. Issue #9 extends it to the [minimal runtime](../guides/minimal-runtime.md).
 Inventory observations below describe the pre-scaffolding state.
 
 ## Why .NET 10

@@ -1,7 +1,7 @@
 # Working on Rafter
 
-Start with the [example design plan](docs/example-design-plan.md) for the current discussion topics and progress.
-Use the [first milestone record](docs/first-working-examples.md) and [completion summary](docs/milestone-review.md)
+Start with the [example design plan](docs/design/example-design-plan.md) for the current discussion topics and progress.
+Use the [first milestone record](docs/history/first-working-examples.md) and [completion summary](docs/history/milestone-review.md)
 for the delivered Windows baseline; do not treat their future recommendations as accepted requirements.
 Use Markdown for project documents. Keep proposed syntax distinct from agreed behavior and implemented capabilities.
 Use the [documentation index](docs/README.md) for current development entry points and historical evaluation records.
@@ -61,7 +61,7 @@ Use the [documentation index](docs/README.md) for current development entry poin
 
 ## Testing and verification
 
-- The initial .NET skills are installed locally; see [setup and updates](docs/dotnet-skills-setup.md).
+- The initial .NET skills are installed locally; see [setup and updates](docs/development/dotnet-skills-setup.md).
   When run-tests needs its filter-syntax catalog, read
   [.agents/skills/run-tests/references/filter-syntax.md](.agents/skills/run-tests/references/filter-syntax.md).
   Keep the project constraints below authoritative over generic skill examples.
@@ -74,6 +74,8 @@ Use the [documentation index](docs/README.md) for current development entry poin
 - Keep test dependencies outside shipping runtime packages.
 - Record observed outcomes and unavailable checks. Historical results do not verify the current implementation;
   never mark skipped or unexecuted acceptance scenarios complete.
+- Follow the [generated-file and evidence policy](docs/development/generated-files.md); ignored files can contain
+  retained investigation evidence. Use the [tool inventory](tools/README.md) for current verification entry points.
 - Keep documentation and milestone status aligned with the behavior and platforms actually verified.
 
 ## Dependency versions
@@ -103,6 +105,6 @@ Use the [documentation index](docs/README.md) for current development entry poin
   Keep final titles and descriptions aligned with the delivered change rather than intermediate work history.
 - Establish repository ownership, integration branch, merge strategy, issue workflow, and required CI checks
   explicitly before relying on them. Do not inherit another project's GitHub configuration or protection claims.
-- Follow the [GitHub issue workflow](docs/example-design-plan.md#github-issue-workflow): discuss initial syntax in
+- Follow the [GitHub issue workflow](docs/design/example-design-plan.md#github-issue-workflow): discuss initial syntax in
   Markdown, then create scoped issues before implementation. Link decisions and acceptance criteria without duplicating
   detailed checklists across documents and issues.

@@ -1,10 +1,12 @@
 param([int]$Samples = 9)
 
 $ErrorActionPreference = 'Stop'
-$repository = Split-Path $PSScriptRoot -Parent
+$repository = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 Set-Location -LiteralPath $repository
-$evidenceDirectory = Join-Path $repository 'artifacts/renderer'
+$runId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '-' + [Guid]::NewGuid().ToString('N')
+$evidenceDirectory = Join-Path $repository ("artifacts/evidence/evaluations/renderer-measurements/" + $runId)
 New-Item -ItemType Directory -Path $evidenceDirectory -Force | Out-Null
+Write-Host "Evidence: $evidenceDirectory"
 $env:DOTNET_NOLOGO = '1'
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 

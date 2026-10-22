@@ -4,9 +4,11 @@ $ErrorActionPreference = 'Stop'
 if (-not $RedirectedOnly -and ([Console]::IsOutputRedirected -or [Console]::IsErrorRedirected)) {
     throw 'Run in a terminal/pseudoterminal with both streams attached, or select -RedirectedOnly.'
 }
-$repository = Split-Path $PSScriptRoot -Parent
-$evidence = Join-Path $repository 'artifacts/runtime-review'
+$repository = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+$runId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssfffZ') + '-' + [Guid]::NewGuid().ToString('N')
+$evidence = Join-Path $repository ("artifacts/evidence/verification/runtime-terminal/" + $runId)
 New-Item -ItemType Directory -Path $evidence -Force | Out-Null
+Write-Host "Evidence: $evidence"
 $assembly = Join-Path $repository 'tests/testassets/consumers/runtime/project/bin/Release/net10.0/Consumer.dll'
 if (-not (Test-Path -LiteralPath $assembly)) { throw 'Build tests/testassets/consumers/runtime/project/Consumer.csproj in Release first.' }
 $results = @()

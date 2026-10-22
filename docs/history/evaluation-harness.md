@@ -1,7 +1,7 @@
 # Evaluation harness
 
 Issue [#1](https://github.com/sotsera/rafter/issues/1) establishes the environment for the parser and renderer evaluations.
-That issue did not implement the runtime. Issue #9 now adds the [minimal runtime](minimal-runtime.md), referenced by
+That issue did not implement the runtime. Issue #9 now adds the [minimal runtime](../guides/minimal-runtime.md), referenced by
 the same test entry point. examples/minimal.cs runs; the other six examples remain drafts. Reference contains historical
 snapshots, and the HTML previews show illustrative output.
 
@@ -90,7 +90,7 @@ The CI job has an independent 15-minute limit. Shared SDK caches remain outside 
 
 ## Windows CI
 
-[Evaluation workflow](../.github/workflows/evaluation.yml) runs on windows-2022 x64 for pull requests and pushes to main
+[Evaluation workflow](../../.github/workflows/evaluation.yml) runs on windows-2022 x64 for pull requests and pushes to main
 or build/** branches. Build-branch pushes also let the development fork validate this first workflow before it merges.
 Its stable check name is **Windows evaluation**. Actions are pinned to inspected commit SHAs. The job records the runner
 image version, Windows identity, SDK information, build binlog, and TRX results. The windows-evaluation artifact is retained

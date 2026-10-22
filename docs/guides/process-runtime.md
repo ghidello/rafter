@@ -2,15 +2,15 @@
 
 Work is tracked in [issue #15](https://github.com/sotsera/rafter/issues/15). The Windows implementation supports the
 process and build/test examples through project references. The accepted product contract remains in the
-[example design plan](example-design-plan.md#external-processes).
+[example design plan](../design/example-design-plan.md#external-processes).
 
 The Windows launcher keeps its inheritable handles outside the script process so overlapping broad-inheritance
-launchers cannot retain Rafter's output pipes. The [mixed-launcher investigation](process-test-isolation.md) records
+launchers cannot retain Rafter's output pipes. The [mixed-launcher investigation](../history/process-test-isolation.md) records
 the reproduction, implementation, verification, and temporary-helper tradeoffs for issue #23.
 
 ## Current API
 
-The [process example](../examples/processes.cs) uses the real Windows implementation:
+The [process example](../../examples/processes.cs) uses the real Windows implementation:
 
 ```csharp
 return await command.RunAsync(args, async context =>
@@ -110,7 +110,7 @@ The implementation was written against the documented Windows APIs; no Aspire or
 All four process-based examples run against the implementation. The dependency example uses .NET 10 native
 Microsoft.Testing.Platform syntax with an explicit `--project`; its fixture contains a library and one xUnit test.
 The isolated consumer suite verifies successful execution, a failed build, and a failed test, including the target
-where scheduling stops. See [example prerequisites](../examples/README.md).
+where scheduling stops. See [example prerequisites](../../examples/README.md).
 
 Linux/macOS ownership and native AOT publishing are unverified; process calls on non-Windows platforms fail explicitly
 before launch. Configurable timeouts, capture APIs, reusable settings, child ANSI control, encoding configuration,
