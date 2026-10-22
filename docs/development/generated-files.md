@@ -36,7 +36,9 @@ before expiry rather than committing whole generated trees into Git.
 
 This organization change deletes no existing evidence or pre-existing generated output and introduces no automatic
 cleanup command. In particular, former `fixtures/` and `tests/Rafter.Evaluation.Tests/` directories can remain locally
-because they contain ignored build output; the maintained sources have moved to `tests/testassets/` and `Rafter.Tests`.
+because they contain ignored build output. Maintained sources now live under `tests/testassets/` and the three
+projects described in the [testing guide](testing.md); ignored output under the former `tests/Rafter.Tests/` path
+can likewise remain until a bounded cleanup is requested.
 
 When cleanup is requested, first identify the exact files and their owners. Stop the related build, test, child-process,
 or editor session before removing its output. Resolve every target inside the intended checkout, reject junctions or

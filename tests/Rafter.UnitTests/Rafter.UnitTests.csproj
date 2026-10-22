@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../build/Rafter.Test.props" />
+  <Import Project="../build/DependencyContracts.props" />
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+
+    <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+    <ProjectReference Include="../../src/Sotsera.Rafter.Analyzers/Sotsera.Rafter.Analyzers.csproj" />
+  </ItemGroup>
+
+  <Import Project="../build/Rafter.Test.targets" />
+</Project>

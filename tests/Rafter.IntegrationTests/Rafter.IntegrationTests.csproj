@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../build/Rafter.Test.props" />
+  <Import Project="../build/DependencyContracts.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+  </ItemGroup>
+
+  <Import Project="../build/ConsumerWorkspace.targets" />
+  <Import Project="../build/Rafter.Test.targets" />
+</Project>

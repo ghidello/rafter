@@ -41,8 +41,11 @@ jobs:
       - name: Build
         run: dotnet build Rafter.slnx --configuration Release --no-restore -bl:artifacts/build.binlog
 
-      - name: Run evaluation
-        run: dotnet test --solution Rafter.slnx --configuration Release --no-build --report-trx --results-directory artifacts/test-results
+      - name: Run ordinary tests
+        run: dotnet test --solution Rafter.slnx --configuration Release --no-build --minimum-expected-tests 1 --max-parallel-test-modules 1 --report-trx --results-directory artifacts/test-results/ordinary
+
+      - name: Run full evaluation
+        run: dotnet test --solution Rafter.slnx --configuration Release --no-build -p:IncludeLongRunningTests=true --minimum-expected-tests 1 --max-parallel-test-modules 1 --report-trx --results-directory artifacts/test-results/full
 
       - name: Pack local runtime and analyzers
         run: dotnet pack src/Sotsera.Rafter/Sotsera.Rafter.csproj --configuration Release --no-build --no-restore --output artifacts/packages

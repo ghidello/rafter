@@ -6,8 +6,9 @@ fixture consumers, and CI entry points. It is not a new correctness audit of eve
 were initially proposed. The approved sequence and navigation implementation are recorded below; test/asset moves
 and later organization work are delivered separately.
 
-The current layout now has one `tests/Rafter.Tests/` project grouped by responsibility, with maintained executable
-inputs under [tests/testassets](../../tests/testassets/README.md). [Issue #28](https://github.com/sotsera/rafter/issues/28)
+The test suite now has separate unit, integration, and Windows projects, described in the [testing guide](testing.md),
+with maintained executable inputs under [tests/testassets](../../tests/testassets/README.md).
+[Issue #28](https://github.com/sotsera/rafter/issues/28)
 records the coordinated rename/move; the tables below retain the original review baseline rather than rewriting its
 historical counts. Documentation/tool grouping and generated-evidence policy are delivered under
 [issue #29](https://github.com/sotsera/rafter/issues/29), as recorded below.
@@ -144,7 +145,7 @@ resolved, and the solution project paths exist. Subsequent CI evidence is record
 ## Test and asset organization delivered
 
 [Issue #28](https://github.com/sotsera/rafter/issues/28) keeps one
-[Rafter.Tests project](../../tests/Rafter.Tests/Rafter.Tests.csproj), grouped into Commands, Inputs, Targets, Processes,
+[Rafter.Tests project](../../tests/Rafter.UnitTests/Rafter.UnitTests.csproj), grouped into Commands, Inputs, Targets, Processes,
 Authoring, Output, Consumers, Evaluation, and Infrastructure. The solution still contains the same four maintained
 projects. Friend-assembly configuration and the process probe's test runtimeconfig path use the renamed assembly.
 The [test-asset inventory](../../tests/testassets/README.md) identifies the automated and optional-tool callers for all

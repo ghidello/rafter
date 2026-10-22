@@ -1,0 +1,11 @@
+{
+  "solution": {
+    "path": "Rafter.slnx",
+    "projects": [
+      "src\\Sotsera.Rafter\\Sotsera.Rafter.csproj",
+      "src\\Sotsera.Rafter.Analyzers\\Sotsera.Rafter.Analyzers.csproj",
+      "tests\\Rafter.UnitTests\\Rafter.UnitTests.csproj",
+      "tests\\Rafter.IntegrationTests\\Rafter.IntegrationTests.csproj"
+    ]
+  }
+}

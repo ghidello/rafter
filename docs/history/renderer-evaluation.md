@@ -34,7 +34,8 @@ and terminal prefixes. Plain mode remains stronger. See the [accepted output des
 ## Executed checks
 
 The existing project now reports **Passed: 109, Failed: 0, Skipped: 0** locally: 83 prior cases and 26 renderer cases.
-[RendererTests.cs](../../tests/Rafter.Tests/Evaluation/RendererTests.cs) covers:
+[RendererTests.cs](../../tests/Rafter.UnitTests/Evaluation/RendererTests.cs) and the subsequently separated
+[RendererConsumerTests](../../tests/Rafter.IntegrationTests/Evaluation/RendererConsumerTests.cs) cover:
 
 - All three accepted help examples at 100 and 48 columns, in plain and styled form, including long aliases, literal
   brackets, combining marks, wide characters, and an emoji sequence. Content, punctuation, alias order, blank lines,

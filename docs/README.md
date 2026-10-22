@@ -31,18 +31,21 @@ The [output preview](design/output-preview.html) illustrates presentation choice
 ## Developing this repository
 
 Open the Git root containing `README.md`, `global.json`, and [Rafter.slnx](../Rafter.slnx). The enclosing workspace
-directory is not itself the repository. The solution contains the two production projects, the existing xUnit/MTP
-suite, and its ProcessProbe executable. The other consumer and workflow projects remain isolated test/tool inputs;
+directory is not itself the repository. The solution contains the two production projects, three xUnit/MTP suites
+(unit, integration, Windows), and ProcessProbe. The other consumer and workflow projects remain isolated test/tool inputs;
 their sample tests are exercised by integration scenarios rather than discovered as additional solution test suites.
 
 Run from the repository root with the [pinned SDK and Windows baseline](development/sdk-and-platform-baseline.md):
 
 ```powershell
-dotnet build Rafter.slnx --configuration Release
-dotnet test --solution Rafter.slnx --configuration Release --report-trx --results-directory artifacts/test-results
+# Ordinary tests
+dotnet test --solution Rafter.slnx --configuration Release --minimum-expected-tests 1
+
+# Full Windows regression, including consumer/package and other long-running cases
+dotnet test --solution Rafter.slnx --configuration Release -p:IncludeLongRunningTests=true --minimum-expected-tests 1 --max-parallel-test-modules 1
 ```
 
-The second command uses the repository's .NET 10 native Microsoft.Testing.Platform mode. To focus an individual
+Both commands use the repository's .NET 10 native Microsoft.Testing.Platform mode. To focus an individual
 suite, consult the installed [run-tests skill](../.agents/skills/run-tests/SKILL.md). CI restores, builds, and tests
 this same solution; its exact commands and evidence retention are in the
 [Windows evaluation workflow](../.github/workflows/evaluation.yml). Package creation and manual/editor checks have
@@ -55,6 +58,8 @@ their own instructions in [local packaging](guides/local-package.md) and the [to
 | [Repository organization review](development/repository-review.md) | Folder/project roles and the agreed next organization steps. |
 | [Development tools](../tools/README.md) | Current verification versus optional dependency evaluations, with reproduction commands. |
 | [Generated files and evidence](development/generated-files.md) | Per-run evidence directories, CI retention, and bounded cleanup policy. |
+| [Testing guide](development/testing.md) | Suite boundaries, ordinary/full/long-only profiles, capabilities, and observed selection checks. |
+| [Test suite plan](development/test-suite-plan.md) | Agreed project split and execution-policy rationale; Linux CI follows separately. |
 
 ## Product direction and open work
 
@@ -62,7 +67,8 @@ The [example design plan](design/example-design-plan.md) owns accepted API decis
 The [first working examples record](history/first-working-examples.md) preserves the completed milestone's selected scope.
 Later capabilities remain separate work; a completed example group does not establish every reference feature or
 platform. Maintained test/tool inputs now live under [tests/testassets](../tests/testassets/README.md); its inventory
-identifies automated and optional-tool callers. The main suite is `tests/Rafter.Tests/`, grouped by responsibility.
+identifies automated and optional-tool callers. The three test projects separate in-process, portable integration,
+and Windows responsibilities. Linux execution remains unverified until its separate CI follow-up.
 
 ## Evaluation and investigation history
 

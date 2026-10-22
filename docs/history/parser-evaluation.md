@@ -21,8 +21,9 @@ meaning must be decided if positional or pass-through input is introduced; it is
 - [CandidateAdapter.cs](../../tests/testassets/evaluations/parser/CandidateAdapter.cs) is the fixed evaluation adapter shared by the tests and
   [probe.cs](../../tests/testassets/evaluations/parser/probe.cs). It is not a generic declaration API, command runner, or shipping library.
 - [ParserCandidate.cs](../../tests/testassets/evaluations/parser/ParserCandidate.cs) exposes an unadapted schema for baseline comparisons.
-- [ParserTests.cs](../../tests/Rafter.Tests/Evaluation/ParserTests.cs) checks accepted behavior and runs the real file app.
-  [ParserBaselineTests.cs](../../tests/Rafter.Tests/Evaluation/ParserBaselineTests.cs) records incompatible package defaults.
+- [ParserTests.cs](../../tests/Rafter.UnitTests/Evaluation/ParserTests.cs) checks accepted behavior; the real file-app
+  scenario now lives in [ParserConsumerTests](../../tests/Rafter.IntegrationTests/Evaluation/ParserConsumerTests.cs).
+  [ParserBaselineTests.cs](../../tests/Rafter.UnitTests/Evaluation/ParserBaselineTests.cs) records incompatible package defaults.
 - The consumer launcher copies the parser asset and root `Directory.Packages.props` into a temporary workspace,
   preserving repository-relative paths. `#:package System.CommandLine` therefore resolves the same centrally pinned
   version outside the checkout. No source reference to the old Rafter repository is used.

@@ -4,7 +4,9 @@
     <Project Path="src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Rafter.Tests/Rafter.Tests.csproj" />
+    <Project Path="tests/Rafter.UnitTests/Rafter.UnitTests.csproj" />
+    <Project Path="tests/Rafter.IntegrationTests/Rafter.IntegrationTests.csproj" />
+    <Project Path="tests/Rafter.WindowsTests/Rafter.WindowsTests.csproj" />
   </Folder>
   <Folder Name="/tests/testassets/" />
   <Folder Name="/tests/testassets/processes/">

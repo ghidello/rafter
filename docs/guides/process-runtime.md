@@ -126,7 +126,7 @@ On the local Windows x64 host, the full regression run including the file-app co
 the recorded result predates the repository reorganization:
 
 ```powershell
-dotnet test --project tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --report-trx --results-directory artifacts/test-results
+dotnet test --solution Rafter.slnx -p:IncludeLongRunningTests=true --max-parallel-test-modules 1 --configuration Release --report-trx --results-directory artifacts/test-results
 ```
 
 The scoped signalling check records `Scoped console signal supported: True` on the local host; its child exited zero

@@ -1,0 +1,11 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="Spectre.Console" PrivateAssets="all" />
+    <PackageReference Include="System.CommandLine" PrivateAssets="all" />
+
+    <Compile Include="$(MSBuildThisFileDirectory)../testassets/evaluations/parser/CandidateAdapter.cs" Link="Evaluation/Parser/CandidateAdapter.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../testassets/evaluations/parser/ParserCandidate.cs" Link="Evaluation/Parser/ParserCandidate.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../testassets/evaluations/renderer/shared/RendererDestination.cs" Link="Evaluation/Renderer/RendererDestination.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)../testassets/evaluations/renderer/shared/HelpSamples.cs" Link="Evaluation/Renderer/HelpSamples.cs" />
+  </ItemGroup>
+</Project>

@@ -62,10 +62,10 @@ rules and before the body; synchronous user predicates cannot be forcibly interr
 
 The existing Windows native-MTP harness includes:
 
-- [Runtime tests](../../tests/Rafter.Tests/Inputs/TypedInputTests.cs) for declarations, repeated policies, aliases,
+- [Runtime tests](../../tests/Rafter.UnitTests/Inputs/TypedInputTests.cs) for declarations, repeated policies, aliases,
   presence/defaults, grammar and diagnostic privacy, rule ordering, exceptions, snapshots, ownership, cancellation,
   and help at 48/100 columns.
-- [Consumer tests](../../tests/Rafter.Tests/Consumers/TypedInputConsumerTests.cs) building and running both actual
+- [Consumer tests](../../tests/Rafter.IntegrationTests/Consumers/TypedInputConsumerTests.cs) building and running both actual
   examples in isolated workspaces, plus compiler failures for optional-to-nonnullable assignments, unavailable
   policy methods after finalization, and output facilities on the validation context.
 - [Shared consumer scenarios](../../tests/testassets/consumers/runtime/Scenario.cs) proving the typed API in file apps and ordinary
@@ -79,8 +79,8 @@ Equivalent commands from the repository root use the current project path; the r
 the repository reorganization:
 
 ```powershell
-dotnet build tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --no-restore -bl:artifacts/build.binlog
-dotnet test --project tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --no-build --report-trx --results-directory artifacts/test-results
+dotnet build Rafter.slnx --configuration Release --no-restore -bl:artifacts/build.binlog
+dotnet test --solution Rafter.slnx -p:IncludeLongRunningTests=true --max-parallel-test-modules 1 --configuration Release --no-build --report-trx --results-directory artifacts/test-results
 ```
 
 A real Windows pseudoterminal run of options.cs help confirmed blue names, lavender type hints, and muted commas.

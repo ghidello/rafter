@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../build/Rafter.Test.props" />
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/Sotsera.Rafter/Sotsera.Rafter.csproj" />
+    <ProjectReference Include="../testassets/processes/ProcessProbe.csproj" />
+
+    <AssemblyAttribute Include="Xunit.TraitAttribute">
+      <_Parameter1>OS</_Parameter1>
+      <_Parameter2>Windows</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
+  <Import Project="../build/ConsumerWorkspace.targets" />
+  <Import Project="../build/Rafter.Test.targets" />
+</Project>

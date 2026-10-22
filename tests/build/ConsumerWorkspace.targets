@@ -1,0 +1,21 @@
+<Project>
+  <!-- Explicitly imported only by suites that launch isolated SDK consumers. -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)../Shared/*.cs" Link="Infrastructure/%(Filename)%(Extension)" />
+
+    <None Include="$(MSBuildThisFileDirectory)../testassets/**"
+          Exclude="$(MSBuildThisFileDirectory)../testassets/**/bin/**;$(MSBuildThisFileDirectory)../testassets/**/obj/**"
+          Link="Workspace/tests/testassets/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(MSBuildThisFileDirectory)../../src/**"
+          Exclude="$(MSBuildThisFileDirectory)../../src/**/bin/**;$(MSBuildThisFileDirectory)../../src/**/obj/**"
+          Link="Workspace/src/%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(MSBuildThisFileDirectory)../../examples/*.cs;$(MSBuildThisFileDirectory)../../examples/Directory.Build.targets"
+          Link="Workspace/examples/%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(MSBuildThisFileDirectory)../../global.json;$(MSBuildThisFileDirectory)../../NuGet.Config;$(MSBuildThisFileDirectory)../../Directory.Packages.props"
+          Link="Workspace/%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

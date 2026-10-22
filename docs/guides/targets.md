@@ -69,10 +69,10 @@ policies also apply to target output. Host writers remain open until invocation 
 
 ## Verification
 
-[Target runtime tests](../../tests/Rafter.Tests/Targets/TargetTests.cs) exercise order, shared dependencies, repeated
+[Target runtime tests](../../tests/Rafter.UnitTests/Targets/TargetTests.cs) exercise order, shared dependencies, repeated
 references, nested groups, a 12,000-level graph, all-declaration validation, cycles, ownership, awaited execution,
 failure/cancellation cleanup, snapshots, overlapping invocations, input integration, and 48/100-column help.
-[Consumer tests](../../tests/Rafter.Tests/Consumers/TargetConsumerTests.cs) build and run the actual targets.cs and check
+[Consumer tests](../../tests/Rafter.IntegrationTests/Consumers/TargetConsumerTests.cs) build and run the actual targets.cs and check
 unsupported invocation shapes at compile time. Existing [runtime consumers](../../tests/testassets/consumers/runtime/Scenario.cs) also
 exercise successful and failed target workflows in both file apps and ordinary projects with warnings as errors.
 
@@ -82,8 +82,8 @@ build reports **0 warnings and 0 errors**. Commands from the repository root use
 the recorded results predate the repository reorganization:
 
 ```powershell
-dotnet build tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --no-restore -bl:artifacts/build.binlog
-dotnet test --project tests/Rafter.Tests/Rafter.Tests.csproj --configuration Release --report-trx --results-directory artifacts/test-results
+dotnet build Rafter.slnx --configuration Release --no-restore -bl:artifacts/build.binlog
+dotnet test --solution Rafter.slnx -p:IncludeLongRunningTests=true --max-parallel-test-modules 1 --configuration Release --report-trx --results-directory artifacts/test-results
 ```
 
 Manual Windows pseudoterminal runs of targets.cs and its help confirmed bold target/group headings, muted direct
