@@ -49,7 +49,8 @@ return await command.RunAsync(args, context =>
 
 Run `dotnet run --file hello.cs -- --quiet`. A regular net10.0 C# project instead adds
 `<PackageReference Include="Sotsera.Rafter" Version="0.1.0-local" />` and uses the same code without directives.
-The runtime baseline remains Windows x64 verification first; owned processes require Windows, and AOT remains unverified.
+Fresh package-only project/file-app consumers are also verified by the full portable suite on Ubuntu 24.04 x64;
+see the [testing guide](../development/testing.md#linux-ci-scope). Owned processes require Windows, and AOT remains unverified.
 
 Use a fresh consumer/package cache when rebuilding the same local version, or pass a new local `-p:Version=...` to
 pack and update the consumer version. NuGet caches packages by version; it does not replace an already-restored package

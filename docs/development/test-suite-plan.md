@@ -1,7 +1,9 @@
 # Test suite reorganization plan
 
 Agreed on 2026-10-22. Test reorganization is delivered under [issue #32](https://github.com/sotsera/rafter/issues/32);
-Linux CI follows in a separate PR under [issue #33](https://github.com/sotsera/rafter/issues/33).
+Linux CI is delivered separately under [issue #33](https://github.com/sotsera/rafter/issues/33), in
+[PR #35](https://github.com/sotsera/rafter/pull/35). The original delivery sequence below records the agreement;
+the testing guide now includes observed Ubuntu portable-suite results.
 See the [testing guide](testing.md) for current commands and observed results. This plan adapts the user-provided
 `xunit-long-running-test-strategy.md` to Rafter's existing tests, assets, and toolchain. The attachment is a design
 reference, not a requirement to copy its build files or change the repository's SDK/package policy.
@@ -193,5 +195,6 @@ the attachment's final retention advice as authorization to delete them.
 6. Publish the verified run profiles in the development guide. Keep this proposal's accepted decisions distinct from
    observed platform support and update the source-of-truth inventory as future tests are added.
 
-The project split and selection policy are implemented; the testing guide records the adoption checks. Linux and
-macOS execution remain unverified by this Windows-only reorganization.
+The project split and selection policy were implemented in the Windows-only reorganization. The separate Linux CI
+change subsequently verified the portable suite on Ubuntu; the testing guide records both sets of results. macOS
+execution and Linux-native process ownership remain unverified.

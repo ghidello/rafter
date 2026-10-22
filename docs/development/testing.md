@@ -1,8 +1,9 @@
 # Testing Rafter
 
 Implemented for [issue #32](https://github.com/sotsera/rafter/issues/32) on 2026-10-22, following the
-[agreed plan](test-suite-plan.md). Windows x64 is the verified environment. Linux CI is a separate follow-up in
-[issue #33](https://github.com/sotsera/rafter/issues/33); the portable grouping does not yet establish Linux/macOS support.
+[agreed plan](test-suite-plan.md). Windows x64 covers the full suite. The separate
+[issue #33](https://github.com/sotsera/rafter/issues/33) adds verified portable-suite coverage on Ubuntu 24.04 x64;
+Linux-native process ownership and macOS remain unverified.
 
 ## Suite boundaries
 
@@ -15,8 +16,8 @@ Implemented for [issue #32](https://github.com/sotsera/rafter/issues/32) on 2026
 
 All three suites remain in [Rafter.slnx](../../Rafter.slnx). [Rafter.Portable.slnf](../../Rafter.Portable.slnf) selects the
 two portable projects and their production dependencies, excluding WindowsTests and ProcessProbe before their test
-application starts. Its membership and execution are verified on Windows here; Linux interpretation is checked in #33.
-The filter uses the project identifiers required by the pinned Windows SDK, with a root-relative solution filename.
+application starts. Its membership and execution are verified on Windows and Ubuntu. The filter uses backslash
+project identifiers and a root-relative solution filename; the same file works with the pinned SDK on both systems.
 
 Each project explicitly imports [shared settings](../../tests/build/Rafter.Test.props) and
 [execution policy](../../tests/build/Rafter.Test.targets). Main-suite settings do not flow through an automatic
@@ -127,6 +128,35 @@ Observed locally on Windows x64 / SDK 10.0.402:
   scoped empty handling, and preservation of a real assertion failure (**exit 2**). No deliberate failure remains
   in maintained test sources.
 
-PR CI runs ordinary and explicitly enabled full Windows profiles, then packs and checks redirected runtime output.
+## Linux CI scope
+
+The separate `Linux portable evaluation` job targets Ubuntu 24.04 x64. It uses the same SDK selection and native
+MTP configuration as Windows, with `Rafter.Portable.slnf` as the entry point for restore, build, and both test profiles:
+
+```bash
+dotnet restore Rafter.Portable.slnf
+dotnet build Rafter.Portable.slnf --configuration Release --no-restore
+dotnet test --solution Rafter.Portable.slnf --configuration Release --no-build --minimum-expected-tests 1 --max-parallel-test-modules 1
+dotnet test --solution Rafter.Portable.slnf --configuration Release --no-build -p:IncludeLongRunningTests=true --minimum-expected-tests 1 --max-parallel-test-modules 1
+```
+
+CI adds TRX reporting and separate ordinary/full result directories. It records the actual OS, runner image, SDK,
+and filter membership, then checks that WindowsTests and ProcessProbe have no restore/build output in the clean
+checkout. Required consumer restores and package builds remain failures when unavailable; they are not skipped.
+The full integration profile creates and consumes its own local package in real project/file-app hosts.
+
+Observed on 2026-10-22 for commit `5db9f74840d3a539b9c773a2f828a4a7335feae4` in the
+[first Linux run](https://github.com/ghidello/rafter/actions/runs/39771953044/job/119801407841): Ubuntu 24.04.5 LTS x64,
+SDK 10.0.402, runtime 10.0.13, runner image `20261012.334.1`. The build reports **0 warnings/errors**. Ordinary
+selection reports **343 passed, 0 failed, 0 skipped**; full selection reports **364 passed, 0 failed, 0 skipped**
+(342 unit and 22 integration cases). The existing filter, consumers, package layout, and test assertions required no
+portability changes. Exact-commit results for the final delivery belong to the PR.
+
+This job exercises portable command/input/target/output behavior, in-process analyzer checks, and managed
+SDK/compiler/package consumers. It does not establish Linux-native child-process ownership, process-tree cleanup,
+interactive terminal behavior, VS Code integration, AOT, macOS, or a wider Linux distribution/architecture matrix.
+Use the portable filter on Linux; a whole-solution invocation still builds the Windows project graph before skips.
+
+PR CI also retains the ordinary and explicitly enabled full Windows profiles, packaging, and redirected runtime checks.
 Exact-commit CI results belong to the delivery PR. Existing evidence and older build output are retained according
 to the [generated-files policy](generated-files.md); no automatic cleanup or dependency upgrade accompanies this split.

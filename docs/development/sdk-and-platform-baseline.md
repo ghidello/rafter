@@ -7,6 +7,8 @@ No SDK was installed, no global.json or project was created, and no Rafter code 
 Subsequent issue #1 work now implements this baseline for the [evaluation harness](../history/evaluation-harness.md), which records
 the current configuration and observed results. Issue #9 extends it to the [minimal runtime](../guides/minimal-runtime.md).
 Inventory observations below describe the pre-scaffolding state.
+The later [testing guide](testing.md#linux-ci-scope) records verified Ubuntu portable-suite coverage; the original
+platform plan and local inventory below do not replace that current evidence.
 
 ## Why .NET 10
 

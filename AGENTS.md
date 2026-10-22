@@ -68,7 +68,8 @@ Use the [documentation index](docs/README.md) for current development entry poin
 - Use xUnit v3, Microsoft.Testing.Platform, and AwesomeAssertions for .NET tests. Verify compatible stable versions
   and the required runner configuration when scaffolding or upgrading the toolchain.
 - Use the [testing guide](docs/development/testing.md) for project boundaries and execution profiles. Ordinary runs
-  exclude `LongRunning=true`; preserve explicit full Windows coverage in PR CI. Linux CI is a separate follow-up.
+  exclude `LongRunning=true`; preserve explicit full Windows and portable Linux coverage in PR CI. Use the portable
+  solution filter on Linux; portable test results do not establish Linux-native process ownership.
 - Run checks appropriate to the change. Test observable behavior and meaningful failure cases rather than mirroring
   implementation details.
 - Verify file-based application behavior with actual file-based applications. Verify child-process behavior with

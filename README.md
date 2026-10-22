@@ -8,6 +8,8 @@ The [repository review](docs/development/repository-review.md) maps the folders 
 
 Open [Rafter.slnx](Rafter.slnx) from this repository root to work on the runtime, analyzers, and main test suite.
 Use the [documentation index](docs/README.md) for current guides, development commands, and historical evaluations.
+The [testing guide](docs/development/testing.md) covers the unit/integration/Windows suites and their run profiles.
+CI verifies the full Windows suite and the portable suite on Ubuntu 24.04 x64; Linux process ownership remains separate work.
 
 The first [runtime slice](docs/guides/minimal-runtime.md) runs body-only commands with validation, help, direct output,
 exception containment, and cooperative managed cancellation. Try the real [minimal example](examples/minimal.cs):

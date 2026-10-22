@@ -47,8 +47,8 @@ dotnet test --solution Rafter.slnx --configuration Release -p:IncludeLongRunning
 
 Both commands use the repository's .NET 10 native Microsoft.Testing.Platform mode. To focus an individual
 suite, consult the installed [run-tests skill](../.agents/skills/run-tests/SKILL.md). CI restores, builds, and tests
-this same solution; its exact commands and evidence retention are in the
-[Windows evaluation workflow](../.github/workflows/evaluation.yml). Package creation and manual/editor checks have
+this same solution on Windows and the [portable filter](../Rafter.Portable.slnf) on Ubuntu. Exact commands and
+evidence retention are in the [evaluation workflow](../.github/workflows/evaluation.yml). Package creation and manual/editor checks have
 their own instructions in [local packaging](guides/local-package.md) and the [tool inventory](../tools/README.md).
 
 | Development reference | Purpose |
@@ -59,7 +59,7 @@ their own instructions in [local packaging](guides/local-package.md) and the [to
 | [Development tools](../tools/README.md) | Current verification versus optional dependency evaluations, with reproduction commands. |
 | [Generated files and evidence](development/generated-files.md) | Per-run evidence directories, CI retention, and bounded cleanup policy. |
 | [Testing guide](development/testing.md) | Suite boundaries, ordinary/full/long-only profiles, capabilities, and observed selection checks. |
-| [Test suite plan](development/test-suite-plan.md) | Agreed project split and execution-policy rationale; Linux CI follows separately. |
+| [Test suite plan](development/test-suite-plan.md) | Agreed project split, execution-policy rationale, and separate Linux CI delivery. |
 
 ## Product direction and open work
 
@@ -68,7 +68,8 @@ The [first working examples record](history/first-working-examples.md) preserves
 Later capabilities remain separate work; a completed example group does not establish every reference feature or
 platform. Maintained test/tool inputs now live under [tests/testassets](../tests/testassets/README.md); its inventory
 identifies automated and optional-tool callers. The three test projects separate in-process, portable integration,
-and Windows responsibilities. Linux execution remains unverified until its separate CI follow-up.
+and Windows responsibilities. Ubuntu 24.04 x64 now verifies the portable suite; Linux-native process ownership,
+macOS, AOT, and other platform/environment checks retain their own acceptance gates.
 
 ## Evaluation and investigation history
 

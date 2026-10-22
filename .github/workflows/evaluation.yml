@@ -10,6 +10,63 @@ permissions:
   contents: read
 
 jobs:
+  linux-portable-evaluation:
+    name: Linux portable evaluation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
+    env:
+      DOTNET_NOLOGO: '1'
+      DOTNET_CLI_TELEMETRY_OPTOUT: '1'
+      TESTINGPLATFORM_TELEMETRY_OPTOUT: '1'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Record environment and portable membership
+        run: |
+          mkdir -p artifacts
+          dotnet --info | tee artifacts/dotnet-info.txt
+          cat /etc/os-release | tee artifacts/linux-info.txt
+          uname -a | tee -a artifacts/linux-info.txt
+          printf 'ImageOS=%s ImageVersion=%s\n' "$ImageOS" "$ImageVersion" > artifacts/runner-image.txt
+          dotnet sln Rafter.Portable.slnf list | tee artifacts/portable-projects.txt
+          grep -F 'Rafter.UnitTests.csproj' artifacts/portable-projects.txt
+          grep -F 'Rafter.IntegrationTests.csproj' artifacts/portable-projects.txt
+          if grep -E 'Rafter.WindowsTests|ProcessProbe' artifacts/portable-projects.txt; then
+            echo 'Windows projects must be excluded from the portable solution filter.' >&2
+            exit 1
+          fi
+
+      - name: Restore portable solution
+        run: dotnet restore Rafter.Portable.slnf
+
+      - name: Build portable solution
+        run: |
+          dotnet build Rafter.Portable.slnf --configuration Release --no-restore -bl:artifacts/build.binlog
+          test ! -d tests/Rafter.WindowsTests/obj
+          test ! -d tests/testassets/processes/obj
+
+      - name: Run ordinary portable tests
+        run: dotnet test --solution Rafter.Portable.slnf --configuration Release --no-build --minimum-expected-tests 1 --max-parallel-test-modules 1 --report-trx --results-directory artifacts/test-results/ordinary
+
+      - name: Run full portable evaluation
+        run: dotnet test --solution Rafter.Portable.slnf --configuration Release --no-build -p:IncludeLongRunningTests=true --minimum-expected-tests 1 --max-parallel-test-modules 1 --report-trx --results-directory artifacts/test-results/full
+
+      - name: Retain portable evaluation evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-portable-evaluation
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
   windows-evaluation:
     name: Windows evaluation
     runs-on: windows-2022
