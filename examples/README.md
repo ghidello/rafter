@@ -1,6 +1,6 @@
 # Rafter examples
 
-All eight examples run against the new runtime through project references. The process examples currently require
+The eight implemented examples listed below run against the new runtime through project references. The process examples currently require
 Windows; the target-only example prepares and prints a greeting without child processes. See the
 [design plan](../docs/design/example-design-plan.md) for accepted decisions and open topics.
 
@@ -16,6 +16,14 @@ use a package reference with a configured local feed, or supply equivalent proje
 | [process-failure.cs](process-failure.cs) | `--project` identifies a buildable project; a failed build demonstrates `Fail` returning its result. |
 | [process-working-directory.cs](process-working-directory.cs) | Launch from a directory containing `src` with a buildable project or solution. |
 | [dependencies.cs](dependencies.cs) | `--project` identifies a test project; uses .NET 10 native Microsoft.Testing.Platform mode. |
+
+## Syntax drafts
+
+[environment.cs](environment.cs) is a discussion draft, not a runnable ninth example. Its agreed
+`.FromEnvironment(...)` method is not implemented. See the [environment-input design](../docs/design/environment-inputs.md)
+for agreed resolution/output behavior and the remaining syntax questions. The eight examples above remain runnable.
+
+## Running the workflow examples
 
 The [workflow fixture](../tests/testassets/workflows/) supplies a small library and a one-test project. From the repository root:
 

@@ -90,6 +90,21 @@ During the renderer evaluation, we also agreed to respect a **nonempty `NO_COLOR
 Rafter's colors. This does not itself disable emphasis or terminal presentation prefixes. `--plain` remains the complete
 presentation override, and redirected destinations remain plain independently of `NO_COLOR` and CI environment variables.
 
+## Environment-input sources
+
+The [environment-input design](environment-inputs.md#agreed-help-and-output-behavior) adds accepted presentation behavior
+for the planned environment-backed inputs. Help identifies the mapped variable from declarations, without reading or
+converting current environment values or running input validators; invalid environment values do not block help.
+Existing declaration and malformed-command-line checks still apply. Verbose stderr identifies the source
+actually selected and marks empty environment values. Normal and quiet stderr retain source context when reporting
+an input error, without routine source announcements. Source diagnostics do not automatically print value contents;
+an empty string alone is not a warning. Help adds environment metadata after description/policy and before validation
+rules, explains precedence once, and distinguishes Boolean command-line flags from environment values. After successful
+validation, verbose stderr shows one `Input sources` block before body/target execution: all options in declaration
+order, primary names, selected source only, and `(empty)` for empty environment values. Failed validation keeps grouped
+errors without the routine block. Use existing heading/name colors and flat runtime gutters; `(empty)` is ordinary text.
+The linked transcripts are illustrative, and this feature is not implemented yet.
+
 ## Minimal success
 
 For [minimal.cs](../../examples/minimal.cs):

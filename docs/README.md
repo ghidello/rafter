@@ -27,6 +27,8 @@ The two short pages at the old diagnostic/package paths preserve links embedded 
 
 The [output preview](design/output-preview.html) illustrates presentation choices; the
 [runtime review samples](history/runtime-review-samples.md) and linked verification records capture actual executions.
+The [environment-input design](design/environment-inputs.md) records newly agreed behavior and a proposed example;
+it describes planned functionality, not an implemented runtime feature.
 
 ## Developing this repository
 

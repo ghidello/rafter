@@ -71,7 +71,7 @@ into smaller scopes when needed; agreement on basic inputs, for example, does no
 | Roots and paths | Partial | Partial | Partial | Partial |
 | Typed inputs | ✓ | Partial | Partial | Partial |
 | Input validation | ✓ | ✓ | ✓ | ✓ |
-| Environment inputs | — | — | — | — |
+| Environment inputs | ✓ | ✓ | — | — |
 | Targets and dependencies | ✓ | ✓ | ✓ | ✓ |
 | Conditional execution | — | — | — | — |
 | Output and diagnostics | Partial | Partial | Partial | Partial |
@@ -494,6 +494,32 @@ Preferred direction to explore:
   of silently changing an option value during execution.
 
 No asynchronous option syntax or implementation is selected. Revisit this note when a concrete script needs it.
+
+### Environment inputs
+
+The [environment-input design](environment-inputs.md) records behavior agreed on 2026-10-22 and the open syntax questions.
+[examples/environment.cs](../../examples/environment.cs) is a new syntax draft; `.FromEnvironment(...)` is agreed and
+not implemented. The reference example remains unchanged.
+
+Agreed: command line precedes environment, then default and required/optional behavior. Empty is supplied, not missing:
+accept it for strings subject to validation, and reject it for integer/Boolean conversion without falling back. Resolve
+once during invocation preparation so `GetValue` keeps reading the prepared value. Help identifies the mapped variable
+from declarations without reading/converting environment values or running input validators; existing declaration and
+malformed-argument checks still apply. Invalid or empty environment values do not block help. During execution,
+verbose source diagnostics identify the selected source and mark empty environment values, while normal/quiet output
+retains source context for input errors. Do not automatically print value contents in source diagnostics.
+
+`FromEnvironment` is available before and after `.Required()` or `.Default(...)`, preserving the handle kind and source
+precedence. Reject repeated mappings on the same option during initial declaration validation (exit `2`), including
+identical mappings and calls through retained/finalized handles. Reject null/blank names, `=`, NUL/control characters,
+and leading/trailing whitespace as declaration errors. Preserve names without trimming/case conversion; use native
+case matching (Windows case-insensitive, Linux case-sensitive), with uppercase spelling recommended for portability.
+Preserve string whitespace exactly. Ignore surrounding whitespace for integer/Boolean conversion; whitespace-only
+typed values fail rather than falling back. Booleans accept only case-insensitive `true`/`false`, with no numeric or
+yes/no/on/off forms. Do not interpret quotes or escapes in environment text. Help adds mapping metadata before rules
+and explains precedence once. After successful validation, verbose stderr lists every option's selected source in one
+`Input sources` block before execution, using declaration order and primary names without value contents. The selected
+design is agreed; implementation and verification remain pending. Use the linked design as the detailed decision record.
 
 ### Input validation
 
