@@ -3,6 +3,7 @@
 The selected behavior, syntax, and help/verbose layouts are agreed on 2026-10-22. Environment-backed option resolution
 is not implemented or verified. The [example draft](../../examples/environment.cs) adapts the scenario from the
 unchanged [reference example](../../reference/examples/environment.cs) to the current command and lookup APIs.
+Implementation is scoped in [issue #36](https://github.com/sotsera/rafter/issues/36).
 
 ## Agreed resolution behavior
 
@@ -211,6 +212,6 @@ announcements in the body. The new method is agreed syntax, not an implemented A
 
 ## Implementation boundary
 
-The selected design is agreed and ready for a scoped implementation issue. Runtime implementation and executable
+The selected design is agreed and tracked in issue #36. Runtime implementation and executable
 acceptance checks remain pending. Analyzer extensions remain a later topic. Async value resolution, secret redaction,
 automatic name inference, `.env` loading, and child-process environment configuration are separate topics.

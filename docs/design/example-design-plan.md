@@ -499,7 +499,7 @@ No asynchronous option syntax or implementation is selected. Revisit this note w
 
 The [environment-input design](environment-inputs.md) records behavior agreed on 2026-10-22 and the open syntax questions.
 [examples/environment.cs](../../examples/environment.cs) is a new syntax draft; `.FromEnvironment(...)` is agreed and
-not implemented. The reference example remains unchanged.
+not implemented. [Issue #36](https://github.com/sotsera/rafter/issues/36) scopes implementation. The reference example remains unchanged.
 
 Agreed: command line precedes environment, then default and required/optional behavior. Empty is supplied, not missing:
 accept it for strings subject to validation, and reject it for integer/Boolean conversion without falling back. Resolve
